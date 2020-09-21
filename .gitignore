@@ -15,7 +15,7 @@
 # vendor/
 
 # Project files
-.idea/*
+/backend/*/.idea
 
 # Misc
 .DS_Store
