@@ -15,6 +15,20 @@ type UsersController struct {
 	usersService service.UsersService
 }
 
+func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) *http.Server {
+	u.usersService = usersService
+	server := &http.Server{Addr: ":9090"}
+	http.HandleFunc("/activate", u.activate)
+	http.HandleFunc("/register", u.register)
+	go func() {
+		defer group.Done()
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Info(err)
+		}
+	}()
+	return server
+}
+
 func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Code int8 `json:"code"`
@@ -130,18 +144,4 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	}
 	object, _ = json.Marshal(res)
 	_, _ = w.Write(object)
-}
-
-func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) *http.Server {
-	u.usersService = usersService
-	server := &http.Server{Addr: ":9090"}
-	http.HandleFunc("/activate", u.activate)
-	http.HandleFunc("/register", u.register)
-	go func() {
-		defer group.Done()
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Info(err)
-		}
-	}()
-	return server
 }

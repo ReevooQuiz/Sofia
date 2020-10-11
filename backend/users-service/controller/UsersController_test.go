@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/golang/mock/gomock"
@@ -10,36 +11,34 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 )
 
-//func TestInit(t *testing.T) {
-//	type fields struct {
-//		usersService service.UsersService
-//	}
-//	type args struct {
-//		group        *sync.WaitGroup
-//		usersService service.UsersService
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		args   args
-//		want   *http.Server
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			u := &UsersController{
-//				usersService: tt.fields.usersService,
-//			}
-//			if got := u.Init(tt.args.group, tt.args.usersService); !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("Init() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
+func TestInit(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	tests := []struct {
+		name string
+	}{
+		{"Initialize"},
+	}
+	u := UsersController{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			httpServerExitDone := &sync.WaitGroup{}
+			httpServerExitDone.Add(1)
+			server := u.Init(httpServerExitDone, mockUsersService)
+			time.Sleep(500 * time.Microsecond)
+			if err := server.Shutdown(context.Background()); err != nil {
+				t.Error(err)
+			}
+			httpServerExitDone.Wait()
+		})
+	}
+}
 
 func TestActivate(t *testing.T) {
 	t.Parallel()
