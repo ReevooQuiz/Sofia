@@ -8,7 +8,6 @@ import (
 	"github.com/zhanghanchong/users-service/mock"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -43,7 +42,6 @@ import (
 func TestActivate(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
-	reader := strings.NewReader(`{"token":"1"}`)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
@@ -79,7 +77,7 @@ func TestActivate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, _ := http.NewRequest(http.MethodGet, "/activate?token="+tt.args.token, reader)
+			r, _ := http.NewRequest(http.MethodGet, "/activate?token="+tt.args.token, nil)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != tt.wantStatus {
