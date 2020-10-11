@@ -25,30 +25,16 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	var token int64
@@ -56,15 +42,8 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	var user entity.Users
@@ -72,15 +51,8 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	user.Role = 1
@@ -91,15 +63,8 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Code = 0
 	}
-	object, err = json.Marshal(res)
-	if err != nil {
-		log.Info(err)
-		return
-	}
-	_, err = w.Write(object)
-	if err != nil {
-		log.Info(err)
-	}
+	object, _ = json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
@@ -116,15 +81,8 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	var user entity.Users
@@ -136,48 +94,25 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 0
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
-	log.Info(err)
 	_, err = u.usersService.FindByEmail(user.Email)
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 1
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
-	log.Info(err)
 	user.Id, err = u.usersService.Insert(user)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		object, err = json.Marshal(res)
-		if err != nil {
-			log.Info(err)
-			return
-		}
-		_, err = w.Write(object)
-		if err != nil {
-			log.Info(err)
-		}
+		object, _ = json.Marshal(res)
+		_, _ = w.Write(object)
 		return
 	}
 	message := gomail.NewMessage()
@@ -193,15 +128,8 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Code = 0
 	}
-	object, err = json.Marshal(res)
-	if err != nil {
-		log.Info(err)
-		return
-	}
-	_, err = w.Write(object)
-	if err != nil {
-		log.Info(err)
-	}
+	object, _ = json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) *http.Server {

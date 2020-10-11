@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/golang/mock/gomock"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/mock"
@@ -45,11 +47,17 @@ func TestActivate(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
-	user := entity.Users{Id: 1, Username: "root", Password: "root", Email: "root@sjtu.edu.cn", Role: 3}
+	users := [][]entity.Users{
+		{{1, "root", "root", "root@sjtu.edu.cn", 3}, {1, "root", "root", "root@sjtu.edu.cn", 1}},
+		{{}, {}},
+	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindById(1).Return(user, nil),
-		mockUsersService.EXPECT().Update(user).Return(nil),
+		mockUsersService.EXPECT().FindById(users[0][0].Id).Return(users[0][0], nil),
+		mockUsersService.EXPECT().Update(users[0][1]).Return(nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindById(users[1][0].Id).Return(users[1][0], errors.New("sql: no rows in result set")),
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}
@@ -57,21 +65,32 @@ func TestActivate(t *testing.T) {
 	type args struct {
 		token string
 	}
+	type res struct {
+		Code int8 `json:"code"`
+	}
 	tests := []struct {
 		name       string
 		args       args
 		wantStatus int
+		wantRes    res
 	}{
-		{"Normal", args{"1"}, http.StatusOK},
+		{"Normal", args{"1"}, http.StatusOK, res{0}},
+		{"NotFound", args{"0"}, http.StatusOK, res{1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest(http.MethodGet, "/activate?token="+tt.args.token, reader)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
-			resp := w.Result()
-			if resp.StatusCode != tt.wantStatus {
-				t.Errorf("Actual: %v, expect: %v.", resp.StatusCode, tt.wantStatus)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			body := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(body)
+			var res res
+			_ = json.Unmarshal(body, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})
 	}
