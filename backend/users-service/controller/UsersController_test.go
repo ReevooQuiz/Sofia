@@ -98,6 +98,49 @@ func TestActivate(t *testing.T) {
 	}
 }
 
+func TestOauth(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	u := UsersController{mockUsersService}
+	mux.HandleFunc("/oauth", u.oauth)
+	type args struct {
+		code string
+	}
+	type res struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+		Scope       string `json:"scope"`
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    res
+	}{
+		{"Normal", args{""}, http.StatusOK, res{"", "", ""}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := http.NewRequest("GET", "/oauth?code="+tt.args.code, nil)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res res
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestRegister(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
