@@ -19,6 +19,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	u.usersService = usersService
 	server := &http.Server{Addr: ":9090"}
 	http.HandleFunc("/activate", u.activate)
+	http.HandleFunc("/oauth", u.oauth)
 	http.HandleFunc("/register", u.register)
 	go func() {
 		defer group.Done()
@@ -33,13 +34,12 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Code int8 `json:"code"`
 	}
-	var object []byte
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -47,16 +47,16 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
 	var token int64
-	token, err = strconv.ParseInt(r.Form["token"][0], 10, 64)
+	token, err = strconv.ParseInt(r.FormValue("token"), 10, 64)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -65,7 +65,7 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -77,8 +77,33 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Code = 0
 	}
-	object, _ = json.Marshal(res)
+	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
+}
+
+func (u *UsersController) oauth(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	var request *http.Request
+	request, err = http.NewRequest(http.MethodPost, "https://github.com/login/oauth/access_token?client_id=51f0dde36e2f4fcee97c&client_secret=04aee9d3c62d4ea10577113dedbf62b842f8a855&code="+r.FormValue("code"), nil)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	request.Header.Set("accept", "application/json")
+	client := http.Client{}
+	var response *http.Response
+	response, err = client.Do(request)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	responseBody := make([]byte, 92)
+	_, err = response.Body.Read(responseBody)
+	_, _ = w.Write(responseBody)
 }
 
 func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
@@ -88,14 +113,13 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 			Type int8 `json:"type"`
 		} `json:"result"`
 	}
-	var object []byte
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -108,7 +132,7 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 0
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -116,7 +140,7 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 1
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -125,7 +149,7 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		object, _ = json.Marshal(res)
+		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
@@ -142,6 +166,6 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Code = 0
 	}
-	object, _ = json.Marshal(res)
+	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
 }
