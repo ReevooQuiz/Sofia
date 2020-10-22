@@ -1,5 +1,12 @@
 package entity
 
+const (
+	ADMIN = iota
+	USER
+	DISABLE
+	NOTACTIVE
+)
+
 type Users struct {
 	Id       int64  `json:"id"`
 	Username string `json:"username"`
