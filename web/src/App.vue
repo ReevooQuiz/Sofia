@@ -1,13 +1,21 @@
 <template>
-  <div id="nav">
-    <button class="btn btn-primary">button</button>
-    <router-link to="/">Home123</router-link> |
-    <router-link to="/about">About</router-link>
+  <div id="background">
+    <div id="nav">
+      <router-link to="/">Home123</router-link>|
+      <router-link to="/about">About</router-link>|
+      <router-link to="/search">search</router-link>
+    </div>
+
+    <router-view />
   </div>
-  <router-view />
 </template>
 
+
+
 <style>
+#background {
+  background-color: #edeeed;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
