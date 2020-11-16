@@ -1,5 +1,6 @@
 <template>
   <div id="nav">
+    <button class="btn btn-primary">button</button>
     <router-link to="/">Home123</router-link> |
     <router-link to="/about">About</router-link>
   </div>
