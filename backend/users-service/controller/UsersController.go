@@ -15,9 +15,9 @@ type UsersController struct {
 	usersService service.UsersService
 }
 
-func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) *http.Server {
+func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) (server *http.Server) {
 	u.usersService = usersService
-	server := &http.Server{Addr: ":9090"}
+	server = &http.Server{Addr: ":9090"}
 	http.HandleFunc("/activate", u.Activate)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
 	http.HandleFunc("/register", u.Register)
