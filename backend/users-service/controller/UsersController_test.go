@@ -47,8 +47,8 @@ func TestActivate(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{1, "root", "root", "root@sjtu.edu.cn", 3},
-		{1, "root", "root", "root@sjtu.edu.cn", 1},
+		{1, "root", "root", "root@sjtu.edu.cn", entity.NOTACTIVE},
+		{1, "root", "root", "root@sjtu.edu.cn", entity.USER},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
@@ -62,7 +62,7 @@ func TestActivate(t *testing.T) {
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}
-	mux.HandleFunc("/activate", u.activate)
+	mux.HandleFunc("/activate", u.Activate)
 	type args struct {
 		token string
 	}
@@ -98,14 +98,14 @@ func TestActivate(t *testing.T) {
 	}
 }
 
-func TestOauth(t *testing.T) {
+func TestOAuthGithub(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	u := UsersController{mockUsersService}
-	mux.HandleFunc("/oauth", u.oauth)
+	mux.HandleFunc("/oauth/github", u.OAuthGithub)
 	type args struct {
 		code string
 	}
@@ -124,7 +124,7 @@ func TestOauth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r, _ := http.NewRequest("GET", "/oauth?code="+tt.args.code, nil)
+			r, _ := http.NewRequest("GET", "/oauth/github?code="+tt.args.code, nil)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != tt.wantStatus {
@@ -148,8 +148,8 @@ func TestRegister(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{0, "root", "root", "root@sjtu.edu.cn", 3},
-		{0, "root", "root", "root", 3},
+		{0, "root", "root", "root@sjtu.edu.cn", entity.NOTACTIVE},
+		{0, "root", "root", "root", entity.NOTACTIVE},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
@@ -171,7 +171,7 @@ func TestRegister(t *testing.T) {
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}
-	mux.HandleFunc("/register", u.register)
+	mux.HandleFunc("/register", u.Register)
 	type args struct {
 		username string
 		password string

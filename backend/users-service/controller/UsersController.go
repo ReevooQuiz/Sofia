@@ -18,9 +18,9 @@ type UsersController struct {
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) *http.Server {
 	u.usersService = usersService
 	server := &http.Server{Addr: ":9090"}
-	http.HandleFunc("/activate", u.activate)
-	http.HandleFunc("/oauth", u.oauth)
-	http.HandleFunc("/register", u.register)
+	http.HandleFunc("/activate", u.Activate)
+	http.HandleFunc("/oauth/github", u.OAuthGithub)
+	http.HandleFunc("/register", u.Register)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -30,7 +30,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	return server
 }
 
-func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
+func (u *UsersController) Activate(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Code int8 `json:"code"`
 	}
@@ -69,7 +69,7 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
-	user.Role = 1
+	user.Role = entity.USER
 	err = u.usersService.Update(user)
 	if err != nil {
 		log.Info(err)
@@ -81,7 +81,7 @@ func (u *UsersController) activate(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(object)
 }
 
-func (u *UsersController) oauth(w http.ResponseWriter, r *http.Request) {
+func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Info(err)
@@ -106,7 +106,7 @@ func (u *UsersController) oauth(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(responseBody)
 }
 
-func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
+func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Code   int8 `json:"code"`
 		Result struct {
@@ -127,7 +127,7 @@ func (u *UsersController) register(w http.ResponseWriter, r *http.Request) {
 	user.Username = r.PostFormValue("username")
 	user.Password = r.PostFormValue("password")
 	user.Email = r.PostFormValue("email")
-	user.Role = 3
+	user.Role = entity.NOTACTIVE
 	_, err = u.usersService.FindByUsername(user.Username)
 	if err == nil {
 		res.Code = 1
