@@ -1,12 +1,7 @@
 <template>
   <div id="background">
     <Navigator></Navigator>
-    <div id="nav">
-      <router-link to="/">Home123</router-link>|
-      <router-link to="/search">search</router-link>|
-      <router-link to="/question">Question</router-link>
-    </div>
-
+    <br/>
     <router-view />
   </div>
 </template>

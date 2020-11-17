@@ -8,11 +8,14 @@
       <a-descriptions title="属性" size="small">
         <a-descriptions-item v-for="(item) in info.attributes" v-bind:key="item.index">
           <a-tag id="tagBack" color="#eeeeee">
-            {{item[0]}}
-            <!-- <span style="text-align:right">
-{{item[1]}}
-            </span> -->
-            <a-tag color="#a3dbd8" style="align:right,margin-left ：100px">{{item[1]}}</a-tag>
+            <a-row justify="space-between">
+              <a-col :span="10">
+                <font color="black">{{item[0]}}</font>
+              </a-col>
+              <a-col :span="14">
+                <a-tag color="#a3dbd8" id="tagFront"><font color="black">{{item[1]}}</font></a-tag>
+              </a-col>
+            </a-row>
           </a-tag>
         </a-descriptions-item>
       </a-descriptions>
@@ -81,9 +84,20 @@ export default {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-
+#attribute{
+  color: #000;
+}
 #tagBack{
-   width: 100px;
+   width: 30px;   
+overflow: hidden;
+text-overflow:ellipsis;
+white-space: nowrap;
+}
+#tagBack{
+   width: 100px; 
+overflow: hidden;
+text-overflow:ellipsis;
+white-space: nowrap;
 }
 /* .ant-tag-has-color, .ant-tag-has-color a, .ant-tag-has-color a:hover, .ant-tag-has-color .anticon-close, .ant-tag-has-color .anticon-close:hover {
     width: 70px;
