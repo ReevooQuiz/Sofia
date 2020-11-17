@@ -1,7 +1,7 @@
 <template>
   <a-row id="search">
     <a-col :span="8">
-        <img src="../assets/cactus1.png" height="500" width="360"    style="marginTop: 95px"/>
+        <img src="../assets/cactus1.png" height="500" width="360"    style="marginTop: 185px"/>
     </a-col>
     <a-col :span="8">
       <a-row justify="center" style="marginTop: 80px">
@@ -20,7 +20,7 @@
       </a-row>    
     </a-col>
     <a-col :span="5" :offset="3">
-        <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 250px"/>
+        <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 340px"/>
     </a-col>
   </a-row>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <div class="answerCard">
+  <div id="answerCard">
     <a-card  size="small" style="border-radius : 3px">
         <!-- <a-card-meta title="ans.user">
             <template #avatar>
@@ -7,10 +7,10 @@
             </template>
         </a-card-meta> -->
       <a-row>
-        <a-col :span="4">
+        <a-col :span="3">
           <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
         </a-col>
-        <a-col :span="20">
+        <a-col :span="21">
           <a-comment>
               <template #actions>
               <span key="comment-basic-like">
@@ -34,15 +34,15 @@
                     <DislikeOutlined @click="dislike" />
                   </template>
                 </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
+                <!-- <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span> -->
               </span>
               <span key="comment-basic-comment">
                 <MessageOutlined @click="comment" />
-                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.commentNum }}</span>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.comment_count }}</span>
               </span>
             </template>
             <template #author>
-              <a> {{ans.user}}</a>
+              <a> {{ans.owner.user_name}}</a>
             </template>
             <template #avatar>
               <a-avatar
@@ -89,20 +89,20 @@ export default {
   data() {
     return {
       action: null,
-      likes:this.ans.likeNum,
-      dislikes:this.ans.dislikeNum,
+      likes:this.ans.like_count,
+      // dislikes:this.ans.dislike_count,
       moment
     };
   },
   methods: {
     like() {
       this.likes = 1;
-      this.dislikes =  0;
+      // this.dislikes =  0;
       this.action = "liked";
     },
     dislike() {
       this.likes = 0;
-      this.dislikes = 1;
+      // this.dislikes = 1;
       this.action = "disliked";
     },
     comment() {
@@ -111,3 +111,10 @@ export default {
   }
 };
 </script>
+
+<style>
+#answerCard
+{
+  min-width :1280px;
+}
+</style>

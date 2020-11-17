@@ -1,7 +1,7 @@
 import axios from 'axios'
 import router from "@/router/index.ts";
 const server = axios.create({
-    baseURL:"http://localhost:8070/",
+    baseURL:"http://localhost:4000/",
     timeout:5000,
 });
 // 设置拦截器
