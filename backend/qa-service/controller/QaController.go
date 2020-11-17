@@ -12,13 +12,11 @@ import (
 )
 
 type QaController struct {
-	labelsService    service.LabelsService
-	questionsService service.QuestionsService
+	qaService service.QaService
 }
 
-func (q *QaController) Init(group *sync.WaitGroup, labelsService service.LabelsService, questionsService service.QuestionsService) (server *http.Server) {
-	q.labelsService = labelsService
-	q.questionsService = questionsService
+func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) (server *http.Server) {
+	q.qaService = qaService
 	server = &http.Server{Addr: ":9090"}
 	http.HandleFunc("/questions", q.Questions)
 	go func() {
@@ -45,8 +43,8 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 				Qid bson.ObjectId `json:"qid"`
 			} `json:"result"`
 		}
-		err := q.labelsService.Init()
-		defer q.labelsService.Destruct()
+		err := q.qaService.Init()
+		defer q.qaService.Destruct()
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
@@ -55,7 +53,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(object)
 			return
 		}
-		q.questionsService.Init()
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			log.Info(err)
@@ -75,7 +72,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		question.ViewCount = 0
 		question.FavoriteCount = 0
 		question.Time = time.Now()
-		question.Qid, err = q.questionsService.Insert(question)
+		question.Qid, err = q.qaService.InsertQuestion(question)
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
@@ -87,9 +84,9 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		for _, tag := range req.Tags {
 			var label entity.Labels
 			label.Title = tag
-			label.Lid, err = q.labelsService.Insert(label)
+			label.Lid, err = q.qaService.InsertLabel(label)
 			if err != nil {
-				label, err = q.labelsService.FindByTitle(tag)
+				label, err = q.qaService.FindLabelByTitle(tag)
 				if err != nil {
 					log.Info(err)
 					res.Code = 1
