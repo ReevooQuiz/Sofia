@@ -13,5 +13,4 @@ type Questions struct {
 	ViewCount      int64     `json:"view_count"`
 	FavoriteCount  int64     `json:"favorite_count"`
 	Time           time.Time `json:"time"`
-	Labels         []Labels  `json:"labels"`
 }

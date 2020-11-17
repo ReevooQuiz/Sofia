@@ -27,6 +27,19 @@ func (q *QuestionsDaoImpl) FindByQid(qid string) (question entity.Questions, err
 	}
 	defer session.Close()
 	c := session.DB("mydb").C("questions")
-	err = c.Find(bson.M{"qid": qid}).All(&question)
-	return question, nil
+	err = c.Find(bson.M{"_id": qid}).All(&question)
+	return question, err
+}
+
+func (q *QuestionsDaoImpl) Insert(question entity.Questions) (qid string, err error) {
+	var session *mgo.Session
+	session, err = mgo.Dial(mongoUrl)
+	if err != nil {
+		return qid, err
+	}
+	defer session.Close()
+	question.Qid = string(bson.NewObjectId())
+	c := session.DB("mydb").C("questions")
+	err = c.Insert(question)
+	return question.Qid, err
 }

@@ -19,3 +19,7 @@ func (q *QuestionsServiceImpl) Init(questionsDao ...dao.QuestionsDao) {
 func (q *QuestionsServiceImpl) FindByQid(qid string) (question entity.Questions, err error) {
 	return q.questionsDao.FindByQid(qid)
 }
+
+func (q *QuestionsServiceImpl) Insert(question entity.Questions) (qid string, err error) {
+	return q.questionsDao.Insert(question)
+}
