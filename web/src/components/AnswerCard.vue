@@ -1,14 +1,18 @@
 <template>
-  <div class="questionForSearch">
-    <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
+  <div class="answerCard">
+    <a-card  size="small" style="border-radius : 3px">
+        <!-- <a-card-meta title="ans.user">
+            <template #avatar>
+                <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+            </template>
+        </a-card-meta> -->
       <a-row>
-        <a-col :span="5">
-          <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" @click="toQuestion"/>
+        <a-col :span="4">
+          <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
         </a-col>
-        <a-col :span="19">
-          <!-- <template> -->
+        <a-col :span="20">
           <a-comment>
-            <template #actions>
+              <template #actions>
               <span key="comment-basic-like">
                 <a-tooltip title="Like">
                   <template v-if="action === 'liked'">
@@ -32,10 +36,13 @@
                 </a-tooltip>
                 <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
               </span>
-              <span key="comment-basic-reply-to">Reply to</span>
+              <span key="comment-basic-comment">
+                <MessageOutlined @click="comment" />
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.commentNum }}</span>
+              </span>
             </template>
             <template #author>
-              <a> {{ques.user}}</a>
+              <a> {{ans.user}}</a>
             </template>
             <template #avatar>
               <a-avatar
@@ -43,12 +50,14 @@
                 alt="Han Solo"
               />
             </template>
+            <template #extra>
+                <a-tag>
+                    #tag
+                </a-tag>
+            </template>
             <template #content>
-              <p  @click="toQuestion">
-                {{ques.title}}
-                We supply a series of design principles, practical patterns and high quality design
-                resources (Sketch and Axure), to help people create their product prototypes beautifully and
-                efficiently.
+              <p>
+                {{ans.content}}
               </p>
             </template>
             <!-- <template #datetime>
@@ -56,9 +65,10 @@
                   <span>{{ moment().fromNow() }}</span>
                 </a-tooltip>
             </template>-->
-          </a-comment>
-          <!-- </template> -->
+            </a-comment>
+            <!-- </template> -->
         </a-col>
+        
       </a-row>
     </a-card>
     <br/>
@@ -69,18 +79,18 @@
 
 <script >
 import moment from "moment";
-import { LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined } from '@ant-design/icons-vue';
+import { LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined,MessageOutlined } from '@ant-design/icons-vue';
 export default {
   components: {
-     LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined
+     LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined,MessageOutlined
   },
-  props: ['ques'] ,
+  props: ['ans'] ,
   
   data() {
     return {
-      likes :  this.ques.likeNum,
-      dislikes:   this.ques.dislikeNum,
       action: null,
+      likes:this.ans.likeNum,
+      dislikes:this.ans.dislikeNum,
       moment
     };
   },
@@ -95,8 +105,8 @@ export default {
       this.dislikes = 1;
       this.action = "disliked";
     },
-    toQuestion() {
-      this.$router.push({ path:'/question' , query: { questionId: this.ques.id } });
+    comment() {
+        console.log("comment");
     }
   }
 };
