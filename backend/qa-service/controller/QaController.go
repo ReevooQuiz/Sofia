@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/qa-service/entity"
 	"github.com/zhanghanchong/qa-service/service"
+	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"sync"
 	"time"
@@ -30,16 +31,16 @@ func (q *QaController) Init(group *sync.WaitGroup, questionsService service.Ques
 func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var req struct {
-			Raiser   string   `json:"raiser"`
-			Title    string   `json:"title"`
-			Content  string   `json:"content"`
-			Category string   `json:"category"`
-			Tags     []string `json:"tags"`
+			Raiser   bson.ObjectId `json:"raiser"`
+			Title    string        `json:"title"`
+			Content  string        `json:"content"`
+			Category string        `json:"category"`
+			Tags     []string      `json:"tags"`
 		}
 		var res struct {
 			Code   int8 `json:"code"`
 			Result struct {
-				Qid string `json:"qid"`
+				Qid bson.ObjectId `json:"qid"`
 			} `json:"result"`
 		}
 		q.questionsService.Init()
@@ -57,7 +58,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		question.Title = req.Title
 		question.Content = req.Content
 		question.Category = req.Category
-		question.AcceptedAnswer = ""
+		question.AcceptedAnswer = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 		question.AnswerCount = 0
 		question.ViewCount = 0
 		question.FavoriteCount = 0
@@ -66,7 +67,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = ""
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 		} else {
 			res.Code = 0
 			res.Result.Qid = question.Qid

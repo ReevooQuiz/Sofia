@@ -16,7 +16,7 @@ var mongoUrl string
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(os.Stdout)
-	mongoUrl = "test:test@localhost"
+	mongoUrl = "test:test@localhost/mydb"
 }
 
 func (q *QuestionsDaoImpl) FindByQid(qid string) (question entity.Questions, err error) {
@@ -26,20 +26,20 @@ func (q *QuestionsDaoImpl) FindByQid(qid string) (question entity.Questions, err
 		return question, err
 	}
 	defer session.Close()
-	c := session.DB("mydb").C("questions")
-	err = c.Find(bson.M{"_id": qid}).All(&question)
+	c := session.DB("sofia").C("questions")
+	err = c.Find(bson.M{"qid": qid}).All(&question)
 	return question, err
 }
 
-func (q *QuestionsDaoImpl) Insert(question entity.Questions) (qid string, err error) {
+func (q *QuestionsDaoImpl) Insert(question entity.Questions) (qid bson.ObjectId, err error) {
 	var session *mgo.Session
 	session, err = mgo.Dial(mongoUrl)
 	if err != nil {
 		return qid, err
 	}
 	defer session.Close()
-	question.Qid = string(bson.NewObjectId())
-	c := session.DB("mydb").C("questions")
+	question.Qid = bson.NewObjectId()
+	c := session.DB("sofia").C("questions")
 	err = c.Insert(question)
 	return question.Qid, err
 }

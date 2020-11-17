@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 16/11/2020 22:18:56
+ Date: 17/11/2020 15:39:29
 */
 
 SET NAMES utf8mb4;
@@ -22,7 +22,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `approve_answers`;
 CREATE TABLE `approve_answers`  (
-  `uid` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `aid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
@@ -44,7 +44,7 @@ CREATE TABLE `favorite_items`  (
 DROP TABLE IF EXISTS `favorites`;
 CREATE TABLE `favorites`  (
   `fid` bigint(20) NOT NULL AUTO_INCREMENT,
-  `uid` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`fid`) USING BTREE,
   INDEX `uid`(`uid`) USING BTREE
@@ -98,7 +98,7 @@ CREATE TABLE `labels`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `like_answers`;
 CREATE TABLE `like_answers`  (
-  `uid` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `aid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;

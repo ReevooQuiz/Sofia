@@ -1,16 +1,19 @@
 package entity
 
-import "time"
+import (
+	"gopkg.in/mgo.v2/bson"
+	"time"
+)
 
 type Questions struct {
-	Qid            string    `json:"qid"`
-	Raiser         string    `json:"raiser"`
-	Title          string    `json:"title"`
-	Content        string    `json:"content"`
-	Category       string    `json:"category"`
-	AcceptedAnswer string    `json:"accepted_answer"`
-	AnswerCount    int64     `json:"answer_count"`
-	ViewCount      int64     `json:"view_count"`
-	FavoriteCount  int64     `json:"favorite_count"`
-	Time           time.Time `json:"time"`
+	Qid            bson.ObjectId `bson:"_id"`
+	Raiser         bson.ObjectId `bson:"raiser"`
+	Title          string        `bson:"title"`
+	Content        string        `bson:"content"`
+	Category       string        `bson:"category"`
+	AcceptedAnswer bson.ObjectId `bson:"accepted_answer"`
+	AnswerCount    int64         `bson:"answer_count"`
+	ViewCount      int64         `bson:"view_count"`
+	FavoriteCount  int64         `bson:"favorite_count"`
+	Time           time.Time     `bson:"time"`
 }
