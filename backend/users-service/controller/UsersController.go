@@ -107,6 +107,11 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
+	}
 	var res struct {
 		Code   int8 `json:"code"`
 		Result struct {
@@ -123,10 +128,19 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
 	var user entity.Users
-	user.Username = r.PostFormValue("username")
-	user.Password = r.PostFormValue("password")
-	user.Email = r.PostFormValue("email")
+	user.Username = req.Username
+	user.Password = req.Password
+	user.Email = req.Email
 	user.Role = entity.NOTACTIVE
 	_, err = u.usersService.FindByUsername(user.Username)
 	if err == nil {

@@ -8,7 +8,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/mock"
-	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -197,14 +196,17 @@ func TestRegister(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			requestBody := new(bytes.Buffer)
-			writer := multipart.NewWriter(requestBody)
-			_ = writer.WriteField("username", tt.args.username)
-			_ = writer.WriteField("password", tt.args.password)
-			_ = writer.WriteField("email", tt.args.email)
-			_ = writer.Close()
-			r, _ := http.NewRequest("POST", "/register", requestBody)
-			r.Header.Set("Content-Type", writer.FormDataContentType())
+			var req struct {
+				Username string `json:"username"`
+				Password string `json:"password"`
+				Email    string `json:"email"`
+			}
+			req.Username = tt.args.username
+			req.Password = tt.args.password
+			req.Email = tt.args.email
+			requestBody, _ := json.Marshal(req)
+			r, _ := http.NewRequest("POST", "/register", bytes.NewReader(requestBody))
+			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != tt.wantStatus {
