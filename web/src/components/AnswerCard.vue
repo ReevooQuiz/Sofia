@@ -1,5 +1,5 @@
 <template>
-  <div class="answerCard">
+  <div id="answerCard">
     <a-card  size="small" style="border-radius : 3px">
         <!-- <a-card-meta title="ans.user">
             <template #avatar>
@@ -7,10 +7,10 @@
             </template>
         </a-card-meta> -->
       <a-row>
-        <a-col :span="4">
+        <a-col :span="3">
           <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
         </a-col>
-        <a-col :span="20">
+        <a-col :span="21">
           <a-comment>
               <template #actions>
               <span key="comment-basic-like">
@@ -111,3 +111,10 @@ export default {
   }
 };
 </script>
+
+<style>
+#answerCard
+{
+  min-width :1280px;
+}
+</style>

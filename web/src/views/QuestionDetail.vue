@@ -43,7 +43,7 @@ const data = {
   qid: 234,
   owner: {
     user_id: 1,
-    user_name: abc,
+    user_name: "abc",
     user_icon: ""
   },
   title: "ababa",
@@ -57,7 +57,7 @@ const data = {
       aid: 234,
       owner: {
         user_id: 1,
-        user_name: abc,
+        user_name: "abc",
         user_icon: ""
       },
       like_count: 2,
@@ -119,21 +119,22 @@ export default {
     return {
       data,
       orderNow: "按热度排序",
-      questionHead
+      questionHead:{}
     };
   },
   created() {
     console.log(this.$route.query.questionId);
+    let p= this.$route.query.questionId;
     server
       .get("/question", {
-        params: this.$route.query.questionId
+        params: p
       })
       .catch(function(error) {
         console.log(error);
       })
       .then(response => {
-        console.log("!");
-        // console.log(response.data);
+        console.log("!111");
+        console.log(response);
         // console.log(response.data.question_list);
         this.data = response.data;
         // console.log(this.questionData);
