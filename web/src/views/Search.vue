@@ -6,6 +6,7 @@
           <a-col :span="20">
             <a-input-search
               placeholder="输入您的问题"
+              v-model:value="inputValue" 
               @search="onSearch"
               style="{'box-shadow': 5px 5px 10px gray}"
             />
@@ -78,7 +79,7 @@ const data = [
 const data2={
   title:"上海交通大学",
   keyWords:["国际知名大学","二月十三","C9高校"],
-  attributes:[["前身","南洋公学"],["校长","林忠钦"],["位于","上海"],["党委书记","姜斯宪"]],
+  attributes:[["前身","南洋公学"],["校长","林忠钦"],["位于","上海"],["书记","姜斯宪"]],
   tags:["二月十三","复旦"]
 
 }
@@ -88,24 +89,31 @@ export default {
     return {
       questionData: data,
       searchValue: "",
-      cardInfo:data2
+      cardInfo:data2,
+      inputValue: "wge"
     };
+  },
+  created() {
+    this.searchValue=this.$route.query.content;
+    this.inputValue=this.$route.query.content;
+    console.log(this.inputValue);
+    // server
+    //   .post("/search", {
+    //     value: this.searchValue
+    //   })
+    //   .catch(function(error) {
+    //     console.log(error);
+    //   })
+    //   .then(response => {
+    //     this.questionData= response.data.questionData;
+    //   });
+    //todo:search function
   },
   methods: {
     onSearch(value) {
-      this.searchValue = value;
-      console.log(this.searchValue);
-
-      server
-        .post("/search", {
-          value: this.searchValue
-        })
-        .catch(function(error) {
-          console.log(error);
-        })
-        .then(response => {
-          this.questionData= response.data.questionData;
-        });
+      if (value!=''){
+        this.$router.push({ path:'/search' , query: { content: value } });
+      }
     },
 
     handleInit(response) {
@@ -113,16 +121,16 @@ export default {
       this.cardInfo=response.data.cardInfo;
     }
   },
-  created: function() {
-    server
-      .get("/get", {
-        params: {}
-      })
-      .then(response => this.handleInit(response))
-      .catch(function(error) {
-        console.log(error);
-      });
-  }
+  // created: function() {
+  //   server
+  //     .get("/get", {
+  //       params: {}
+  //     })
+  //     .then(response => this.handleInit(response))
+  //     .catch(function(error) {
+  //       console.log(error);
+  //     });
+  // }
 };
 </script>
 

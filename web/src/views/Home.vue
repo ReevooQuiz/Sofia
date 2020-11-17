@@ -19,7 +19,7 @@
         </div>
       </a-row>    
     </a-col>
-    <a-col :span="8">
+    <a-col :span="5" :offset="3">
         <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 250px"/>
     </a-col>
   </a-row>
@@ -34,8 +34,9 @@ export default {
   },
   methods: {
     onSearch(value) {
-      if (value!='')
-        console.log(value);
+      if (value!=''){
+        this.$router.push({ path:'/search' , query: { content: value } });
+      }
     },
   },
 };

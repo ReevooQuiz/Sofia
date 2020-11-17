@@ -3,7 +3,8 @@
         <a-row type="flex" justify="space-between" align="middle">
             <img alt="Sofia" src="../assets/Sofia.png" height="25" width="65" style="marginLeft:20px"/>
             <a-menu v-model:selectedKeys="current" mode="horizontal" inlineIndent=0 align="middle">
-                <a-menu-item key="home">首页</a-menu-item>
+                
+                <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
                 <a-menu-item key="category">分类</a-menu-item>
                 <a-menu-item key="recommend">推荐</a-menu-item>
                 <a-menu-item key="explore">探索</a-menu-item>
@@ -11,11 +12,13 @@
                 <a-menu-item key="mine">我的</a-menu-item>
             </a-menu>
             <a-space :size="10" style="marginRight:20px">
-                <a-button type="primary" shape="circle" >
-                    <template #icon>
-                        <SearchOutlined style="color:'#FFFFFF'"/>
-                    </template>
-                </a-button>
+                <router-link to="/">
+                    <a-button type="primary" shape="circle" >
+                        <template #icon>
+                            <SearchOutlined style="color:'#FFFFFF'"/>
+                        </template>
+                    </a-button>
+                </router-link>
                 <a-button type="primary" shape="round" size="small">
                     提问
                 </a-button>
@@ -46,6 +49,8 @@ export default {
       current: ['home'],
     };
   },
+  methods: {
+  }
 };
 </script>
 
