@@ -12,10 +12,12 @@ import (
 )
 
 type QaController struct {
+	labelsService    service.LabelsService
 	questionsService service.QuestionsService
 }
 
-func (q *QaController) Init(group *sync.WaitGroup, questionsService service.QuestionsService) (server *http.Server) {
+func (q *QaController) Init(group *sync.WaitGroup, labelsService service.LabelsService, questionsService service.QuestionsService) (server *http.Server) {
+	q.labelsService = labelsService
 	q.questionsService = questionsService
 	server = &http.Server{Addr: ":9090"}
 	http.HandleFunc("/questions", q.Questions)
@@ -43,8 +45,18 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 				Qid bson.ObjectId `json:"qid"`
 			} `json:"result"`
 		}
+		err := q.labelsService.Init()
+		defer q.labelsService.Destruct()
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Qid = ""
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
 		q.questionsService.Init()
-		err := json.NewDecoder(r.Body).Decode(&req)
+		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
@@ -68,11 +80,26 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 			log.Info(err)
 			res.Code = 1
 			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
-		} else {
-			res.Code = 0
-			res.Result.Qid = question.Qid
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
 		}
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
+		for _, tag := range req.Tags {
+			var label entity.Labels
+			label.Title = tag
+			label.Lid, err = q.labelsService.Insert(label)
+			if err != nil {
+				label, err = q.labelsService.FindByTitle(tag)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+					object, _ := json.Marshal(res)
+					_, _ = w.Write(object)
+					return
+				}
+			}
+			log.Info(label.Lid)
+		}
 	}
 }

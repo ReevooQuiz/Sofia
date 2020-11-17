@@ -21,7 +21,7 @@ func init() {
 	mongoUrl = os.Getenv("MONGO_URL")
 }
 
-func (q *QuestionsDaoImpl) FindByQid(qid string) (question entity.Questions, err error) {
+func (q *QuestionsDaoImpl) FindByQid(qid bson.ObjectId) (question entity.Questions, err error) {
 	var session *mgo.Session
 	session, err = mgo.Dial(mongoUrl)
 	if err != nil {
@@ -29,7 +29,7 @@ func (q *QuestionsDaoImpl) FindByQid(qid string) (question entity.Questions, err
 	}
 	defer session.Close()
 	c := session.DB("sofia").C("questions")
-	err = c.Find(bson.M{"qid": qid}).All(&question)
+	err = c.Find(bson.M{"_id": qid}).All(&question)
 	return question, err
 }
 

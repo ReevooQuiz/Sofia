@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 17/11/2020 15:39:29
+ Date: 17/11/2020 18:05:51
 */
 
 SET NAMES utf8mb4;
@@ -80,7 +80,8 @@ DROP TABLE IF EXISTS `kcards`;
 CREATE TABLE `kcards`  (
   `kid` bigint(20) NOT NULL AUTO_INCREMENT,
   `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  PRIMARY KEY (`kid`) USING BTREE
+  PRIMARY KEY (`kid`) USING BTREE,
+  UNIQUE INDEX `title`(`title`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -90,7 +91,8 @@ DROP TABLE IF EXISTS `labels`;
 CREATE TABLE `labels`  (
   `lid` bigint(20) NOT NULL AUTO_INCREMENT,
   `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  PRIMARY KEY (`lid`) USING BTREE
+  PRIMARY KEY (`lid`) USING BTREE,
+  UNIQUE INDEX `title`(`title`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------

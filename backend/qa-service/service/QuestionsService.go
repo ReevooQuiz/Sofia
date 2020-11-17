@@ -9,6 +9,6 @@ import (
 type QuestionsService interface {
 	Init(questionsDao ...dao.QuestionsDao)
 
-	FindByQid(qid string) (question entity.Questions, err error)
+	FindByQid(qid bson.ObjectId) (question entity.Questions, err error)
 	Insert(question entity.Questions) (qid bson.ObjectId, err error)
 }

@@ -17,7 +17,7 @@ func (q *QuestionsServiceImpl) Init(questionsDao ...dao.QuestionsDao) {
 	q.questionsDao = questionsDao[0]
 }
 
-func (q *QuestionsServiceImpl) FindByQid(qid string) (question entity.Questions, err error) {
+func (q *QuestionsServiceImpl) FindByQid(qid bson.ObjectId) (question entity.Questions, err error) {
 	return q.questionsDao.FindByQid(qid)
 }
 
