@@ -1,18 +1,22 @@
-import 'dart:convert';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:mobile/src/controller/account.dart';
+import 'package:mobile/src/model/form.dart';
+import 'package:mvc_application/view.dart';
 
-class Login extends StatefulWidget{
+class Login extends StatefulWidget {
   @override
-  State<StatefulWidget> createState()=>LoginState();
+  State<StatefulWidget> createState() => LoginState();
 }
-class LoginState extends State<Login>{
 
+class LoginState extends StateMVC<Login> {
   final _formKey = GlobalKey<FormState>();
   String _name;
   String _password;
+  AccountCon _accountCon;
+  LoginState() : super(AccountCon()) {
+    _accountCon = controller;
+  }
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -22,16 +26,13 @@ class LoginState extends State<Login>{
           children: <Widget>[
             Padding(
                 padding: const EdgeInsets.symmetric(vertical: 15.0),
-                child:Icon(
+                child: Icon(
                   Icons.filter_vintage,
                   size: 50,
                 )),
             Text(
               '登录',
-              style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
             ),
             Padding(
                 padding: const EdgeInsets.symmetric(
@@ -51,7 +52,7 @@ class LoginState extends State<Login>{
                 )),
             Padding(
               padding:
-              const EdgeInsets.symmetric(vertical: 16.0, horizontal: 30.0),
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 30.0),
               child: TextFormField(
                 decoration: const InputDecoration(
                     icon: Icon(Icons.lock), hintText: '密码'),
@@ -69,7 +70,7 @@ class LoginState extends State<Login>{
             ),
             Padding(
               padding:
-              const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
+                  const EdgeInsets.symmetric(vertical: 20.0, horizontal: 10.0),
               child: RaisedButton(
                 color: Colors.cyan[600],
                 textColor: Colors.white,
@@ -79,28 +80,7 @@ class LoginState extends State<Login>{
 
                   if (_formKey.currentState.validate()) {
                     _formKey.currentState.save();
-                    http.post('http://192.168.3.40:8070/' + 'Login', body: {
-                      'user_name': _name,
-                      'password': _password
-                    }).then((value) => {
-                      if (jsonDecode(value.body)['LoginStatus'] == true)
-                        {
-                          Scaffold.of(context).showSnackBar(
-                              SnackBar(content: Text('登录成功'))),
-                          Navigator.pop(context),
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => StateBookTile(
-                                      User.fromJson(
-                                          jsonDecode(value.body)))))
-                        }
-                      else
-                        {
-                          Scaffold.of(context).showSnackBar(
-                              SnackBar(content: Text('登录失败'))),
-                        }
-                    });
+                    _accountCon.fetchAccount(LoginForm(_name, _password)) ;
                   }
                 },
                 child: Text('登录'),
