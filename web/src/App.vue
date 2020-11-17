@@ -1,5 +1,6 @@
 <template>
   <div id="background">
+    <Navigator></Navigator>
     <div id="nav">
       <router-link to="/">Home123</router-link>|
       <router-link to="/about">About</router-link>|
@@ -10,6 +11,17 @@
   </div>
 </template>
 
+<script lang="ts">
+import { Options, Vue } from "vue-class-component";
+import Navigator from "@/components/Navigator.vue";
+
+@Options({
+  components: {
+    Navigator
+  }
+})
+export default class App extends Vue {}
+</script>
 
 
 <style>

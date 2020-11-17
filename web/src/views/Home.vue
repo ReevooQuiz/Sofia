@@ -1,18 +1,48 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
-  </div>
+  <a-row id="search">
+    <a-col :span="8">
+        <img src="../assets/cactus1.png" height="500" width="360"    style="marginTop: 95px"/>
+    </a-col>
+    <a-col :span="8">
+      <a-row justify="center" style="marginTop: 80px">
+          <h1>这里一片荒芜</h1>
+      </a-row>
+      <a-row justify="center">
+          <h1>直到有了绿洲……</h1>
+      </a-row>
+      <a-row justify="center">
+          <h1>Sofia</h1>
+      </a-row>
+      <a-row justify="center">
+        <div class="col-7">
+             <a-input-search placeholder="输入您的问题" style="width: 450px" @search="onSearch" size="large" v-model:value="value"/>
+        </div>
+      </a-row>    
+    </a-col>
+    <a-col :span="8">
+        <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 250px"/>
+    </a-col>
+  </a-row>
 </template>
 
-<script lang="ts">
-import { Options, Vue } from "vue-class-component";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
-
-@Options({
-  components: {
-    HelloWorld
-  }
-})
-export default class Home extends Vue {}
+<script>
+export default {
+  data() {
+    return {
+      value: '',
+    };
+  },
+  methods: {
+    onSearch(value) {
+      if (value!='')
+        console.log(value);
+    },
+  },
+};
 </script>
+
+<style>
+#search {
+  background-color: #edeeed;
+}
+</style>
