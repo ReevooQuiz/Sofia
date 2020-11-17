@@ -1,6 +1,11 @@
 <template>
   <div class="questionHead">
     <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
+      <template #extra>
+        <a-tag v-for="(item) in que.tags" v-bind:key="item.tid">
+          {{item.title}}
+        </a-tag>
+      </template>
       <a-row>
         <a-col :span="4">
           <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
@@ -41,11 +46,6 @@
                 src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
                 alt="Han Solo"
               />
-            </template>
-            <template #extra>
-                <a-tag>
-                    #tag
-                </a-tag>
             </template>
             <template #content>
               <p>
