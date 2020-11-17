@@ -3,7 +3,7 @@
     <a-col :span="20" :offset="2">
       <a-row>
         <div>
-          <QuestionHead :ques="data.questionHead" />
+          <QuestionHead :ques="questionHead" />
         </div>
       </a-row>
       <a-row justify="space-between">
@@ -37,6 +37,7 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
+import server from "@/http/request.js";
 const data = {
   code: 0,
   qid: 234,
