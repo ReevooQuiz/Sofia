@@ -30,6 +30,108 @@ func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) 
 }
 
 func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		type Owner struct {
+			UserId   bson.ObjectId `json:"user_id"`
+			UserName string        `json:"user_name"`
+			UserIcon string        `json:"user_icon"`
+		}
+		type Tag struct {
+			Tid   int64  `json:"tid"`
+			Title string `json:"title"`
+		}
+		type Answer struct {
+			Aid            bson.ObjectId `json:"aid"`
+			Owner          Owner         `json:"owner"`
+			LikeCount      int64         `json:"like_count"`
+			CriticismCount int64         `json:"criticism_count"`
+			ApprovalCount  int64         `json:"approval_count"`
+			CommentCount   int64         `json:"comment_count"`
+			Content        string        `json:"content"`
+		}
+		var res struct {
+			Code        int8     `json:"code"`
+			Owner       Owner    `json:"owner"`
+			Title       string   `json:"title"`
+			Content     string   `json:"content"`
+			AnswerCount int64    `json:"answer_count"`
+			FollowCount int64    `json:"follow_count"`
+			ViewCount   int64    `json:"view_count"`
+			Tags        []Tag    `json:"tags"`
+			AnswerList  []Answer `json:"answer_list"`
+		}
+		err := q.qaService.Init()
+		defer q.qaService.Destruct()
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		err = r.ParseForm()
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		qid := bson.ObjectIdHex(r.FormValue("qid"))
+		var question entity.Questions
+		question, err = q.qaService.FindQuestionByQid(qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var answers []entity.Answers
+		answers, err = q.qaService.FindAnswersByQid(qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var questionLabels []entity.QuestionLabels
+		questionLabels, err = q.qaService.FindQuestionLabelsByQid(qid.Hex())
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		res.Code = 0
+		res.Owner.UserId = question.Raiser
+		res.Owner.UserName = "root"
+		res.Owner.UserIcon = "root"
+		res.Title = question.Title
+		res.Content = question.Content
+		res.AnswerCount = question.AnswerCount
+		res.FollowCount = question.FavoriteCount
+		res.ViewCount = question.ViewCount
+		for _, questionLabel := range questionLabels {
+			var label entity.Labels
+			label, err = q.qaService.FindLabelByLid(questionLabel.Lid)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				object, _ := json.Marshal(res)
+				_, _ = w.Write(object)
+				return
+			}
+			res.Tags = append(res.Tags, Tag{label.Lid, label.Title})
+		}
+		for _, answer := range answers {
+			res.AnswerList = append(res.AnswerList, Answer{answer.Aid, Owner{answer.Answerer, "root", "root"}, answer.LikeCount, answer.CriticismCount, answer.ApprovalCount, answer.CommentCount, answer.Content})
+		}
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+	}
 	if r.Method == "POST" {
 		var req struct {
 			Raiser   bson.ObjectId `json:"raiser"`
@@ -49,7 +151,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -58,7 +159,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -77,7 +177,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -91,7 +190,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Info(err)
 					res.Code = 1
-					res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 					object, _ := json.Marshal(res)
 					_, _ = w.Write(object)
 					return
@@ -104,7 +202,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Info(err)
 				res.Code = 1
-				res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 				object, _ := json.Marshal(res)
 				_, _ = w.Write(object)
 				return
@@ -119,7 +216,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -129,7 +225,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -141,7 +236,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -156,7 +250,6 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return

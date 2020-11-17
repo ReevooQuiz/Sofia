@@ -22,12 +22,24 @@ func (q *QaServiceImpl) Destruct() {
 	q.qaDao.Destruct()
 }
 
+func (q *QaServiceImpl) FindAnswersByQid(qid bson.ObjectId) (answers []entity.Answers, err error) {
+	return q.qaDao.FindAnswersByQid(qid)
+}
+
+func (q *QaServiceImpl) FindLabelByLid(lid int64) (label entity.Labels, err error) {
+	return q.qaDao.FindLabelByLid(lid)
+}
+
 func (q *QaServiceImpl) FindLabelByTitle(title string) (label entity.Labels, err error) {
 	return q.qaDao.FindLabelByTitle(title)
 }
 
 func (q *QaServiceImpl) FindQuestionByQid(qid bson.ObjectId) (question entity.Questions, err error) {
 	return q.qaDao.FindQuestionByQid(qid)
+}
+
+func (q *QaServiceImpl) FindQuestionLabelsByQid(qid string) (questionLabels []entity.QuestionLabels, err error) {
+	return q.qaDao.FindQuestionLabelsByQid(qid)
 }
 
 func (q *QaServiceImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
