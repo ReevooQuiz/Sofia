@@ -254,6 +254,21 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(object)
 			return
 		}
-		log.Info(responseBody)
+		for _, keyword := range responseBody.Data {
+			var kcard entity.Kcards
+			kcard.Title = keyword
+			kcard.Kid, err = q.qaService.InsertKcard(kcard)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				object, _ := json.Marshal(res)
+				_, _ = w.Write(object)
+				return
+			}
+		}
+		res.Code = 0
+		res.Result.Qid = question.Qid
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
 	}
 }

@@ -112,6 +112,22 @@ func (q *QaDaoImpl) FindQuestionLabelsByQid(qid string) (questionLabels []entity
 	return questionLabels, err
 }
 
+func (q *QaDaoImpl) InsertKcard(kcard entity.Kcards) (kid int64, err error) {
+	var stmt *sql.Stmt
+	stmt, err = q.db.Prepare("insert into kcards(title) values(?)")
+	if err != nil {
+		return kid, err
+	}
+	defer stmt.Close()
+	var res sql.Result
+	res, err = stmt.Exec(kcard.Title)
+	if err != nil {
+		return kid, err
+	}
+	kid, err = res.LastInsertId()
+	return kid, err
+}
+
 func (q *QaDaoImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = q.db.Prepare("insert into labels(title) values(?)")

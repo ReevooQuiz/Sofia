@@ -42,6 +42,10 @@ func (q *QaServiceImpl) FindQuestionLabelsByQid(qid string) (questionLabels []en
 	return q.qaDao.FindQuestionLabelsByQid(qid)
 }
 
+func (q *QaServiceImpl) InsertKcard(kcard entity.Kcards) (kid int64, err error) {
+	return q.qaDao.InsertKcard(kcard)
+}
+
 func (q *QaServiceImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
 	return q.qaDao.InsertLabel(label)
 }
