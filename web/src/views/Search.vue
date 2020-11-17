@@ -16,9 +16,9 @@
         <div>
           <a-tabs default-active-key="1" @change="callback" :size="small">
             <a-tab-pane key="1" tab="问题">
-            
+
               <QuestionForSearch v-for="(item) in data" v-bind:key="item.id" :ques="item"/>
-              
+
             </a-tab-pane>
             <a-tab-pane key="2" tab="用户">用户</a-tab-pane>
           </a-tabs>
@@ -80,7 +80,7 @@ const data = [
 @Options({
   components: {
     QuestionForSearch,
-     CardForSearch 
+     CardForSearch
   }
 })
 export default class Search extends Vue {
