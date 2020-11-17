@@ -8,7 +8,7 @@
         <a-col :span="19">
           <!-- <template> -->
           <a-comment>
-            <template #actions>
+            <!-- <template #actions>
               <span key="comment-basic-like">
                 <a-tooltip title="Like">
                   <template v-if="action === 'liked'">
@@ -33,9 +33,9 @@
                 <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
               </span>
               <span key="comment-basic-reply-to">Reply to</span>
-            </template>
+            </template> -->
             <template #author>
-              <a> {{ques.user}}</a>
+              <a> {{ques.owner.user_name}}</a>
             </template>
             <template #avatar>
               <a-avatar
@@ -45,10 +45,8 @@
             </template>
             <template #content>
               <p  @click="toQuestion">
-                {{ques.title}}
-                We supply a series of design principles, practical patterns and high quality design
-                resources (Sketch and Axure), to help people create their product prototypes beautifully and
-                efficiently.
+                {{ques.description}}
+              
               </p>
             </template>
             <!-- <template #datetime>
@@ -78,8 +76,8 @@ export default {
   
   data() {
     return {
-      likes :  this.ques.likeNum,
-      dislikes:   this.ques.dislikeNum,
+      // likes :  this.ques.likeNum,
+      // dislikes:   this.ques.dislikeNum,
       action: null,
       moment
     };
@@ -96,7 +94,9 @@ export default {
       this.action = "disliked";
     },
     toQuestion() {
-      this.$router.push({ path:'/question' , query: { questionId: this.ques.id } });
+      console.log("??")
+      console.log( this.ques.qid )
+      this.$router.push({ path:'/question' , query: { questionId: this.ques.qid } });
     }
   }
 };

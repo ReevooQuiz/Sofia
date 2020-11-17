@@ -6,7 +6,7 @@
           <a-col :span="20">
             <a-input-search
               placeholder="输入您的问题"
-              v-model:value="inputValue" 
+              v-model:value="inputValue"
               @search="onSearch"
               style="{'box-shadow': 5px 5px 10px gray}"
             />
@@ -25,7 +25,7 @@
         </div>
       </a-col>
       <a-col :span="8" :offset="1">
-        <CardForSearch :info="cardInfo"/>
+        <CardForSearch :info="cardInfo" />
       </a-col>
     </a-row>
   </div>
@@ -39,57 +39,82 @@ import server from "@/http/request.js";
 
 const data = [
   {
-    id: 1,
-    title: "Ant Design Title 1",
-    user: "akvfcdg",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 1,
+    owner: {
+      user_id: 1,
+      user_name: "阿钪",
+      user_icon:
+        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+
+    follow_count: 234
   },
   {
-    id: 2,
-    title: "A7654 Title 1",
-    user: "dfsfskang",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   },
   {
-    id: 3,
-    title: "gfds 1",
-    user: "ererang",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   },
   {
-    id: 4,
-    title: "ytre",
-    user: "akgfds",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   }
 ];
 
-const data2={
-  title:"上海交通大学",
-  keyWords:["国际知名大学","二月十三","C9高校"],
-  attributes:[["前身","南洋公学"],["校长","林忠钦"],["位于","上海"],["书记","姜斯宪"]],
-  tags:["二月十三","复旦"]
-
-}
+const data2 = {
+  title: "上海交通大学",
+  keyWords: ["国际知名大学", "二月十三", "C9高校"],
+  attributes: [
+    ["前身", "南洋公学"],
+    ["校长", "林忠钦"],
+    ["位于", "上海"],
+    ["书记", "姜斯宪"]
+  ],
+  tags: ["二月十三", "复旦"]
+};
 export default {
   components: { QuestionForSearch, CardForSearch },
   data() {
     return {
       questionData: data,
       searchValue: "",
-      cardInfo:data2,
+      cardInfo: data2,
       inputValue: "wge"
     };
   },
@@ -111,14 +136,28 @@ export default {
   },
   methods: {
     onSearch(value) {
-      if (value!=''){
-        this.$router.push({ path:'/search' , query: { content: value } });
-      }
+      this.searchValue = value;
+      console.log(this.searchValue);
+
+      server
+        .get("/search", {
+          params: this.searchValue
+        })
+        .catch(function(error) {
+          console.log(error);
+        })
+        .then(response => {
+          console.log("!");
+          console.log(response.data);
+          console.log(response.data.question_list);
+          this.questionData = response.data.question_list;
+          console.log(this.questionData);
+        });
     },
 
     handleInit(response) {
       this.questionData = response.data.questionData;
-      this.cardInfo=response.data.cardInfo;
+      this.cardInfo = response.data.cardInfo;
     }
   },
   // created: function() {
@@ -131,6 +170,7 @@ export default {
   //       console.log(error);
   //     });
   // }
+
 };
 </script>
 
@@ -141,23 +181,23 @@ export default {
 }
 
 .ant-input-affix-wrapper {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-variant: tabular-nums;
-    list-style: none;
-    font-feature-settings: 'tnum';
-    position: relative;
-    display: inline-flex;
-    border: 1px solid #d9d9d9;
-    border-radius: 20px;
-    padding: 4px 11px;
-    width: 100%;
-    text-align: start;
-    background-color: #fff;
-    background-image: none;
-    color: rgba(0, 0, 0, 0.65);
-    font-size: 14px;
-    line-height: 1.5715;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-variant: tabular-nums;
+  list-style: none;
+  font-feature-settings: "tnum";
+  position: relative;
+  display: inline-flex;
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 4px 11px;
+  width: 100%;
+  text-align: start;
+  background-color: #fff;
+  background-image: none;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+  line-height: 1.5715;
 }
 </style>

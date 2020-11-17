@@ -34,15 +34,15 @@
                     <DislikeOutlined @click="dislike" />
                   </template>
                 </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
+                <!-- <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span> -->
               </span>
               <span key="comment-basic-comment">
                 <MessageOutlined @click="comment" />
-                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.commentNum }}</span>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.comment_count }}</span>
               </span>
             </template>
             <template #author>
-              <a> {{ans.user}}</a>
+              <a> {{ans.owner.user_name}}</a>
             </template>
             <template #avatar>
               <a-avatar
@@ -89,8 +89,8 @@ export default {
   data() {
     return {
       action: null,
-      likes:this.ans.likeNum,
-      dislikes:this.ans.dislikeNum,
+      likes:this.ans.like_count,
+      // dislikes:this.ans.dislike_count,
       moment
     };
   },
