@@ -1,0 +1,6 @@
+package org.reevoo.mobile
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}
