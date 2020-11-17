@@ -37,3 +37,7 @@ func (q *QaServiceImpl) InsertLabel(label entity.Labels) (lid int64, err error) 
 func (q *QaServiceImpl) InsertQuestion(question entity.Questions) (qid bson.ObjectId, err error) {
 	return q.qaDao.InsertQuestion(question)
 }
+
+func (q *QaServiceImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (err error) {
+	return q.qaDao.InsertQuestionLabel(questionLabel)
+}

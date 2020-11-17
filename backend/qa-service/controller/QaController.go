@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/qa-service/entity"
@@ -48,7 +49,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = ""
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -57,7 +58,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
-			res.Result.Qid = ""
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			object, _ := json.Marshal(res)
 			_, _ = w.Write(object)
 			return
@@ -96,7 +97,70 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-			log.Info(label.Lid)
+			var questionLabel entity.QuestionLabels
+			questionLabel.Qid = question.Qid.Hex()
+			questionLabel.Lid = label.Lid
+			err = q.qaService.InsertQuestionLabel(questionLabel)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+				object, _ := json.Marshal(res)
+				_, _ = w.Write(object)
+				return
+			}
 		}
+		var requestBody struct {
+			Content string `json:"content"`
+		}
+		requestBody.Content = question.Title
+		var requestBodyJson []byte
+		requestBodyJson, err = json.Marshal(requestBody)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var request *http.Request
+		request, err = http.NewRequest("POST", "http://192.168.126.131:3000/keyword", bytes.NewReader(requestBodyJson))
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		request.Header.Set("Content-Type", "application/json")
+		client := http.Client{}
+		var response *http.Response
+		response, err = client.Do(request)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		responseBodyJson := make([]byte, response.ContentLength)
+		_, err = response.Body.Read(responseBodyJson)
+		var responseBody struct {
+			Status string   `json:"status"`
+			Data   []string `json:"data"`
+		}
+		err = json.Unmarshal(responseBodyJson, &responseBody)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Qid = bson.ObjectId([]byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(responseBody)
 	}
 }

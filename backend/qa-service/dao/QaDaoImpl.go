@@ -86,3 +86,14 @@ func (q *QaDaoImpl) InsertQuestion(question entity.Questions) (qid bson.ObjectId
 	err = c.Insert(question)
 	return question.Qid, err
 }
+
+func (q *QaDaoImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = q.db.Prepare("insert into question_labels values(?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(questionLabel.Qid, questionLabel.Lid)
+	return err
+}

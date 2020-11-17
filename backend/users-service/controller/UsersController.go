@@ -88,7 +88,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var request *http.Request
-	request, err = http.NewRequest(http.MethodPost, "https://github.com/login/oauth/access_token?client_id=51f0dde36e2f4fcee97c&client_secret=04aee9d3c62d4ea10577113dedbf62b842f8a855&code="+r.FormValue("code"), nil)
+	request, err = http.NewRequest("POST", "https://github.com/login/oauth/access_token?client_id=51f0dde36e2f4fcee97c&client_secret=04aee9d3c62d4ea10577113dedbf62b842f8a855&code="+r.FormValue("code"), nil)
 	if err != nil {
 		log.Info(err)
 		return
