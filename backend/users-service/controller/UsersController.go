@@ -111,7 +111,69 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	}
 	var responseBodyJson []byte
 	responseBodyJson, err = ioutil.ReadAll(response.Body)
-	_, _ = w.Write(responseBodyJson)
+	var responseBodyToken struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+		Scope       string `json:"scope"`
+	}
+	err = json.Unmarshal(responseBodyJson, &responseBodyToken)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	request, err = http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Authorization", "token "+responseBodyToken.AccessToken)
+	response, err = client.Do(request)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	responseBodyJson, err = ioutil.ReadAll(response.Body)
+	var responseBodyInfo struct {
+		Login             string `json:"login"`
+		Id                int64  `json:"id"`
+		NodeId            string `json:"node_id"`
+		AvatarUrl         string `json:"avatar_url"`
+		GravatarId        string `json:"gravatar_id"`
+		Url               string `json:"url"`
+		HtmlUrl           string `json:"html_url"`
+		FollowersUrl      string `json:"followers_url"`
+		FollowingUrl      string `json:"following_url"`
+		GistsUrl          string `json:"gists_url"`
+		StarredUrl        string `json:"starred_url"`
+		SubscriptionsUrl  string `json:"subscriptions_url"`
+		OrganizationsUrl  string `json:"organizations_url"`
+		ReposUrl          string `json:"repos_url"`
+		EventsUrl         string `json:"events_url"`
+		ReceivedEventsUrl string `json:"received_events_url"`
+		Type              string `json:"type"`
+		SiteAdmin         bool   `json:"site_admin"`
+		Name              string `json:"name"`
+		Company           string `json:"company"`
+		Blog              string `json:"blog"`
+		Location          string `json:"location"`
+		Email             string `json:"email"`
+		Hireable          string `json:"hireable"`
+		Bio               string `json:"bio"`
+		TwitterUsername   string `json:"twitter_username"`
+		PublicRepos       int64  `json:"public_repos"`
+		PublicGists       int64  `json:"public_gists"`
+		Followers         int64  `json:"followers"`
+		Following         int64  `json:"following"`
+		CreatedAt         string `json:"created_at"`
+		UpdatedAt         string `json:"updated_at"`
+	}
+	err = json.Unmarshal(responseBodyJson, &responseBodyInfo)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+	log.Info(responseBodyInfo)
 }
 
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
