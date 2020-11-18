@@ -18,7 +18,7 @@ type QaController struct {
 
 func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) (server *http.Server) {
 	q.qaService = qaService
-	server = &http.Server{Addr: ":9090"}
+	server = &http.Server{Addr: ":9091"}
 	http.HandleFunc("/questions", q.Questions)
 	go func() {
 		defer group.Done()
