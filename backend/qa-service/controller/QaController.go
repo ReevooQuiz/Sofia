@@ -7,6 +7,7 @@ import (
 	"github.com/zhanghanchong/qa-service/entity"
 	"github.com/zhanghanchong/qa-service/service"
 	"gopkg.in/mgo.v2/bson"
+	"io/ioutil"
 	"net/http"
 	"sync"
 	"time"
@@ -240,8 +241,8 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write(object)
 			return
 		}
-		responseBodyJson := make([]byte, response.ContentLength)
-		_, err = response.Body.Read(responseBodyJson)
+		var responseBodyJson []byte
+		responseBodyJson, err = ioutil.ReadAll(response.Body)
 		var responseBody struct {
 			Status string   `json:"status"`
 			Data   []string `json:"data"`

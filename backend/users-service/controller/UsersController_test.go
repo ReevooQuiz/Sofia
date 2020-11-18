@@ -51,7 +51,7 @@ func TestActivate(t *testing.T) {
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindById(users[0].Id).Return(users[0], nil),
+		mockUsersService.EXPECT().FindById(users[0].Uid).Return(users[0], nil),
 		mockUsersService.EXPECT().Update(users[1]).Return(nil),
 		mockUsersService.EXPECT().Destruct(),
 		mockUsersService.EXPECT().Init().Return(nil),

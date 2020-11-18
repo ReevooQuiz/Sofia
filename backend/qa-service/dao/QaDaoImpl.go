@@ -43,8 +43,7 @@ func (q *QaDaoImpl) FindAnswersByQid(qid bson.ObjectId) (answers []entity.Answer
 		return answers, err
 	}
 	defer session.Close()
-	c := session.DB("sofia").C("answers")
-	err = c.Find(bson.M{"qid": qid}).All(&answers)
+	err = session.DB("sofia").C("answers").Find(bson.M{"qid": qid}).All(&answers)
 	return answers, err
 }
 
@@ -77,9 +76,8 @@ func (q *QaDaoImpl) FindQuestionByQid(qid bson.ObjectId) (question entity.Questi
 		return question, err
 	}
 	defer session.Close()
-	c := session.DB("sofia").C("questions")
 	var res []entity.Questions
-	err = c.Find(bson.M{"_id": qid}).All(&res)
+	err = session.DB("sofia").C("questions").Find(bson.M{"_id": qid}).All(&res)
 	if err != nil {
 		return question, err
 	}
@@ -152,8 +150,7 @@ func (q *QaDaoImpl) InsertQuestion(question entity.Questions) (qid bson.ObjectId
 	}
 	defer session.Close()
 	question.Qid = bson.NewObjectId()
-	c := session.DB("sofia").C("questions")
-	err = c.Insert(question)
+	err = session.DB("sofia").C("questions").Insert(question)
 	return question.Qid, err
 }
 

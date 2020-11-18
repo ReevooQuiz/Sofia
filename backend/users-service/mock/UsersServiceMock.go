@@ -49,7 +49,7 @@ func (mr *MockUsersServiceMockRecorder) Destruct() *gomock.Call {
 // FindByEmail mocks base method
 func (m *MockUsersService) FindByEmail(arg0 string) (entity.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByEmail", arg0)
+	ret := m.ctrl.Call(m, "FindUserByEmail", arg0)
 	ret0, _ := ret[0].(entity.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -58,13 +58,13 @@ func (m *MockUsersService) FindByEmail(arg0 string) (entity.Users, error) {
 // FindByEmail indicates an expected call of FindByEmail
 func (mr *MockUsersServiceMockRecorder) FindByEmail(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUsersService)(nil).FindByEmail), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmail", reflect.TypeOf((*MockUsersService)(nil).FindByEmail), arg0)
 }
 
 // FindById mocks base method
 func (m *MockUsersService) FindById(arg0 int64) (entity.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindById", arg0)
+	ret := m.ctrl.Call(m, "FindUserByUid", arg0)
 	ret0, _ := ret[0].(entity.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -73,13 +73,13 @@ func (m *MockUsersService) FindById(arg0 int64) (entity.Users, error) {
 // FindById indicates an expected call of FindById
 func (mr *MockUsersServiceMockRecorder) FindById(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUsersService)(nil).FindById), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByUid", reflect.TypeOf((*MockUsersService)(nil).FindById), arg0)
 }
 
 // FindByUsername mocks base method
 func (m *MockUsersService) FindByUsername(arg0 string) (entity.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByUsername", arg0)
+	ret := m.ctrl.Call(m, "FindUserByNickname", arg0)
 	ret0, _ := ret[0].(entity.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -88,7 +88,7 @@ func (m *MockUsersService) FindByUsername(arg0 string) (entity.Users, error) {
 // FindByUsername indicates an expected call of FindByUsername
 func (mr *MockUsersServiceMockRecorder) FindByUsername(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUsername", reflect.TypeOf((*MockUsersService)(nil).FindByUsername), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByNickname", reflect.TypeOf((*MockUsersService)(nil).FindByUsername), arg0)
 }
 
 // Init mocks base method
@@ -112,7 +112,7 @@ func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 // Insert mocks base method
 func (m *MockUsersService) Insert(arg0 entity.Users) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", arg0)
+	ret := m.ctrl.Call(m, "InsertUser", arg0)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
@@ -121,13 +121,13 @@ func (m *MockUsersService) Insert(arg0 entity.Users) (int64, error) {
 // Insert indicates an expected call of Insert
 func (mr *MockUsersServiceMockRecorder) Insert(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockUsersService)(nil).Insert), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUser", reflect.TypeOf((*MockUsersService)(nil).Insert), arg0)
 }
 
 // Update mocks base method
 func (m *MockUsersService) Update(arg0 entity.Users) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0)
+	ret := m.ctrl.Call(m, "UpdateUser", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
@@ -135,5 +135,5 @@ func (m *MockUsersService) Update(arg0 entity.Users) error {
 // Update indicates an expected call of Update
 func (mr *MockUsersServiceMockRecorder) Update(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockUsersService)(nil).Update), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUsersService)(nil).Update), arg0)
 }

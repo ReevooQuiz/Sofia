@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/zhanghanchong/users-service/dao"
 	"github.com/zhanghanchong/users-service/entity"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type UsersServiceImpl struct {
@@ -21,22 +22,22 @@ func (u *UsersServiceImpl) Destruct() {
 	u.usersDao.Destruct()
 }
 
-func (u *UsersServiceImpl) FindByEmail(email string) (user entity.Users, err error) {
-	return u.usersDao.FindByEmail(email)
+func (u *UsersServiceImpl) FindUserByEmail(email string) (user entity.Users, err error) {
+	return u.usersDao.FindUserByEmail(email)
 }
 
-func (u *UsersServiceImpl) FindById(id int64) (user entity.Users, err error) {
-	return u.usersDao.FindById(id)
+func (u *UsersServiceImpl) FindUserByNickname(nickname string) (user entity.Users, err error) {
+	return u.usersDao.FindUserByNickname(nickname)
 }
 
-func (u *UsersServiceImpl) FindByUsername(username string) (user entity.Users, err error) {
-	return u.usersDao.FindByUsername(username)
+func (u *UsersServiceImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
+	return u.usersDao.FindUserByUid(uid)
 }
 
-func (u *UsersServiceImpl) Insert(user entity.Users) (id int64, err error) {
-	return u.usersDao.Insert(user)
+func (u *UsersServiceImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
+	return u.usersDao.InsertUser(user)
 }
 
-func (u *UsersServiceImpl) Update(user entity.Users) (err error) {
-	return u.usersDao.Update(user)
+func (u *UsersServiceImpl) UpdateUser(user entity.Users) (err error) {
+	return u.usersDao.UpdateUser(user)
 }
