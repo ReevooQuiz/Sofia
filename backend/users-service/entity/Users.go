@@ -34,6 +34,6 @@ type Users struct {
 	Icon             string        `bson:"icon"`
 	Gender           int8          `bson:"gender"`
 	Role             int8          `bson:"role"`
-	Type             int8          `bson:"type"`
+	AccountType      int8          `bson:"account_type"`
 	NotificationTime time.Time     `bson:"notification_time"`
 }

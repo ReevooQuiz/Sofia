@@ -72,6 +72,24 @@ func (u *UsersDaoImpl) FindUserByNickname(nickname string) (user entity.Users, e
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
+	var session *mgo.Session
+	session, err = mgo.Dial(mongoUrl)
+	if err != nil {
+		return user, err
+	}
+	defer session.Close()
+	var res []entity.Users
+	err = session.DB("sofia").C("users").Find(bson.M{"oid": oid, "account_type": accountType}).All(&res)
+	if err != nil {
+		return user, err
+	}
+	if len(res) == 0 {
+		return user, errors.New("mongo: no rows in result set")
+	}
+	return res[0], err
+}
+
 func (u *UsersDaoImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
 	var session *mgo.Session
 	session, err = mgo.Dial(mongoUrl)

@@ -8,6 +8,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	dao "github.com/zhanghanchong/users-service/dao"
 	entity "github.com/zhanghanchong/users-service/entity"
+	"gopkg.in/mgo.v2/bson"
 	reflect "reflect"
 )
 
@@ -15,6 +16,30 @@ import (
 type MockUsersService struct {
 	ctrl     *gomock.Controller
 	recorder *MockUsersServiceMockRecorder
+}
+
+func (m *MockUsersService) FindUserByEmail(email string) (user entity.Users, err error) {
+	panic("implement me")
+}
+
+func (m *MockUsersService) FindUserByNickname(nickname string) (user entity.Users, err error) {
+	panic("implement me")
+}
+
+func (m *MockUsersService) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
+	panic("implement me")
+}
+
+func (m *MockUsersService) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
+	panic("implement me")
+}
+
+func (m *MockUsersService) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
+	panic("implement me")
+}
+
+func (m *MockUsersService) UpdateUser(user entity.Users) (err error) {
+	panic("implement me")
 }
 
 // MockUsersServiceMockRecorder is the mock recorder for MockUsersService

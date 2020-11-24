@@ -30,6 +30,10 @@ func (u *UsersServiceImpl) FindUserByNickname(nickname string) (user entity.User
 	return u.usersDao.FindUserByNickname(nickname)
 }
 
+func (u *UsersServiceImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
+	return u.usersDao.FindUserByOidAndAccountType(oid, accountType)
+}
+
 func (u *UsersServiceImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
 	return u.usersDao.FindUserByUid(uid)
 }
