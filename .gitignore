@@ -19,3 +19,6 @@
 
 # Misc
 .DS_Store
+
+# Enviroment files
+*.env
