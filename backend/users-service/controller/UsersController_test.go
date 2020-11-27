@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/mock"
+	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -46,18 +47,15 @@ func TestActivate(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{1, "root", "root", "root@sjtu.edu.cn", entity.NOTACTIVE},
-		{1, "root", "root", "root@sjtu.edu.cn", entity.USER},
+		{Uid: bson.ObjectIdHex("000000000000000000000000"), Role: entity.USER},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindById(users[0].Uid).Return(users[0], nil),
-		mockUsersService.EXPECT().Update(users[1]).Return(nil),
+		mockUsersService.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
+		mockUsersService.EXPECT().UpdateUser(users[0]).Return(nil),
 		mockUsersService.EXPECT().Destruct(),
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().Destruct(),
-		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindById(int64(0)).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersService.EXPECT().FindUserByUid(users[0].Uid).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}
@@ -74,9 +72,8 @@ func TestActivate(t *testing.T) {
 		wantStatus int
 		wantRes    res
 	}{
-		{"Normal", args{"1"}, http.StatusOK, res{0}},
-		{"TokenNotFound", args{"nil"}, http.StatusOK, res{1}},
-		{"IdNotFound", args{"0"}, http.StatusOK, res{1}},
+		{"Normal", args{"000000000000000000000000"}, http.StatusOK, res{0}},
+		{"UidNotFound", args{"000000000000000000000000"}, http.StatusOK, res{1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -103,15 +100,33 @@ func TestOAuthGithub(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	users := []entity.Users{
+		{Oid: "0", Role: entity.NOTACTIVE, AccountType: entity.GITHUB},
+	}
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByOidAndAccountType(users[0].Oid, users[0].AccountType).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().InsertUser(users[0]).Return(users[0].Uid, nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByOidAndAccountType(users[0].Oid, users[0].AccountType).Return(users[0], nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
 	u := UsersController{mockUsersService}
 	mux.HandleFunc("/oauth/github", u.OAuthGithub)
 	type args struct {
 		code string
 	}
+	type result struct {
+		First        bool          `json:"first"`
+		Role         int8          `json:"role"`
+		Id           bson.ObjectId `json:"id"`
+		Token        string        `json:"token"`
+		RefreshToken string        `json:"refresh_token"`
+	}
 	type res struct {
-		AccessToken string `json:"access_token"`
-		TokenType   string `json:"token_type"`
-		Scope       string `json:"scope"`
+		Code   int8   `json:"code"`
+		Result result `json:"result"`
 	}
 	tests := []struct {
 		name       string
@@ -119,7 +134,8 @@ func TestOAuthGithub(t *testing.T) {
 		wantStatus int
 		wantRes    res
 	}{
-		{"Normal", args{""}, http.StatusOK, res{"", "", ""}},
+		{"NormalAndFirst", args{""}, http.StatusOK, res{0, result{First: true, Role: users[0].Role, Id: users[0].Uid}}},
+		{"NormalAndNotFirst", args{""}, http.StatusOK, res{0, result{First: false, Role: users[0].Role, Id: users[0].Uid}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,34 +163,31 @@ func TestRegister(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{0, "root", "root", "root@sjtu.edu.cn", entity.NOTACTIVE},
-		{0, "root", "root", "root", entity.NOTACTIVE},
+		{Nickname: "test", Email: "test@sjtu.edu.cn", Role: entity.NOTACTIVE, AccountType: entity.SOFIA},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindByUsername(users[0].Username).Return(entity.Users{}, errors.New("sql: no rows in result set")),
-		mockUsersService.EXPECT().FindByEmail(users[0].Email).Return(entity.Users{}, errors.New("sql: no rows in result set")),
-		mockUsersService.EXPECT().Insert(users[0]).Return(int64(1), nil),
+		mockUsersService.EXPECT().FindUserByNickname(users[0].Nickname).Return(users[0], nil),
 		mockUsersService.EXPECT().Destruct(),
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindByUsername(users[0].Username).Return(users[0], nil),
+		mockUsersService.EXPECT().FindUserByNickname(users[0].Nickname).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().FindUserByEmail(users[0].Email).Return(users[0], nil),
 		mockUsersService.EXPECT().Destruct(),
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindByUsername(users[0].Username).Return(entity.Users{}, errors.New("sql: no rows in result set")),
-		mockUsersService.EXPECT().FindByEmail(users[0].Email).Return(users[0], nil),
-		mockUsersService.EXPECT().Destruct(),
-		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().FindByUsername(users[1].Username).Return(entity.Users{}, errors.New("sql: no rows in result set")),
-		mockUsersService.EXPECT().FindByEmail(users[1].Email).Return(entity.Users{}, errors.New("sql: no rows in result set")),
-		mockUsersService.EXPECT().Insert(users[1]).Return(int64(1), nil),
+		mockUsersService.EXPECT().FindUserByNickname(users[0].Nickname).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().FindUserByEmail(users[0].Email).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().InsertUser(users[0]).Return(users[0].Uid, nil),
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}
 	mux.HandleFunc("/register", u.Register)
 	type args struct {
-		username string
+		name     string
+		nickname string
 		password string
 		email    string
+		icon     string
+		gender   int8
 	}
 	type result struct {
 		Type int8 `json:"type"`
@@ -189,19 +202,18 @@ func TestRegister(t *testing.T) {
 		wantStatus int
 		wantRes    res
 	}{
-		{"Normal", args{users[0].Username, users[0].Password, users[0].Email}, http.StatusOK, res{0, result{0}}},
-		{"UsernameFound", args{users[0].Username, users[0].Password, users[0].Email}, http.StatusOK, res{1, result{0}}},
-		{"EmailFound", args{users[0].Username, users[0].Password, users[0].Email}, http.StatusOK, res{1, result{1}}},
-		{"MailFail", args{users[1].Username, users[1].Password, users[1].Email}, http.StatusOK, res{1, result{2}}},
+		{"NicknameFound", args{users[0].Name, users[0].Nickname, users[0].Password, users[0].Email, users[0].Icon, users[0].Gender}, http.StatusOK, res{1, result{0}}},
+		{"EmailFound", args{users[0].Name, users[0].Nickname, users[0].Password, users[0].Email, users[0].Icon, users[0].Gender}, http.StatusOK, res{1, result{1}}},
+		{"MailFail", args{users[0].Name, users[0].Nickname, users[0].Password, users[0].Email, users[0].Icon, users[0].Gender}, http.StatusOK, res{1, result{2}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var req struct {
-				Username string `json:"username"`
+				Nickname string `json:"nickname"`
 				Password string `json:"password"`
 				Email    string `json:"email"`
 			}
-			req.Username = tt.args.username
+			req.Nickname = tt.args.nickname
 			req.Password = tt.args.password
 			req.Email = tt.args.email
 			requestBody, _ := json.Marshal(req)

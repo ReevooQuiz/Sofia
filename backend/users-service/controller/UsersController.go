@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"sync"
-	"time"
 )
 
 type UsersController struct {
@@ -93,18 +92,25 @@ func (u *UsersController) Activate(w http.ResponseWriter, r *http.Request) {
 
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var res struct {
-		Code  int8 `json:"code"`
-		First bool `json:"first"`
-		Info  struct {
-			Uid      bson.ObjectId `json:"uid"`
-			Name     string        `json:"name"`
-			Nickname string        `json:"nickname"`
-			Email    string        `json:"email"`
-			Icon     string        `json:"icon"`
-			Gender   int8          `json:"gender"`
-		}
+		Code   int8 `json:"code"`
+		Result struct {
+			First        bool          `json:"first"`
+			Role         int8          `json:"role"`
+			Id           bson.ObjectId `json:"id"`
+			Token        string        `json:"token"`
+			RefreshToken string        `json:"refresh_token"`
+		} `json:"result"`
 	}
-	err := r.ParseForm()
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -212,26 +218,23 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	user, err = u.usersService.FindUserByOidAndAccountType(strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
 	if err == nil {
 		res.Code = 0
-		res.First = false
-		res.Info.Uid = user.Uid
-		res.Info.Name = user.Name
-		res.Info.Nickname = user.Nickname
-		res.Info.Email = user.Email
-		res.Info.Icon = user.Icon
-		res.Info.Gender = user.Gender
+		res.Result.First = false
+		res.Result.Role = user.Role
+		res.Result.Id = user.Uid
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.NOTACTIVE, AccountType: entity.GITHUB, NotificationTime: time.Now()}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.NOTACTIVE, AccountType: entity.GITHUB}
 	user.Uid, err = u.usersService.InsertUser(user)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
 	} else {
 		res.Code = 0
-		res.First = true
-		res.Info.Uid = user.Uid
+		res.Result.First = true
+		res.Result.Role = user.Role
+		res.Result.Id = user.Uid
 	}
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
@@ -280,7 +283,6 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	user.Gender = req.Gender
 	user.Role = entity.NOTACTIVE
 	user.AccountType = entity.SOFIA
-	user.NotificationTime = time.Now()
 	_, err = u.usersService.FindUserByNickname(user.Nickname)
 	if err == nil {
 		res.Code = 1

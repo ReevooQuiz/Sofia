@@ -8,6 +8,7 @@ import (
 const (
 	MALE = iota
 	FEMALE
+	OTHER
 )
 
 const (
