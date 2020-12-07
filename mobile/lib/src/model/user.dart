@@ -1,8 +1,5 @@
 class User {
-  // final String name;
   final String id;
-  // final String avatar;
-  // final String joinDate;
   final String type;
   User(this.id, this.type);
   factory User.fromJson(Map<String, dynamic> json) {
