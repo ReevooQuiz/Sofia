@@ -11,30 +11,33 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    MaterialColor colors = createMaterialColor(Color(0xFF88D5D1));
+    const BorderRadius globalBorderRadius = BorderRadius.all(Radius.circular(30));
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-          primarySwatch: createMaterialColor(Color(0xFF88D5D1)),
+          primarySwatch: colors,
+          colorScheme: ColorScheme.fromSwatch(primarySwatch: colors,accentColor: colors.shade600),
           visualDensity: VisualDensity.adaptivePlatformDensity,
           buttonTheme: ButtonThemeData(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(30)))),
+              shape: RoundedRectangleBorder(borderRadius: globalBorderRadius)),
           inputDecorationTheme: InputDecorationTheme(
               filled: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 15.0),
               fillColor: Color(0x2088D5D2),
               focusedErrorBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.redAccent),
-                  borderRadius: BorderRadius.all(Radius.circular(30))),
+                  borderRadius: globalBorderRadius),
               errorBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.redAccent),
-                  borderRadius: BorderRadius.all(Radius.circular(30))),
+                  borderRadius: globalBorderRadius),
               enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF67A29E)),
-                  borderRadius: BorderRadius.all(Radius.circular(30))),
+                  borderRadius: globalBorderRadius),
               focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Color(0xFF88D5D1)),
-                  borderRadius: BorderRadius.all(Radius.circular(30))))),
-      home: Home(title: 'Sofia'),
+                  borderRadius: globalBorderRadius))),
+      home: Login(),
     );
   }
 }

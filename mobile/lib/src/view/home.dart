@@ -6,18 +6,17 @@ import 'package:mvc_pattern/mvc_pattern.dart';
 
 class Home extends StatefulWidget {
   final String title;
-
   Home({Key key, this.title}) : super(key: key);
 
   @override
-  State<StatefulWidget> createState() => HomeState();
+  State<StatefulWidget> createState() => _HomeState();
 }
 
-class HomeState extends StateMVC<Home> {
+class _HomeState extends StateMVC<Home> {
   HomeCon _homeCon;
   int _index;
-
-  HomeState() : super(HomeCon()) {
+  _HomeState() : super(HomeCon()) {
+    _index = 0;
     _homeCon = HomeCon.con;
   }
 
@@ -29,12 +28,9 @@ class HomeState extends StateMVC<Home> {
 
   @override
   Widget build(BuildContext context) {
-    if (!AccountCon.loginState) {
-      return Login();
-    }
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(widget.title,style: TextStyle(color: Colors.white),),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
@@ -44,7 +40,7 @@ class HomeState extends StateMVC<Home> {
           _homeCon.me
         ],
         currentIndex: _index,
-        selectedItemColor: Colors.white,
+        selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey[400],
         onTap: _onItemTapped,
         showUnselectedLabels: false,
@@ -55,6 +51,7 @@ class HomeState extends StateMVC<Home> {
 
   Widget _show() {
     Widget display;
+
     switch (_index) {
       case 0:
         display = HotList();

@@ -6,3 +6,6 @@ export 'view/hotlist.dart';
 export 'view/me.dart';
 export 'view/timeline.dart';
 export 'view/list_component/question.dart';
+export 'view/signin.dart';
+export 'view/forget_password.dart';
+export 'view/account/verify_code_button.dart';

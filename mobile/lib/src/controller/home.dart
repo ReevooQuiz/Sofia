@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile/src/controller.dart';
+import 'package:mobile/src/view.dart';
 
 class HomeCon extends ControllerMVC {
   static HomeCon _this;

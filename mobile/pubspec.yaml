@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.12.2
+  image_picker: ^0.6.7+14
   mvc_pattern: ^6.0.0
   cupertino_icons: ^1.0.0
   mockito: ^4.1.3

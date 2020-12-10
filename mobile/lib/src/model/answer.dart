@@ -1,4 +1,3 @@
-
 class Answer {
   final int answerId;
   final int answerer;
@@ -33,5 +32,6 @@ class Answer {
         json['like_count'],
         DateTime.tryParse(json['time']));
   }
-  Map<String, dynamic> toJson()=>{'qid':this.questionId,'content':this.content};
+  Map<String, dynamic> toJson() =>
+      {'qid': this.questionId, 'content': this.content};
 }
