@@ -23,7 +23,10 @@ class AccountCon extends ControllerMVC {
   final String regexEmail =
       "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*\$";
   final simpleAuth.GithubApi githubApi = new simpleAuth.GithubApi(
-      "github", "51f0dde36e2f4fcee97c", "04aee9d3c62d4ea10577113dedbf62b842f8a855", "http://localhost",
+      "github",
+      "51f0dde36e2f4fcee97c",
+      "04aee9d3c62d4ea10577113dedbf62b842f8a855",
+      "http://localhost",
       scopes: [
         "user",
         "repo",
@@ -203,7 +206,7 @@ class AccountCon extends ControllerMVC {
               FontAwesomeIcons.github,
               color: Colors.white,
             ),
-            Text("使用GitHub登录",style: TextStyle(color: Colors.white))
+            Text("使用GitHub登录", style: TextStyle(color: Colors.white))
           ],
         ),
       ));
@@ -218,8 +221,6 @@ class AccountCon extends ControllerMVC {
   }
 
   bool validPassword(String confirmPassword) {
-    print(_user.password);
-    print(confirmPassword);
     return _user.password == confirmPassword;
   }
 
@@ -234,9 +235,9 @@ class AccountCon extends ControllerMVC {
       return await ImagePicker().getImage(source: ImageSource.gallery);
   }
 
-  Future<bool> verifyEmail() async {
-    if (_forgetFormKey.currentState.validate()) {
-      _forgetFormKey.currentState.save();
+  Future<bool> verifyEmail(GlobalKey<FormState> formState) async {
+    if (formState.currentState.validate()) {
+      formState.currentState.save();
       _codeSent = true;
     } else {
       _codeSent = false;
@@ -248,7 +249,7 @@ class AccountCon extends ControllerMVC {
   Future<bool> verifyCode(String value) async =>
       value != null ? value == _code : false;
 
-  bool validateCode(String value) {
+  bool validateCode(String value) {;
     if (_codeSent) return value.trim().length != 0;
     return true;
   }

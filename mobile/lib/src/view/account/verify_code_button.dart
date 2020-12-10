@@ -5,15 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:mobile/src/controller.dart';
 
 class VerifyCodeButton extends StatefulWidget {
+  final GlobalKey<FormState> _formKey;
+  VerifyCodeButton(this._formKey);
   @override
-  State<StatefulWidget> createState() => _EmailVaildater();
+  State<StatefulWidget> createState() => _EmailVaildater(_formKey);
 }
 
 class _EmailVaildater extends StateMVC<VerifyCodeButton> {
   AccountCon _accountCon;
+  final GlobalKey<FormState> _formKey;
   bool _sendState;
   int _countDown;
-  _EmailVaildater() : super(AccountCon()) {
+  _EmailVaildater(this._formKey) : super(AccountCon()) {
     _accountCon = AccountCon.con;
     _countDown = 60;
     _sendState = false;
@@ -31,7 +34,7 @@ class _EmailVaildater extends StateMVC<VerifyCodeButton> {
   void _startTimer() async {
     const oneSec = const Duration(seconds: 1);
     _sendState = true;
-    if (await _accountCon.verifyEmail()) {
+    if (await _accountCon.verifyEmail(_formKey)) {
       Scaffold.of(context)
           .showSnackBar(SnackBar(content: Text('已向邮箱发送验证码，请注意查收。')));
       new Timer.periodic(

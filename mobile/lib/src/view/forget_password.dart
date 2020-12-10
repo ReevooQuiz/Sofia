@@ -84,64 +84,13 @@ class _ForgetPasswordState extends StateMVC<ForgetPassword> {
           children: [
             Form(
               key: _accountCon.forgetFormKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 50.0),
-                    child: TextFormField(
-                      decoration: const InputDecoration(hintText: '邮箱'),
-                      validator: (value) {
-                        if (value.trim().isEmpty) return '请输入邮箱';
-                        if (_accountCon.isEmail(value) == false)
-                          return '请输入正确格式的电子邮箱地址';
-                        return null;
-                      },
-                      onSaved: (value) {
-                        _accountCon.email = value;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 50.0),
-                      child: Column(children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Expanded(
-                                flex: 3,
-                                child: TextFormField(
-                                  decoration:
-                                      const InputDecoration(hintText: '验证码'),
-                                  onSaved: (value) {
-                                    _accountCon.code = value;
-                                  },
-                                  validator: (value) =>
-                                      _accountCon.validateCode(value)
-                                          ? null
-                                          : '输入验证码',
-                                  textInputAction: TextInputAction.next,
-                                )),
-                            Expanded(
-                                flex: 5,
-                                child: Padding(
-                                  child: VerifyCodeButton(),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10.0),
-                                ))
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 50.0),
-                          child: _accountCon.codeVerifier,
-                        )
-                      ])),
-                ],
-              ),
+              child: Column(children: [
+                EmailValidater(_accountCon.forgetFormKey),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 50.0),
+                  child: _accountCon.codeVerifier,
+                )
+              ]),
             )
           ],
         ));

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile/src/controller/account.dart';
+import 'package:mobile/src/controller.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
-
+import 'package:mobile/src/view.dart';
 enum imageOpt { gallery, camera }
 
 class SignIn extends StatefulWidget {
@@ -167,23 +167,7 @@ class SignInState extends StateMVC<SignIn> {
                               textInputAction: TextInputAction.next,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 16.0, horizontal: 50.0),
-                            child: TextFormField(
-                              decoration: const InputDecoration(hintText: '邮箱'),
-                              validator: (value) {
-                                if (value.isEmpty) return '请输入邮箱';
-                                if (_accountCon.isEmail(value) == false)
-                                  return '请输入正确格式的电子邮箱地址';
-                                return null;
-                              },
-                              onSaved: (value) {
-                                _accountCon.email = value;
-                              },
-                              textInputAction: TextInputAction.done,
-                            ),
-                          ),
+                          EmailValidater(_accountCon.signInFormKey),
                           Padding(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 20.0, horizontal: 10.0),
