@@ -64,7 +64,7 @@ class LoginState extends StateMVC<Login> {
                         child: TextFormField(
                           decoration: const InputDecoration(hintText: '用户名'),
                           validator: (value) {
-                            if (value.isEmpty) {
+                            if (value.trim().isEmpty) {
                               return '请输入用户名';
                             }
                             return null;
@@ -80,7 +80,7 @@ class LoginState extends StateMVC<Login> {
                       child: TextFormField(
                         decoration: const InputDecoration(hintText: '密码'),
                         validator: (value) {
-                          if (value.isEmpty) {
+                          if (value.trim().isEmpty) {
                             return '请输入密码';
                           }
                           return null;

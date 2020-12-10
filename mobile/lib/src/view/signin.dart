@@ -79,7 +79,7 @@ class SignInState extends StateMVC<SignIn> {
                                 decoration:
                                     const InputDecoration(hintText: '用户名'),
                                 validator: (value) {
-                                  if (value.isEmpty) {
+                                  if (value.trim().isEmpty) {
                                     return '请输入用户名';
                                   }
                                   return null;
@@ -96,7 +96,7 @@ class SignInState extends StateMVC<SignIn> {
                                 decoration:
                                     const InputDecoration(hintText: '昵称'),
                                 validator: (value) {
-                                  if (value.isEmpty) {
+                                  if (value.trim().isEmpty) {
                                     return '请输入昵称';
                                   }
                                   return null;
@@ -131,7 +131,7 @@ class SignInState extends StateMVC<SignIn> {
                             child: TextFormField(
                               decoration: const InputDecoration(hintText: '密码'),
                               validator: (value) {
-                                if (value.isEmpty) {
+                                if (value.trim().isEmpty) {
                                   return '请输入密码';
                                 }
                                 if (value.trim().length < 6)
@@ -155,7 +155,7 @@ class SignInState extends StateMVC<SignIn> {
                               decoration:
                                   const InputDecoration(hintText: '确认密码'),
                               validator: (value) {
-                                if (value.isEmpty) return '请再次输入密码';
+                                if (value.trim().isEmpty) return '请再次输入密码';
                                 if (_accountCon.validPassword(value) == false)
                                   return '两次输入密码不一致';
                                 return null;
