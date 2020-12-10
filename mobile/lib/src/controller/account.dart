@@ -7,6 +7,8 @@ import 'package:mobile/src/model/form.dart';
 import 'package:mobile/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile/src/view.dart';
+import 'package:simple_auth/simple_auth.dart' as simpleAuth;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class AccountCon extends ControllerMVC {
   static AccountCon _this;
@@ -20,7 +22,13 @@ class AccountCon extends ControllerMVC {
   User _user;
   final String regexEmail =
       "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*\$";
-
+  final simpleAuth.GithubApi githubApi = new simpleAuth.GithubApi(
+      "github", "51f0dde36e2f4fcee97c", "04aee9d3c62d4ea10577113dedbf62b842f8a855", "http://localhost",
+      scopes: [
+        "user",
+        "repo",
+        "public_repo",
+      ]);
   factory AccountCon() {
     _this ??= AccountCon._();
     return _this;
@@ -174,6 +182,31 @@ class AccountCon extends ControllerMVC {
         }
       },
       child: Text('确认修改'));
+
+  Widget get loginWithGithub => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 80.0),
+      child: RaisedButton(
+        color: Colors.black,
+        onPressed: () async {
+          try {
+            var success = await githubApi.authenticate();
+            Scaffold.of(stateMVC.context).showSnackBar(
+                SnackBar(content: Text("Logged in success: $success")));
+          } catch (e) {
+            print("$e");
+          }
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            FaIcon(
+              FontAwesomeIcons.github,
+              color: Colors.white,
+            ),
+            Text("使用GitHub登录",style: TextStyle(color: Colors.white))
+          ],
+        ),
+      ));
 
   Future<User> fetchAccount(LoginForm form, http.Client client) async {
     final response = await client.post(hostUrl + 'login', body: form.toJson());

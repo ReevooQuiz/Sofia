@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile/src/controller/account.dart';
 import 'package:mobile/src/view.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
-
 class Login extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => LoginState();
@@ -12,6 +11,7 @@ class Login extends StatefulWidget {
 class LoginState extends StateMVC<Login> {
   AccountCon _accountCon;
   String _title;
+
   LoginState() : super(AccountCon()) {
     _accountCon = AccountCon.con;
     _accountCon.forgetTrigger = () => forgetPassword();
@@ -100,6 +100,7 @@ class LoginState extends StateMVC<Login> {
                         child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              _accountCon.loginWithGithub,
                               _accountCon.forgetPassword,
                               Row(
                                   mainAxisAlignment:
