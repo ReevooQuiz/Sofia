@@ -2,9 +2,9 @@
   <div id="questionHead">
     <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
       <template #extra>
-        <a-tag v-for="(item) in ques.tags" v-bind:key="item.tid">
+        <!-- <a-tag v-for="(item) in ques.tags" v-bind:key="item.tid">
           {{111}}
-        </a-tag>
+        </a-tag> -->
       </template>
       <a-row>
         <a-col :span="3">
