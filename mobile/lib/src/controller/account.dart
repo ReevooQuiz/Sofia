@@ -120,7 +120,7 @@ class AccountCon extends ControllerMVC {
         },
         child: Text('登录'),
       );
-  Widget get signIn => OutlineButton(
+  Widget get signIn => OutlinedButton(
         onPressed: () {
           _user = User("-1", "<<invalid>>");
           Navigator.push(stateMVC.context,
@@ -167,7 +167,7 @@ class AccountCon extends ControllerMVC {
       },
       child: Text('忘记密码？'));
 
-  Widget get codeVerifier => OutlineButton(
+  Widget get codeVerifier => OutlinedButton(
         onPressed: () {
           if (_forgetFormKey.currentState.validate()) {
             _changePassword();
@@ -249,7 +249,7 @@ class AccountCon extends ControllerMVC {
   Future<bool> verifyCode(String value) async =>
       value != null ? value == _code : false;
 
-  bool validateCode(String value) {;
+  bool validateCode(String value) {
     if (_codeSent) return value.trim().length != 0;
     return true;
   }

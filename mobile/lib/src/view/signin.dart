@@ -23,9 +23,9 @@ class SignInState extends StateMVC<SignIn> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("注册"),
+          title: Text("注册",style: TextStyle(color: Color(0xFF5F6772)),),
           leading: IconButton(
-              icon: Icon(Icons.arrow_back_outlined),
+              icon: Icon(Icons.arrow_back_outlined,color: Color(0xFF5F6772)),
               onPressed: () => Navigator.pop(context)),
           backgroundColor: Colors.white,
         ),

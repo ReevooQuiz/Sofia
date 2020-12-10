@@ -30,11 +30,11 @@ class LoginState extends StateMVC<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(_title),
+          title: Text(_title,style: TextStyle(color: Color(0xFF5F6772)),),
           leading: _title == '登录'
               ? null
               : IconButton(
-                  icon: Icon(Icons.arrow_back),
+                  icon: Icon(Icons.arrow_back,color: Color(0xFF5F6772)),
                   onPressed: () => forgetPassword()),
           backgroundColor: Colors.white,
         ),
@@ -56,7 +56,7 @@ class LoginState extends StateMVC<Login> {
                         child: Text(
                           'Reevoo σοφία',
                           style: TextStyle(
-                              fontSize: 30, fontWeight: FontWeight.bold),
+                              fontSize: 30, fontWeight: FontWeight.bold,color: Color(0xFF5F6772)),
                         )),
                     Padding(
                         padding: const EdgeInsets.symmetric(

@@ -24,9 +24,9 @@ class _EmailVaildater extends StateMVC<VerifyCodeButton> {
   @override
   Widget build(BuildContext context) {
     if (_sendState == false) {
-      return OutlineButton(onPressed: _startTimer, child: Text('发送验证码'));
+      return OutlinedButton(onPressed: _startTimer, child: Text('发送验证码'));
     } else {
-      return OutlineButton(
+      return OutlinedButton(
           onPressed: null, child: Text(_countDown.toString() + '秒后重新发送'));
     }
   }
