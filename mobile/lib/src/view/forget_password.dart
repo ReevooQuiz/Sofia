@@ -30,15 +30,6 @@ class _ForgetPasswordState extends StateMVC<ForgetPassword> {
     if (_change)
       return Scaffold(
           appBar: AppBar(
-            leading: IconButton(
-                icon: Icon(Icons.arrow_back_outlined, color: Color(0xFF5F6772)),
-                onPressed: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _change = false;
-                    _title = "验证邮箱";
-                  });
-                }),
             title: Text(
               _title,
               style: TextStyle(color: Color(0xFF5F6772)),

@@ -16,7 +16,7 @@ class AccountCon extends ControllerMVC {
   final _signInFormKey = GlobalKey<FormState>();
   final _forgetFormKey = GlobalKey<FormState>();
   final _changeFormKey = GlobalKey<FormState>();
-  static bool loginState = false;
+  static bool loginState = true;
   bool _codeSent = false;
   String _code;
   User _user;
@@ -113,6 +113,10 @@ class AccountCon extends ControllerMVC {
                     ));
                     loginState = true;
                     Navigator.pop(stateMVC.context);
+                    Navigator.push(
+                        stateMVC.context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => Home()));
                   }
               }
             });
@@ -180,7 +184,9 @@ class AccountCon extends ControllerMVC {
         if (_changeFormKey.currentState.validate()) {
           _changeFormKey.currentState.save();
           Navigator.pop(stateMVC.context);
-        }
+        Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
+                      content: Text("修改密码成功，请牢记您的新密码。"),
+                    ));}
       },
       child: Text('确认修改'));
 
@@ -192,7 +198,7 @@ class AccountCon extends ControllerMVC {
           try {
             var success = await githubApi.authenticate();
             Scaffold.of(stateMVC.context).showSnackBar(
-                SnackBar(content: Text("Logged in success: $success")));
+                SnackBar(content: Text("登录成功: $success")));
           } catch (e) {
             print("$e");
           }
