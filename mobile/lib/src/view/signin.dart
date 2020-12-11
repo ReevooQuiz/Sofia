@@ -77,7 +77,7 @@ class SignInState extends StateMVC<SignIn> {
                                   vertical: 16.0, horizontal: 50.0),
                               child: TextFormField(
                                 decoration:
-                                    const InputDecoration(hintText: '用户名'),
+                                    const InputDecoration(hintText: '用户名', labelText:'用户名'),
                                 validator: (value) {
                                   if (value.trim().isEmpty) {
                                     return '请输入用户名';
@@ -94,7 +94,7 @@ class SignInState extends StateMVC<SignIn> {
                                   vertical: 16.0, horizontal: 50.0),
                               child: TextFormField(
                                 decoration:
-                                    const InputDecoration(hintText: '昵称'),
+                                    const InputDecoration(hintText: '昵称', labelText:'昵称'),
                                 validator: (value) {
                                   if (value.trim().isEmpty) {
                                     return '请输入昵称';
@@ -129,7 +129,7 @@ class SignInState extends StateMVC<SignIn> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 16.0, horizontal: 50.0),
                             child: TextFormField(
-                              decoration: const InputDecoration(hintText: '密码'),
+                              decoration: const InputDecoration(hintText: '密码', labelText:'密码'),
                               validator: (value) {
                                 if (value.trim().isEmpty) {
                                   return '请输入密码';
@@ -153,7 +153,7 @@ class SignInState extends StateMVC<SignIn> {
                                 vertical: 16.0, horizontal: 50.0),
                             child: TextFormField(
                               decoration:
-                                  const InputDecoration(hintText: '确认密码'),
+                                  const InputDecoration(hintText: '确认密码', labelText:'确认密码'),
                               validator: (value) {
                                 if (value.trim().isEmpty) return '请再次输入密码';
                                 if (_accountCon.validPassword(value) == false)

@@ -62,7 +62,7 @@ class LoginState extends StateMVC<Login> {
                         padding: const EdgeInsets.symmetric(
                             vertical: 16.0, horizontal: 50.0),
                         child: TextFormField(
-                          decoration: const InputDecoration(hintText: '用户名'),
+                          decoration: const InputDecoration(hintText: '用户名',labelText: '用户名'),
                           validator: (value) {
                             if (value.trim().isEmpty) {
                               return '请输入用户名';
@@ -78,7 +78,7 @@ class LoginState extends StateMVC<Login> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 16.0, horizontal: 50.0),
                       child: TextFormField(
-                        decoration: const InputDecoration(hintText: '密码'),
+                        decoration: const InputDecoration(hintText: '密码',labelText:'密码'),
                         validator: (value) {
                           if (value.trim().isEmpty) {
                             return '请输入密码';

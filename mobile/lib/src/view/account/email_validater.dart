@@ -27,7 +27,7 @@ class _EmailValidaterState extends StateMVC<EmailValidater> {
             padding:
                 const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
             child: TextFormField(
-              decoration: const InputDecoration(hintText: '邮箱'),
+              decoration: const InputDecoration(hintText: '邮箱', labelText:'邮箱'),
               validator: (value) {
                 if (value.trim().isEmpty) return '请输入邮箱';
                 if (_accountCon.isEmail(value) == false)
@@ -51,7 +51,7 @@ class _EmailValidaterState extends StateMVC<EmailValidater> {
                     Expanded(
                         flex: 3,
                         child: TextFormField(
-                          decoration: const InputDecoration(hintText: '验证码'),
+                          decoration: const InputDecoration(hintText: '验证码', labelText:'验证码'),
                           onSaved: (value) {
                             _accountCon.code = value;
                           },
