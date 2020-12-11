@@ -14,16 +14,7 @@ class LoginState extends StateMVC<Login> {
 
   LoginState() : super(AccountCon()) {
     _accountCon = AccountCon.con;
-    _accountCon.forgetTrigger = () => forgetPassword();
     _title = '登录';
-  }
-  void forgetPassword() {
-    setState(() {
-      if (_title == '登录')
-        _title = '忘记密码';
-      else
-        _title = '登录';
-    });
   }
 
   @override
@@ -31,11 +22,6 @@ class LoginState extends StateMVC<Login> {
     return Scaffold(
         appBar: AppBar(
           title: Text(_title,style: TextStyle(color: Color(0xFF5F6772)),),
-          leading: _title == '登录'
-              ? null
-              : IconButton(
-                  icon: Icon(Icons.arrow_back,color: Color(0xFF5F6772)),
-                  onPressed: () => forgetPassword()),
           backgroundColor: Colors.white,
         ),
         body: SingleChildScrollView(child: _form()));

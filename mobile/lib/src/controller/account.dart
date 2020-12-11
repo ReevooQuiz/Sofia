@@ -150,11 +150,6 @@ class AccountCon extends ControllerMVC {
         child: Text('提交'),
       );
 
-  Function _forgetPassword;
-  set forgetTrigger(Function trigger) {
-    _forgetPassword = trigger;
-  }
-
   Function _changePassword;
   set changePwTrigger(Function trigger) {
     _changePassword = trigger;
@@ -163,7 +158,10 @@ class AccountCon extends ControllerMVC {
   Widget get forgetPassword => FlatButton(
       onPressed: () {
         _user = User("-1", "<<invalid>>");
-        _forgetPassword();
+        Navigator.push(
+            stateMVC.context,
+            MaterialPageRoute(
+                builder: (BuildContext context) => ForgetPassword()));
       },
       child: Text('忘记密码？'));
 
@@ -181,7 +179,7 @@ class AccountCon extends ControllerMVC {
       onPressed: () {
         if (_changeFormKey.currentState.validate()) {
           _changeFormKey.currentState.save();
-          _forgetPassword();
+          Navigator.pop(stateMVC.context);
         }
       },
       child: Text('确认修改'));
