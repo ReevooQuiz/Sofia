@@ -1,0 +1,655 @@
+FORMAT: 1A
+HOST: https://polls.apiblueprint.org/
+
+# Reevoo σοφία API
+
+Reevoo σοφία API is an interface provided by backend of the Reevoo σοφία project, 
+allowing students to create questions, post answers to those questions, etc.
+
+## Result Format Convention
+The responses from the server always has the following structure:
+```
+{
+    "code": integer (0: succeeded, 1: failed, 2: token expired)
+    "result": interface-specific
+}
+```
+
+## Group Account
+
+## Register [/register]
+
++ NOTE: Token not needed
++ Attributes of request
+    + **gender**
+        + 0: Male
+        + 1: Female
+        + 2: Other
++ Attributes of result [code=1]
+    + **type** - error type
+        + 0: Username already exists
+        + 1: Email already exists
+        + 2: Others
+
+### Register [POST]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: null
+                
+    + Body
+    
+                {
+                        "name": "test",
+                        "nickname": "test",
+                        "password": "123456",
+                        "email": "test@sjtu.edu.cn",
+                        "icon": "3rmngyj64tbcnwu4rnmw2u65t",
+                        "gender": 0
+                }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+        
+## Activate [/activate]
++ NOTE:
+    + Token not needed
+    + The response code could only be 0 or 1
++ URL parameters:
+    + GET
+        + **token** - the activation token
+
+### Activate [GET]
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+        
+## Change Password [/passwd]
+
++ NOTE: Token needed
++ Attributes of result [code=1]
+    + **type** - error type
+        + 0: The old password is wrong
+        + 1: Others
+
+### Change Password [PUT]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+                
+    + Body
+
+                {
+                    "old": "123456",
+                    "new": "666666"
+                }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+
+## Get Public User Information [/publicInfo/{id}]
+
++ NOTE: Token needed
+
+### Get PublicIinformation [GET]
+
++ Request (application/json)
+    + Headers
+    
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": {
+                "username": "sxs",
+                "level": 2,
+                "gender": 0,
+                "email": "test@sjtu.edu.cn",
+                "account_type": 1
+            
+                "like_count": 10,
+                "question_count": 10,
+                "answer_count": 10,
+                "follower_count": 10,
+                "followed_count": 10
+            }
+        }
+
+## Update Public Information [/publicInfo]
+
++ NOTE: Token needed
++ Attributes of result [code=1]
+    + **type** - error type
+        + 0: Username already exists
+        + 1: Others
+
+### Update Public Information [PUT]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+                
+    + Body
+
+            {
+                "username": "sxs",
+                "gender": 0
+            }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+
+## Group Session
+
+## Log In [/login]
+
+### Log In [POST]
+
++ Attributes of result [code=0]
+    + **role** - role of user
+        - 0: Administrator
+        - 1: Normal user
+        - 2: Disabled user
+        - 3: Not active user
+    + **uid** - User id
+    + **token** - JWT token
+    + **refershToken** - Used to retrieve a new token when token is expired
++ Attibutes of result [code=1]
+    + **type** - error type
+        - 0: User is banned by administrator
+        - 1: Wrong username or password
+
++ Request (application/json)
+
+        {
+            "name": "test",
+            "password": "123456"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": {
+                "role": 0,
+                "uid": 345,
+                "token": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
+                "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
+            }
+        }
+
+## Github Log In [/oauth/github]
+
+### Github Log In [GET]
+
++ Attributes of result [code=0]
+    + **role** - role of user
+        - 0: Administrator
+        - 1: Normal user
+        - 2: Disabled user
+        - 3: Not active user
+    + **uid** - User id
+    + **token** - JWT token
+    + **refershToken** - Used to retrieve a new token when token is expired
++ Attibutes of result [code=1]
+    + **type** - error type
+        - 0: User is banned by administrator
+        - 1: Wrong username or password
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+            "result": {
+                "first": false,
+                "role": 0,
+                "uid": 654,
+                "token": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
+                "refresh_token": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
+            }
+        }
+
+## Log Out [/logout]
+
++ NOTE: Token needed
+
+### Log Out [POST]
+
++ Request (application/json)
+    + Headers
+    
+            Authorization: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
+    
++ Response 200 (application/json)
+    
+        {
+            "code": 0
+        }
+
+## Check Session [/checkSession]
+
++ NOTE: Token needed
+
+### Check Session [GET]
+
++ Request (application/json)
+    + Headers
+    
+            Authorization: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
+    
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+
+## Refresh Token [/refresh]
+
++ NOTE :
+    + Token needed.
+    + New refresh-token and new access-token
+    + **code** will be 1 if user is banned
+    + **code** will be 2 if **refreshToken** is expired 
+    
+    
++ Attributes of result [code=0]
+    + **role** - role of user
+        + 0 : Administrator
+        + 1 : Normal uesr
+    + **uid** - User id
+    + **token** - New JWT token
+    + **refreshToken** - New refresh token
+
+### Refresh Token [POST]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
+   
+    + Body
+        
+            {
+                "refresh":"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6dHJ1ZSwic3ViIjoidGVzdF8wMDAwMDEiLCJpc3MiOiJ1c2VyIiwiaWF0IjoxNTk2MDA5MDg0LCJleHAiOjkyMjMzNzIwMzY4NTQ3NzV9._vxo441Mh6nQ0kMtxeYuk95aBeBi6UY2PRTPuRWvaFs"
+            }
+                
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": {
+                "role": 0,
+                "uid": 1,
+                "token":"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
+                "refresh_token":"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6dHJ1ZSwic3ViIjoidGVzdF8wMDAwMDEiLCJpc3MiOiJ1c2VyIiwiaWF0IjoxNTk2MDA5MDg0LCJleHAiOjkyMjMzNzIwMzY4NTQ3NzV9._vxo441Mh6nQ0kMtxeYuk95aBeBi6UY2PRTPuRWvaFs"
+            }
+        }
+
+## Group Q&A
+
+## Questions [/questions]
+
++ NOTE: Token needed
++ URL parameters
+    + GET
+        + **page**: integer
+
+### List Questions in Main Page [GET]
+
++ Request
+    + Headers
+    
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+                
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": [{
+                "qid": 234,
+                "raiser": {
+                    "uid": 5,
+                    "nickname": "sxs",
+                    "icon": "icon data"
+                }
+                "title": "Favourite programming language?",
+                "time": "2015-08-05T08:40:51.620Z",
+                "answer_count": 5,
+                "view_count": 10,
+                "favorite_count": 20,
+                "category": "study"
+                "labels": ["programming"],
+                "head": "What if we put"
+            }]
+        }
+
+### Create a New Question [POST]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+    
+    + Body
+    
+            {
+                "title": "Favourite programming language?",
+                "content": "<p>example</p>",
+                "labels": ["programming"]
+                "category": "study"
+            }
+
++ Response 201 (application/json)
+
+            {
+                "code": 0,
+                "result": {
+                    "qid": 234
+                }
+            }
+
+### Modify a Question [PUT]
+
++ Request (application/json)
+    + Headers
+    
+                Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+                
+    + Body
+    
+            {
+                "qid": 234,
+                "title": "Favourite OO programming language?",
+                "content": "<p>I just wonder what languages do you prefer.</p>"
+                "category": "life"
+            }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+        
+## Question Detail [/question]
++ NOTE: Token needed
++ URL parameters
+    + GET
+        + **qid**: integer
+
+### Get the Full Content of a Question [GET]
++ Request
+    + Headers
+
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+    
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": "<p>This is the full content of the question.</p>"
+        }
+
+## Answers [/answers]
+
++ NOTE: Token needed
++ URL parameters
+    + GET
+        + **page**: integer
+
+### List Answers Under a Question [GET]
++ Request
+    + Headers
+
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": [{
+                "aid": 234,
+                "answerer": {
+                    "uid":1,
+                    "nickname":"abc",
+                    "icon":""
+                }
+                "like_count":2,
+                "criticism_count":4,
+                "approval_count":2,
+                "comment_count":2,
+                "head":"asadqwf",
+                "time": "2015-08-05T08:40:51.620Z"
+            }]
+        }
+
+### Create a New Answer [POST]
++ Request
+    + Headers
+        
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+    
+    + Body
+    
+            {
+                "qid": 234,
+                "content": "<p>I prefer C#</p>"
+            }
+        
++ Response 201 (application/json)
+        
+        {
+            "code": 0,
+            "result": {
+                "aid": 23
+            }
+        }
+
+### Modify an Answer [PUT]
++ Request
+    + Headers
+    
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+    
+    + Body
+    
+            {
+                "aid": 23,
+                "content": "<p>I prefer C</p>"
+            }
+
++ Response 200 (application/json)
+
+        {
+            "code": 0
+        }
+
+## Answer Detail [/answer]
++ NOTE: Token needed
++ URL parameters
+    + GET
+        + **aid**: integer
+
+### Get the Full Content of a Answer [GET]
++ Request
+    + Headers
+
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+    
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": "<p>This is the full content of the answer.</p>"
+        }
+
+## Comments [/comments]
++ NOTE:
+    + Token needed
+    + Comments will be sorted by time in descent order
++ URL parameters:
+    + GET
+        + **page**: integer
+
+### Get Comments Under an Answer [GET]
++ Request
+    + Headers
+    
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": [{
+                "cmid": 88,
+                "uid": 5,
+                "time": "2015-08-05T08:40:51.620Z",
+                "content": "Ur right"
+            }]
+        }
+
+### Create a Comment [POST]
++ Request
+    + Headers
+        
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
+    + Body
+    
+            {
+                "aid": 24,
+                "content": "Be rational, please"
+            }
++ Response 201 (application/json)
+
+        {
+            "code": 0,
+            "result": {
+                "cmid": 46
+            }
+        }
+
+## Criticisms [/criticisms]
++ NOTE:
+    + Token needed
+    + Criticisms will be sorted by time in descent order
++ URL parameters:
+    + GET
+        + **page**: integer
+
+### Get Criticisms Under an Answer [GET]
++ Request
+    + Headers
+    
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
++ Response 200 (application/json)
+
+        {
+            "code": 0,
+            "result": [{
+                "ctid": 88,
+                "uid": 5,
+                "time": "2015-08-05T08:40:51.620Z",
+                "content": "Ur wrong"
+            }]
+        }
+
+### Create a Criticism [POST]
++ Request
+    + Headers
+        
+            Authorization: eyJhbzI1NiJ9.eyJpZDMNzc1fQ.PJWiCD-Dvg
+
+    + Body
+    
+            {
+                "aid": 24,
+                "content": "I don't agree with you, cuz you didn't even write the correct formula"
+            }
++ Response 201 (application/json)
+
+        {
+            "code": 0,
+            "result": {
+                "ctid": 46
+            }
+        }
+
+## Group Search
+
+## Search Questions [/search]
++ URL parameters:
+    + **page**: integer
+    + **text**: string
+
+### Search[GET]
+
++ Response 200 (application/json)
+
+        {
+            "question_list" : [{
+                "qid": 234,
+                "owner": {
+                    "uid":1,
+                    "nickname":"abc",
+                    "icon":""
+                }
+                "title":"ababa",
+                "description":"abaaba",
+                "answer_count":4,
+                "follow_count":234,
+            }]
+            "user_list" : [],
+            "k_card_list":[{
+                "kid":123,
+                "title":"21asd",
+                "attr":[{
+                    "name":"db",
+                    "value":"sad",
+                    "origin":1234,<!--(answerid)-->
+                }]
+            }]
+        }
+        <!--{-->
+        <!--    "code": 0,-->
+        <!--    "result": {-->
+        <!--        "keywords": ["university", "food", "drink"]-->
+        <!--        "attributes": [{"key": "master", "value": "xxx"}]-->
+        <!--        "labels": ["routine"]-->
+        <!--        "question_list": [{-->
+        <!--            "qid": 234,-->
+        <!--            "owner": 1,-->
+        <!--            "title": "Favourite programming language?",-->
+        <!--            "time": "2015-08-05T08:40:51.620Z",-->
+        <!--            "modified_time": "2015-08-05T08:40:51.620Z",-->
+        <!--            "answer_count": 5,-->
+        <!--            "view_count": 10,-->
+        <!--            "like_count": 15,-->
+        <!--            "follow_count": 20,-->
+        <!--            "remark_count": 23,-->
+        <!--            "category": "study"-->
+        <!--            "tags": ["programming"],-->
+        <!--            "head": "What if we put"-->
+        <!--        }]-->
+        <!--    }-->
+        <!--}-->
+
