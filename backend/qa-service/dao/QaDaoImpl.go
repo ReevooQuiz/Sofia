@@ -13,7 +13,8 @@ import (
 )
 
 type QaDaoImpl struct {
-	db *sql.DB
+	db      *sql.DB
+	session *mgo.Session
 }
 
 var mongoUrl string
@@ -29,6 +30,10 @@ func init() {
 
 func (q *QaDaoImpl) Init() (err error) {
 	q.db, err = sql.Open("mysql", mysqlUrl)
+	if err != nil {
+		return err
+	}
+	q.session, err = mgo.Dial(mongoUrl)
 	return err
 }
 
@@ -37,13 +42,7 @@ func (q *QaDaoImpl) Destruct() {
 }
 
 func (q *QaDaoImpl) FindAnswersByQid(qid bson.ObjectId) (answers []entity.Answers, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return answers, err
-	}
-	defer session.Close()
-	err = session.DB("sofia").C("answers").Find(bson.M{"qid": qid}).All(&answers)
+	err = q.session.DB("sofia").C("answers").Find(bson.M{"qid": qid}).All(&answers)
 	return answers, err
 }
 
@@ -70,14 +69,8 @@ func (q *QaDaoImpl) FindLabelByTitle(title string) (label entity.Labels, err err
 }
 
 func (q *QaDaoImpl) FindQuestionByQid(qid bson.ObjectId) (question entity.Questions, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return question, err
-	}
-	defer session.Close()
 	var res []entity.Questions
-	err = session.DB("sofia").C("questions").Find(bson.M{"_id": qid}).All(&res)
+	err = q.session.DB("sofia").C("questions").Find(bson.M{"_id": qid}).All(&res)
 	if err != nil {
 		return question, err
 	}
@@ -143,14 +136,8 @@ func (q *QaDaoImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
 }
 
 func (q *QaDaoImpl) InsertQuestion(question entity.Questions) (qid bson.ObjectId, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return qid, err
-	}
-	defer session.Close()
 	question.Qid = bson.NewObjectId()
-	err = session.DB("sofia").C("questions").Insert(question)
+	err = q.session.DB("sofia").C("questions").Insert(question)
 	return question.Qid, err
 }
 
