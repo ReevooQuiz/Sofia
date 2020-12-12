@@ -56,6 +56,5 @@ func SignToken(uid bson.ObjectId, role int8, isRefreshToken bool) (result string
 		expireTime = currentTime.Add(accTokenDuration)
 	}
 	result, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"uid": uid, "role": role, "exp": expireTime, "ref": isRefreshToken}).SignedString(jwtSecret)
-	log.Info(err)
 	return result, err
 }

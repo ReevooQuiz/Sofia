@@ -38,6 +38,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	u.usersService = usersService
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/activate", u.Activate)
+	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
 	http.HandleFunc("/register", u.Register)
 	go func() {
@@ -88,6 +89,106 @@ func (u *UsersController) Activate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res.Code = 0
 	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+	var res struct {
+		Code   int8 `json:"code"`
+		Result struct {
+			Type         int8          `json:"type"`
+			Role         int8          `json:"role"`
+			Uid          bson.ObjectId `json:"uid"`
+			Icon         string        `json:"icon"`
+			Name         string        `json:"name"`
+			Nickname     string        `json:"nickname"`
+			Token        string        `json:"token"`
+			RefreshToken string        `json:"refresh_token"`
+		}
+	}
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var user entity.Users
+	user, err = u.usersService.FindUserByName(req.Name)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if req.Password != user.Password {
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if user.Role == entity.DISABLE {
+		res.Code = 1
+		res.Result.Type = 0
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if user.Role == entity.NOTACTIVE {
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var token string
+	token, err = util.SignToken(user.Uid, user.Role, false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var refreshToken string
+	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res.Code = 0
+	res.Result.Role = user.Role
+	res.Result.Uid = user.Uid
+	res.Result.Icon = user.Icon
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
+	res.Result.Token = token
+	res.Result.RefreshToken = refreshToken
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
 }

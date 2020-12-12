@@ -94,6 +94,89 @@ func TestActivate(t *testing.T) {
 	}
 }
 
+func TestLogin(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	users := []entity.Users{
+		{Name: "test", Password: "test", Role: entity.DISABLE},
+		{Name: "test", Password: "test", Role: entity.USER},
+		{Name: "test", Password: "test", Role: entity.NOTACTIVE},
+	}
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByName(users[0].Name).Return(users[0], nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByName(users[0].Name).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByName(users[1].Name).Return(users[1], nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByName(users[2].Name).Return(users[2], nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
+	u := UsersController{mockUsersService}
+	mux.HandleFunc("/login", u.Login)
+	type args struct {
+		name     string
+		password string
+	}
+	type result struct {
+		Type         int8          `json:"type"`
+		Role         int8          `json:"role"`
+		Uid          bson.ObjectId `json:"uid"`
+		Icon         string        `json:"icon"`
+		Name         string        `json:"name"`
+		Nickname     string        `json:"nickname"`
+		Token        string        `json:"token"`
+		RefreshToken string        `json:"refresh_token"`
+	}
+	type res struct {
+		Code   int8   `json:"code"`
+		Result result `json:"result"`
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    res
+	}{
+		{"Disable", args{users[0].Name, users[0].Password}, http.StatusOK, res{1, result{Type: 0}}},
+		{"NameNotFound", args{users[0].Name, users[0].Password}, http.StatusOK, res{1, result{Type: 1}}},
+		{"WrongPassword", args{users[1].Name, ""}, http.StatusOK, res{1, result{Type: 1}}},
+		{"NotActive", args{users[2].Name, users[2].Password}, http.StatusOK, res{1, result{Type: 2}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var req struct {
+				Name     string `json:"name"`
+				Password string `json:"password"`
+			}
+			req.Name = tt.args.name
+			req.Password = tt.args.password
+			requestBody, _ := json.Marshal(req)
+			r, _ := http.NewRequest("POST", "/login", bytes.NewReader(requestBody))
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res res
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestOAuthGithub(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
