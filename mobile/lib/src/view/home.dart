@@ -34,14 +34,12 @@ class _HomeState extends StateMVC<Home> {
           ScrollDirection.reverse) {
         setState(() {
           _isVisible = false;
-          print("**** $_isVisible up");
         });
       }
       if (_hideButtonController.position.userScrollDirection ==
           ScrollDirection.forward) {
         setState(() {
           _isVisible = true;
-          print("**** $_isVisible down");
         });
       }
     });

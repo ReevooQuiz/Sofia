@@ -1,6 +1,6 @@
 class Question {
   final int questionId;
-  final int raiser;
+  final String raiser;
   String imageUrl;
   String title;
   String content;
@@ -9,10 +9,12 @@ class Question {
   int answerCount;
   int viewCount;
   int favoriteCount;
+  bool isSelected = false;
   List<String> labels;
   DateTime time;
 
-  Question(this.questionId, this.raiser, this.title, this.time,{this.imageUrl});
+  Question(this.questionId, this.raiser, this.title, this.time,
+      {this.imageUrl});
 
   factory Question.fromJson(Map<String, dynamic> json) {
     return Question(json['qid'], json['raiser'], json['title'],
