@@ -40,6 +40,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/activate", u.Activate)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
+	http.HandleFunc("/passwd", u.Passwd)
 	http.HandleFunc("/register", u.Register)
 	go func() {
 		defer group.Done()
@@ -109,7 +110,7 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 			Nickname     string        `json:"nickname"`
 			Token        string        `json:"token"`
 			RefreshToken string        `json:"refresh_token"`
-		}
+		} `json:"result"`
 	}
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
@@ -132,15 +133,10 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	var user entity.Users
 	user, err = u.usersService.FindUserByName(req.Name)
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	if req.Password != user.Password {
+	if err != nil || req.Password != user.Password {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 1
 		res.Result.Type = 1
 		object, _ := json.Marshal(res)
@@ -396,6 +392,77 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 		res.Result.First = true
 		res.Result.Role = user.Role
 		res.Result.Uid = user.Uid
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Old string `json:"old"`
+		New string `json:"new"`
+	}
+	var res struct {
+		Code   int8 `json:"code"`
+		Result struct {
+			Type int8 `json:"type"`
+		} `json:"result"`
+	}
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(r.Header.Get("Authorization"))
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	user, err = u.usersService.FindUserByUid(user.Uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if req.Old != user.Password {
+		res.Code = 1
+		res.Result.Type = 0
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	user.Password = req.New
+	err = u.usersService.UpdateUser(user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+	} else {
+		res.Code = 0
 	}
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)

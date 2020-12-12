@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/mock"
+	"github.com/zhanghanchong/users-service/util"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
 	"net/http/httptest"
@@ -233,6 +234,85 @@ func TestOAuthGithub(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("GET", "/oauth/github?code="+tt.args.code+"&error="+tt.args.error, nil)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res res
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestPasswd(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	users := []entity.Users{
+		{Uid: bson.ObjectIdHex("000000000000000000000000"), Password: "test", Role: entity.USER},
+	}
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
+		mockUsersService.EXPECT().UpdateUser(users[0]).Return(nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByUid(users[0].Uid).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
+		mockUsersService.EXPECT().Destruct(),
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
+	u := UsersController{mockUsersService}
+	mux.HandleFunc("/passwd", u.Passwd)
+	type args struct {
+		old string
+		new string
+	}
+	type result struct {
+		Type int8 `json:"type"`
+	}
+	type res struct {
+		Code   int8   `json:"code"`
+		Result result `json:"result"`
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    res
+	}{
+		{"Normal", args{"test", "test"}, http.StatusOK, res{Code: 0}},
+		{"WrongName", args{"test", "test"}, http.StatusOK, res{1, result{1}}},
+		{"WrongPassword", args{}, http.StatusOK, res{1, result{0}}},
+		{"WrongToken", args{"test", "test"}, http.StatusOK, res{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var req struct {
+				Old string `json:"old"`
+				New string `json:"new"`
+			}
+			req.Old = tt.args.old
+			req.New = tt.args.new
+			requestBody, _ := json.Marshal(req)
+			var token string
+			if tt.name != "WrongToken" {
+				token, _ = util.SignToken(users[0].Uid, users[0].Role, false)
+			}
+			r, _ := http.NewRequest("PUT", "/passwd", bytes.NewReader(requestBody))
+			r.Header.Set("Authorization", token)
+			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != tt.wantStatus {

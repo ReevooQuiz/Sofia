@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	accTokenDuration, _ = time.ParseDuration("5m")
-	refTokenDuration, _ = time.ParseDuration("20m")
+	accTokenDuration, _ = time.ParseDuration("15m")
+	refTokenDuration, _ = time.ParseDuration("30m")
 )
 
 var jwtSecret []byte
@@ -24,7 +24,7 @@ func init() {
 	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 }
 
-func CheckToken(tokenString string) (successful bool, uid bson.ObjectId, role int8, exp time.Time, err error) {
+func ParseToken(tokenString string) (successful bool, uid bson.ObjectId, role int8, err error) {
 	var token *jwt.Token
 	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -33,28 +33,23 @@ func CheckToken(tokenString string) (successful bool, uid bson.ObjectId, role in
 		return jwtSecret, nil
 	})
 	if token == nil || err != nil {
-		return false, uid, role, exp, err
+		return false, uid, role, err
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		uid, uidOk := claims["uid"].(bson.ObjectId)
-		role, roleOk := claims["role"].(int8)
-		exp, expOk := claims["exp"].(time.Time)
-		ref, refOk := claims["ref"].(bool)
-		if uidOk && roleOk && expOk && refOk && !ref && exp.After(time.Now()) {
-			return true, uid, role, exp, err
-		}
+		uid = bson.ObjectIdHex(claims["uid"].(string))
+		role = int8(claims["role"].(float64))
+		return true, uid, role, err
 	}
-	return false, uid, role, exp, err
+	return false, uid, role, err
 }
 
-func SignToken(uid bson.ObjectId, role int8, isRefreshToken bool) (result string, err error) {
-	currentTime := time.Now()
-	var expireTime time.Time
-	if isRefreshToken {
-		expireTime = currentTime.Add(refTokenDuration)
+func SignToken(uid bson.ObjectId, role int8, ref bool) (tokenString string, err error) {
+	var exp int64
+	if ref {
+		exp = time.Now().Add(refTokenDuration).Unix()
 	} else {
-		expireTime = currentTime.Add(accTokenDuration)
+		exp = time.Now().Add(accTokenDuration).Unix()
 	}
-	result, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"uid": uid, "role": role, "exp": expireTime, "ref": isRefreshToken}).SignedString(jwtSecret)
-	return result, err
+	tokenString, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"uid": uid, "role": role, "ref": ref, "exp": exp}).SignedString(jwtSecret)
+	return tokenString, err
 }
