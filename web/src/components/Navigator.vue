@@ -24,11 +24,19 @@
         </router-link>
         <a-button type="primary" shape="round" size="small">提问</a-button>
         <a-avatar @click="goToPersonal">
+          <img v-if="this.logStatus" src="'data:image/png;base64,'+this.avtar" alt="图片未上传" />
           <template #icon>
             <UserOutlined />
           </template>
         </a-avatar>
-        <a-button type="primary" shape="round" size="small" @click="goToLogin">登录</a-button>
+        <a-button
+          v-if="this.logStatus"
+          type="primary"
+          shape="round"
+          size="small"
+          @click="goToLogout"
+        >登出</a-button>
+        <a-button v-else type="primary" shape="round" size="small" @click="goToLogin">登录</a-button>
       </a-space>
     </a-row>
   </div>
@@ -38,20 +46,29 @@
 import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
 import { UserOutlined, SearchOutlined } from "@ant-design/icons-vue";
-
-import { Button } from 'ant-design-vue';
+import { message } from "ant-design-vue";
+import { Button } from "ant-design-vue";
 export default {
   components: {
     UserOutlined,
     SearchOutlined,
-     'a-button': Button
-
+    "a-button": Button
   },
   data() {
     return {
-      current: ["home"]
+      current: ["home"],
+      logStatus: false,
+      avtar: ""
     };
   },
+  created() {
+    if (sessionStorage.getItem("user") !== null) {
+      this.logStatus = true;
+      this.avtar = JSON.parse(sessionStorage.getItem("user")).icon;
+    } else {
+    }
+  },
+
   methods: {
     goToPersonal() {
       this.$router.push({ path: "/personal" });
@@ -59,6 +76,31 @@ export default {
     goToLogin() {
       console.log("!");
       this.$router.push({ path: "/login" });
+    },
+    goToLogout() {
+      console.log("!");
+      if (sessionStorage.getItem("user") !== null) {
+        sessionStorage.removeItem("user");
+      }
+      this.logStatus = false;
+
+      message.success("成功登出");
+      this.$router.push({ path: "/" });
+    }
+  },
+  computed: {
+    user: function() {
+      return sessionStorage.getItem("user");
+    }
+  },
+  watch: {
+    user: function(newType) {
+      if (newType !== null) {
+        this.logStatus = true;
+        this.avtar = JSON.parse(newType).icon;
+      } else {
+        this.logStatus = true;
+      }
     }
   }
 };

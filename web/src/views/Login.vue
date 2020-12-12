@@ -6,21 +6,17 @@
           <a-row justify="center">
             <a-col>
               <span id="login-font">登 录</span>
-              <br/>
+              <br />
               <a-form :model="formInline" @submit="handleSubmit" @submit.native.prevent>
                 <a-form-item class="login-input">
-                  <a-input v-model:value="formInline.user" placeholder="请输入用户名">
+                  <a-input v-model:value="formInline.name" placeholder="请输入用户名">
                     <template #prefix>
                       <UserOutlined style="color:rgba(0,0,0,.25)" />
                     </template>
                   </a-input>
                 </a-form-item>
                 <a-form-item class="login-input">
-                  <a-input
-                    v-model:value="formInline.password"
-                    type="password"
-                    placeholder="请输入密码"
-                  >
+                  <a-input v-model:value="formInline.password" type="password" placeholder="请输入密码">
                     <template #prefix>
                       <LockOutlined style="color:rgba(0,0,0,.25)" />
                     </template>
@@ -28,17 +24,14 @@
                 </a-form-item>
 
                 <a-form-item>
-                
-                      <a-button @click="goToRegister">注册</a-button>
-                       
-                      <a-button
-                      style="margin-left:90px;"
-                        type="primary"
-                        html-type="submit"
-                        :disabled="formInline.user === '' || formInline.password === ''"
-                      >登录</a-button>
-                   
-                 
+                  <a-button @click="goToRegister">注册</a-button>
+
+                  <a-button
+                    style="margin-left:90px;"
+                    type="primary"
+                    html-type="submit"
+                    :disabled="formInline.user === '' || formInline.password === ''"
+                  >登录</a-button>
                 </a-form-item>
               </a-form>
             </a-col>
@@ -57,6 +50,8 @@ import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
 import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
 import { Button } from "ant-design-vue";
+import { postRequest } from "@/http/request.js";
+import { message } from "ant-design-vue";
 export default {
   components: {
     "a-button": Button,
@@ -66,7 +61,7 @@ export default {
   data() {
     return {
       formInline: {
-        user: "",
+        name: "",
         password: ""
       }
     };
@@ -75,13 +70,35 @@ export default {
   methods: {
     handleSubmit(e) {
       console.log(this.formInline);
+      postRequest("/login", this.formInline, this.handleLogin, {
+        errorCallback: error => {
+          console.log(error);
+        }
+      });
+    },
+    handleLogin(response) {
+      // 问题： 应该返回头像信息
+      if (response.code == 0) {
+        
+        message.success("登录成功");
+
+       console.log(response.result);
+        sessionStorage.setItem("user", JSON.stringify(response.result));
+    
+      this.$router.back();
+      
+      }
+      // else{
+      //     this.$dialog.alert('您的账户已被禁用，请联系管理员解禁。').then(
+      //         (dialog)=>{
+      //             dialog.close();
+      //         })
+      // }
     },
     goToRegister() {
-      console.log("?");
       this.$router.push({ path: "/register" });
     }
-  },
- 
+  }
 };
 </script>
 
@@ -92,8 +109,9 @@ export default {
 }
 
 #login-block {
-    top: 30%;position: fixed;
-    left: 33%;
+  top: 30%;
+  position: fixed;
+  left: 33%;
   text-align: center;
   background-color: #ffffff;
   width: 480px;
@@ -122,11 +140,4 @@ export default {
 
   background-color: #bae7e5d3;
 }
-
-/* .login-block .ant-input-affix-wrapper > input.ant-input {
-    padding: 0;
-    border: none;
-    outline: none;
-     background-color: #bae7e5d3;
-} */
 </style>

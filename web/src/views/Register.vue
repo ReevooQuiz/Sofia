@@ -92,7 +92,7 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
 import { Button } from "ant-design-vue";
 import { PlusOutlined, LoadingOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
-import {postRequest,server} from "@/http/request.js";
+import {postRequest} from "@/http/request.js";
 function getBase64(img, callback) {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -201,27 +201,26 @@ export default {
     handleFinish(values) {
       console.log(values);
       console.log("finished");
-        server
-        .post('/register', 
-           values
-        )
-        .catch(function (error) {
-            console.log("error");
-          //  errorCallback(error)
+      postRequest('/register',values,this.mycallback,{
+            errorCallback:  (error) => {console.log(error)},
         })
-        .then(response => {
-            console.log("callback");
-            console.log(response);
-            // callback(response.data);
-          
-        });
-      // postRequest('/register',values,this.mycallback,{
-      //       errorCallback:  (error) => {console.log(error)},
-      //   })
     },
     mycallback(response)
     {
-      console.log("!!!!!!!!!");
+      console.log(response);
+      if(response.code==0)
+      {
+        message.error("注册失败：用户名已被使用");
+      }
+      else if(response.code==1)
+      {
+        message.error("注册失败：邮箱已被使用");
+      }
+      else if(response.code==2)
+      {
+        message.success("注册成功");
+        this.$router.push({ path:'/login'  });
+      }
     },
     handleFinishFailed(errors) {
       console.log(JSON.stringify(errors));
