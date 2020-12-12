@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 12/12/2020 14:53:05
+ Date: 12/12/2020 20:09:41
 */
 
 SET NAMES utf8mb4;
@@ -49,6 +49,16 @@ CREATE TABLE `favorites`  (
   PRIMARY KEY (`fid`) USING BTREE,
   INDEX `uid`(`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for followers
+-- ----------------------------
+DROP TABLE IF EXISTS `followers`;
+CREATE TABLE `followers`  (
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `follower` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`uid`, `follower`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for hotlist_items

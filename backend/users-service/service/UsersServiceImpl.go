@@ -38,6 +38,10 @@ func (u *UsersServiceImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, 
 	return u.usersDao.FindUserByUid(uid)
 }
 
+func (u *UsersServiceImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err error) {
+	return u.usersDao.InsertFavorite(favorite)
+}
+
 func (u *UsersServiceImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
 	return u.usersDao.InsertUser(user)
 }

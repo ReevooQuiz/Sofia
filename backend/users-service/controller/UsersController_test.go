@@ -184,13 +184,17 @@ func TestOAuthGithub(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{Oid: "0", Role: entity.USER, AccountType: entity.GITHUB},
+		{Uid: bson.ObjectIdHex("000000000000000000000000"), Oid: "0", Role: entity.USER, AccountType: entity.GITHUB},
 		{Oid: "0", Role: entity.DISABLE, AccountType: entity.GITHUB},
+	}
+	favorites := []entity.Favorites{
+		{Uid: users[0].Uid.Hex(), Title: "Default"},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().FindUserByOidAndAccountType(users[0].Oid, users[0].AccountType).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
 		mockUsersService.EXPECT().InsertUser(gomock.Any()).Return(users[0].Uid, nil),
+		mockUsersService.EXPECT().InsertFavorite(favorites[0]).Return(favorites[0].Fid, nil),
 		mockUsersService.EXPECT().Destruct(),
 		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().FindUserByOidAndAccountType(users[1].Oid, users[1].AccountType).Return(users[1], nil),
@@ -208,7 +212,7 @@ func TestOAuthGithub(t *testing.T) {
 		Type         int8          `json:"type"`
 		First        bool          `json:"first"`
 		Role         int8          `json:"role"`
-		Id           bson.ObjectId `json:"id"`
+		Uid          bson.ObjectId `json:"uid"`
 		Token        string        `json:"token"`
 		RefreshToken string        `json:"refresh_token"`
 	}
@@ -222,7 +226,7 @@ func TestOAuthGithub(t *testing.T) {
 		wantStatus int
 		wantRes    res
 	}{
-		{"NormalAndFirst", args{}, http.StatusOK, res{0, result{First: true, Role: users[0].Role, Id: users[0].Uid}}},
+		{"NormalAndFirst", args{}, http.StatusOK, res{0, result{First: true, Role: users[0].Role, Uid: users[0].Uid}}},
 		{"Disable", args{}, http.StatusOK, res{1, result{Type: 0}}},
 		{"AccessDenied", args{error: "access_denied"}, http.StatusOK, res{1, result{Type: 1}}},
 	}
@@ -252,7 +256,10 @@ func TestRegister(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	users := []entity.Users{
-		{Name: "test", Email: "test@sjtu.edu.cn", Role: entity.NOTACTIVE, AccountType: entity.SOFIA},
+		{Uid: bson.ObjectIdHex("000000000000000000000000"), Name: "test", Email: "test@sjtu.edu.cn", Role: entity.NOTACTIVE, AccountType: entity.SOFIA},
+	}
+	favorites := []entity.Favorites{
+		{Uid: users[0].Uid.Hex(), Title: "Default"},
 	}
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
@@ -266,6 +273,7 @@ func TestRegister(t *testing.T) {
 		mockUsersService.EXPECT().FindUserByName(users[0].Name).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
 		mockUsersService.EXPECT().FindUserByEmail(users[0].Email).Return(entity.Users{}, errors.New("mongo: no rows in result set")),
 		mockUsersService.EXPECT().InsertUser(gomock.Any()).Return(users[0].Uid, nil),
+		mockUsersService.EXPECT().InsertFavorite(favorites[0]).Return(favorites[0].Fid, nil),
 		mockUsersService.EXPECT().Destruct(),
 	)
 	u := UsersController{mockUsersService}

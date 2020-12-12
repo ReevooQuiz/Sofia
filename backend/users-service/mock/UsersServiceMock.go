@@ -125,6 +125,21 @@ func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersService)(nil).Init), arg0...)
 }
 
+// InsertFavorite mocks base method
+func (m *MockUsersService) InsertFavorite(arg0 entity.Favorites) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertFavorite", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertFavorite indicates an expected call of InsertFavorite
+func (mr *MockUsersServiceMockRecorder) InsertFavorite(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFavorite", reflect.TypeOf((*MockUsersService)(nil).InsertFavorite), arg0)
+}
+
 // InsertUser mocks base method
 func (m *MockUsersService) InsertUser(arg0 entity.Users) (bson.ObjectId, error) {
 	m.ctrl.T.Helper()

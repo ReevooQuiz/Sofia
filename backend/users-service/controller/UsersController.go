@@ -373,8 +373,20 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, AccountType: entity.GITHUB, NotificationTime: time.Now()}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now()}
 	user.Uid, err = u.usersService.InsertUser(user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid.Hex()
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersService.InsertFavorite(favorite)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -432,6 +444,9 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	user.Gender = req.Gender
 	user.Role = entity.NOTACTIVE
 	user.AccountType = entity.SOFIA
+	user.Exp = 0
+	user.FollowerCount = 0
+	user.FollowingCount = 0
 	user.NotificationTime = time.Now()
 	_, err = u.usersService.FindUserByName(user.Name)
 	if err == nil {
@@ -450,6 +465,18 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Uid, err = u.usersService.InsertUser(user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid.Hex()
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersService.InsertFavorite(favorite)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1

@@ -92,6 +92,22 @@ func (u *UsersDaoImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err 
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err error) {
+	var stmt *sql.Stmt
+	stmt, err = u.db.Prepare("insert into favorites(uid, title) values(?, ?)")
+	if err != nil {
+		return fid, err
+	}
+	defer stmt.Close()
+	var res sql.Result
+	res, err = stmt.Exec(favorite.Uid, favorite.Title)
+	if err != nil {
+		return fid, err
+	}
+	fid, err = res.LastInsertId()
+	return fid, err
+}
+
 func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
 	user.Uid = bson.NewObjectId()
 	err = u.session.DB("sofia").C("users").Insert(user)
