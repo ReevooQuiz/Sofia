@@ -5,4 +5,4 @@ export 'controller/account.dart';
 export 'controller/home.dart';
 export 'controller/entry.dart';
 
-const String hostUrl = 'http://192.168.3.40:8070/';
+const String hostUrl = 'https://private-1648c9-reevooapi.apiary-mock.com/';

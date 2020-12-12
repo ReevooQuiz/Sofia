@@ -1,11 +1,12 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile/src/controller.dart' show ControllerMVC, hostUrl;
+import 'package:mobile/src/controller.dart' show ControllerMVC;
 import 'package:mobile/src/model/form.dart';
 import 'package:mobile/src/model/user.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile/src/resources/api_provider.dart';
 import 'package:mobile/src/view.dart';
 import 'package:simple_auth/simple_auth.dart' as simpleAuth;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -16,7 +17,7 @@ class AccountCon extends ControllerMVC {
   final _signInFormKey = GlobalKey<FormState>();
   final _forgetFormKey = GlobalKey<FormState>();
   final _changeFormKey = GlobalKey<FormState>();
-  static bool loginState = true;
+  static bool loginState = false;
   bool _codeSent = false;
   String _code;
   User _user;
@@ -46,7 +47,6 @@ class AccountCon extends ControllerMVC {
   GlobalKey<FormState> get forgetFormKey => _forgetFormKey;
   GlobalKey<FormState> get changeFormKey => _changeFormKey;
   Future<User> get future => Future.value(_user);
-
   static AccountCon get con => _this;
 
   set name(String name) {
@@ -88,35 +88,65 @@ class AccountCon extends ControllerMVC {
           // Validate will return true if the form is valid, or false if
           // the form is invalid.
           if (_loginFormKey.currentState.validate()) {
+            _user = User("-1", "<<invalid>>");
             _loginFormKey.currentState.save();
+            showDialog(
+              context: stateMVC.context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                content: CircularProgressIndicator(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 122,vertical: 20),
+              ),
+            );
             fetchAccount(LoginForm(_user.name, _user.password), http.Client())
                 .then((value) {
+              Navigator.pop(stateMVC.context);
               switch (value.type) {
                 case "mismatch":
                   {
-                    Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
-                      content: Text("用户名或密码错误"),
-                    ));
+                                        showDialog(
+                      context: stateMVC.context,
+                      builder: (context) => AlertDialog(
+                        content: Text("用户名或密码错误"),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text("确定"))
+                        ],
+                      ),
+                    ).then((value) {
+                      Navigator.pop(stateMVC.context);
+                    });
                   }
                   break;
                 case "banned":
                   {
-                    Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
-                      content: Text("你的账号已被禁用"),
-                    ));
+                                        showDialog(
+                      context: stateMVC.context,
+                      builder: (context) => AlertDialog(
+                        content: Text("你的账号已被禁用"),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text("确定"))
+                        ],
+                      ),
+                    ).then((value) {
+                      Navigator.pop(stateMVC.context);
+                    });
                   }
                   break;
                 default:
                   {
-                    Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
-                      content: Text("登录成功"),
-                    ));
-                    loginState = true;
-                    Navigator.pop(stateMVC.context);
-                    Navigator.push(
-                        stateMVC.context,
-                        MaterialPageRoute(
-                            builder: (BuildContext context) => Home()));
+                    _user = value;
+                    
+                      loginState = true;
+                      Navigator.pop(stateMVC.context);
+                      Navigator.push(
+                          stateMVC.context,
+                          MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  Home(title: "Sofia")));
                   }
               }
             });
@@ -184,9 +214,10 @@ class AccountCon extends ControllerMVC {
         if (_changeFormKey.currentState.validate()) {
           _changeFormKey.currentState.save();
           Navigator.pop(stateMVC.context);
-        Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
-                      content: Text("修改密码成功，请牢记您的新密码。"),
-                    ));}
+          Scaffold.of(stateMVC.context).showSnackBar(SnackBar(
+            content: Text("修改密码成功，请牢记您的新密码。"),
+          ));
+        }
       },
       child: Text('确认修改'));
 
@@ -197,8 +228,8 @@ class AccountCon extends ControllerMVC {
         onPressed: () async {
           try {
             var success = await githubApi.authenticate();
-            Scaffold.of(stateMVC.context).showSnackBar(
-                SnackBar(content: Text("登录成功: $success")));
+            Scaffold.of(stateMVC.context)
+                .showSnackBar(SnackBar(content: Text("登录成功: $success")));
           } catch (e) {
             print("$e");
           }
@@ -216,12 +247,7 @@ class AccountCon extends ControllerMVC {
       ));
 
   Future<User> fetchAccount(LoginForm form, http.Client client) async {
-    final response = await client.post(hostUrl + 'login', body: form.toJson());
-    final resJson = jsonDecode(response.body);
-    if (resJson['code'] == 0) {
-      return User.fromJson(resJson);
-    } else
-      return User.fromError(resJson['type']);
+    return ApiProvider(http.Client()).login(form.toJson());
   }
 
   bool validPassword(String confirmPassword) {

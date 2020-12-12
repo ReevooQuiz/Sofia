@@ -78,6 +78,7 @@ class LoginState extends StateMVC<Login> {
                           _accountCon.name = value;
                         },
                         autofocus: true,
+                        textInputAction: TextInputAction.next,
                       )),
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -86,18 +87,16 @@ class LoginState extends StateMVC<Login> {
                       decoration: const InputDecoration(
                           hintText: '密码', labelText: '密码'),
                       validator: (value) {
-                        if (value.trim().isEmpty) {
+                        if (value.isEmpty) {
                           return '请输入密码';
                         }
                         return null;
-                      },
-                      onChanged: (value) {
-                        _accountCon.password = value;
                       },
                       obscureText: true,
                       onSaved: (value) {
                         _accountCon.password = value;
                       },
+                        textInputAction: TextInputAction.done,
                     ),
                   ),
                   Padding(
