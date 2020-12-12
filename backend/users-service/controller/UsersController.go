@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/service"
+	"github.com/zhanghanchong/users-service/util"
 	"gopkg.in/gomail.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type UsersController struct {
@@ -94,9 +96,10 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var res struct {
 		Code   int8 `json:"code"`
 		Result struct {
+			Type         int8          `json:"type"`
 			First        bool          `json:"first"`
 			Role         int8          `json:"role"`
-			Id           bson.ObjectId `json:"id"`
+			Uid          bson.ObjectId `json:"uid"`
 			Token        string        `json:"token"`
 			RefreshToken string        `json:"refresh_token"`
 		} `json:"result"`
@@ -106,6 +109,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -114,6 +118,14 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.FormValue("error") == "access_denied" {
+		res.Code = 1
+		res.Result.Type = 1
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -123,6 +135,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -134,6 +147,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -149,6 +163,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -157,6 +172,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -167,6 +183,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -210,6 +227,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -217,24 +235,54 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var user entity.Users
 	user, err = u.usersService.FindUserByOidAndAccountType(strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
 	if err == nil {
+		if user.Role == entity.DISABLE {
+			res.Code = 1
+			res.Result.Type = 0
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var token string
+		token, err = util.SignToken(user.Uid, user.Role, false)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Type = 2
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var refreshToken string
+		refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Type = 2
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
 		res.Code = 0
 		res.Result.First = false
 		res.Result.Role = user.Role
-		res.Result.Id = user.Uid
+		res.Result.Uid = user.Uid
+		res.Result.Token = token
+		res.Result.RefreshToken = refreshToken
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.NOTACTIVE, AccountType: entity.GITHUB}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, AccountType: entity.GITHUB, NotificationTime: time.Now()}
 	user.Uid, err = u.usersService.InsertUser(user)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 	} else {
 		res.Code = 0
 		res.Result.First = true
 		res.Result.Role = user.Role
-		res.Result.Id = user.Uid
+		res.Result.Uid = user.Uid
 	}
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
@@ -283,7 +331,8 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	user.Gender = req.Gender
 	user.Role = entity.NOTACTIVE
 	user.AccountType = entity.SOFIA
-	_, err = u.usersService.FindUserByNickname(user.Nickname)
+	user.NotificationTime = time.Now()
+	_, err = u.usersService.FindUserByName(user.Name)
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 0

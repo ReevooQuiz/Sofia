@@ -13,11 +13,14 @@ import (
 )
 
 type UsersDaoImpl struct {
-	db *sql.DB
+	db      *sql.DB
+	session *mgo.Session
 }
 
-var mongoUrl string
-var mysqlUrl string
+var (
+	mongoUrl string
+	mysqlUrl string
+)
 
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
@@ -29,22 +32,21 @@ func init() {
 
 func (u *UsersDaoImpl) Init() (err error) {
 	u.db, err = sql.Open("mysql", mysqlUrl)
+	if err != nil {
+		return err
+	}
+	u.session, err = mgo.Dial(mongoUrl)
 	return err
 }
 
 func (u *UsersDaoImpl) Destruct() {
 	_ = u.db.Close()
+	u.session.Close()
 }
 
 func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return user, err
-	}
-	defer session.Close()
 	var res []entity.Users
-	err = session.DB("sofia").C("users").Find(bson.M{"email": email}).All(&res)
+	err = u.session.DB("sofia").C("users").Find(bson.M{"email": email}).All(&res)
 	if err != nil {
 		return user, err
 	}
@@ -54,15 +56,9 @@ func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err err
 	return res[0], err
 }
 
-func (u *UsersDaoImpl) FindUserByNickname(nickname string) (user entity.Users, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return user, err
-	}
-	defer session.Close()
+func (u *UsersDaoImpl) FindUserByName(name string) (user entity.Users, err error) {
 	var res []entity.Users
-	err = session.DB("sofia").C("users").Find(bson.M{"nickname": nickname}).All(&res)
+	err = u.session.DB("sofia").C("users").Find(bson.M{"name": name}).All(&res)
 	if err != nil {
 		return user, err
 	}
@@ -73,14 +69,8 @@ func (u *UsersDaoImpl) FindUserByNickname(nickname string) (user entity.Users, e
 }
 
 func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return user, err
-	}
-	defer session.Close()
 	var res []entity.Users
-	err = session.DB("sofia").C("users").Find(bson.M{"oid": oid, "account_type": accountType}).All(&res)
+	err = u.session.DB("sofia").C("users").Find(bson.M{"oid": oid, "account_type": accountType}).All(&res)
 	if err != nil {
 		return user, err
 	}
@@ -91,14 +81,8 @@ func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8)
 }
 
 func (u *UsersDaoImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return user, err
-	}
-	defer session.Close()
 	var res []entity.Users
-	err = session.DB("sofia").C("users").Find(bson.M{"_id": uid}).All(&res)
+	err = u.session.DB("sofia").C("users").Find(bson.M{"_id": uid}).All(&res)
 	if err != nil {
 		return user, err
 	}
@@ -109,23 +93,11 @@ func (u *UsersDaoImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err 
 }
 
 func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return uid, err
-	}
-	defer session.Close()
 	user.Uid = bson.NewObjectId()
-	err = session.DB("sofia").C("users").Insert(user)
+	err = u.session.DB("sofia").C("users").Insert(user)
 	return user.Uid, err
 }
 
 func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
-	var session *mgo.Session
-	session, err = mgo.Dial(mongoUrl)
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-	return session.DB("sofia").C("users").Update(bson.M{"_id": user.Uid}, user)
+	return u.session.DB("sofia").C("users").Update(bson.M{"_id": user.Uid}, user)
 }
