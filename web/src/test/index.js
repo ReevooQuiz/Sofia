@@ -4,6 +4,7 @@ const express = require("express");
 const Mock = require("mockjs");
 const apiRoutes = express.Router();
 
+// 启用mock : node test/test
 apiRoutes.get("/question", function (req, res) {
     let jsonResponse = {};
     res.vary(
@@ -16,7 +17,7 @@ apiRoutes.get("/question", function (req, res) {
         jsonResponse,
         Mock.mock({
             // data: {
-                code: 200,
+                status: 200,
                 qid: 234,
                 owner: {
                     user_id:1,
@@ -88,7 +89,27 @@ apiRoutes.get("/question", function (req, res) {
         res.json(jsonResponse);
     }, 200);
 });
+apiRoutes.post("/register", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
 
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+            code: 2,
+            status: 200,
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
 apiRoutes.get("/search", function (req, res) {
     let jsonResponse = {};
     res.vary(
@@ -101,7 +122,7 @@ apiRoutes.get("/search", function (req, res) {
         jsonResponse,
         Mock.mock({
             // data: {
-            code: 200,
+            status: 200,
             question_list: [
                 {
                     qid: 1,

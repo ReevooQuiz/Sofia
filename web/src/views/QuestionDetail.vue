@@ -32,7 +32,7 @@
   </div>
 </template>
 
-<script>
+<script >
 import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
@@ -67,44 +67,7 @@ const data = {
       content: "asadqwf"
     }
   ]
-  // questionHead:{
-  //   id: 1,
-  //   title: "Ant Design Title 1",
-  //   user:"akvfcdg",
-  //   description:"dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-  //   likeNum :123,
-  //   dislikeNum:4567,
-  //   commentNum:7890,
-  //   content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-  //   followers: 1551,
-  //   answers:114514
-  // },
-  // answers:[
-  //     {
-  //         id:1,
-  //         user:"akangakang",
-  //         likeNum :123,
-  //         dislikeNum:4567,
-  //         commentNum:7890,
-  //         content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-  //     },
-  //     {
-  //         id:2,
-  //         user:"violedo",
-  //         likeNum :12524,
-  //         dislikeNum:427,
-  //         commentNum:785460,
-  //         content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-  //     },
-  //     {
-  //         id:3,
-  //         user:"zhc",
-  //         likeNum :1465,
-  //         dislikeNum:478,
-  //         commentNum:7250,
-  //         content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-  //     },
-  // ]
+  
 };
 
 const orderBy = ["按热度排序", "按时间排序"];

@@ -1,26 +1,43 @@
 <template>
-  <div id="background">
-    <Navigator></Navigator>
-    <br/>
-    <router-view />
-  </div>
+ 
+    
+    <div id="background">
+     <!-- <a-config-provider :locale="locale"> -->
+        <Navigator></Navigator>
+        <br />
+        <router-view />
+      <!-- </a-config-provider> -->
+    </div>
+  
 </template>
 
-<script lang="ts">
+<script >
 import { Options, Vue } from "vue-class-component";
 import Navigator from "@/components/Navigator.vue";
 
-@Options({
+import zh_CN from "ant-design-vue/lib/locale-provider/zh_CN";
+import moment from "moment";
+import "moment/locale/zh-cn";
+
+moment.locale("zh-cn");
+export default {
   components: {
     Navigator
-  }
-})
-export default class App extends Vue {}
+  },
+  data() {
+    return {
+       locale: zh_CN
+    };
+  },
+  
+
+};
 </script>
 
 
 <style>
 #background {
+  min-height: 683px;
   background-color: #edeeed;
 }
 #app {
