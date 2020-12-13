@@ -1,9 +1,17 @@
 package service
 
 import (
+	"crypto/sha256"
+	"fmt"
 	"github.com/zhanghanchong/users-service/dao"
 	"github.com/zhanghanchong/users-service/entity"
 	"gopkg.in/mgo.v2/bson"
+	"math/rand"
+	"time"
+)
+
+const (
+	SaltSize = 16
 )
 
 type UsersServiceImpl struct {
@@ -13,6 +21,7 @@ type UsersServiceImpl struct {
 func (u *UsersServiceImpl) Init(usersDao ...dao.UsersDao) (err error) {
 	if len(usersDao) == 0 {
 		usersDao = append(usersDao, &dao.UsersDaoImpl{})
+		rand.Seed(time.Now().UnixNano())
 	}
 	u.usersDao = usersDao[0]
 	return u.usersDao.Init()
@@ -48,4 +57,16 @@ func (u *UsersServiceImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err
 
 func (u *UsersServiceImpl) UpdateUser(user entity.Users) (err error) {
 	return u.usersDao.UpdateUser(user)
+}
+
+func (u *UsersServiceImpl) HashPassword(password string, salt string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(password + salt)))
+}
+
+func (u *UsersServiceImpl) generateSalt() string {
+	b := make([]byte, SaltSize)
+	for i := range b {
+		b[i] = byte(rand.Uint32() & 0xFF)
+	}
+	return fmt.Sprintf("%x", b)
 }
