@@ -8,7 +8,6 @@ import (
 type QaDao interface {
 	Init() (err error)
 	Destruct()
-
 	FindAnswersByQid(qid bson.ObjectId) (answers []entity.Answers, err error)
 	FindLabelByLid(lid int64) (label entity.Labels, err error)
 	FindLabelByTitle(title string) (label entity.Labels, err error)

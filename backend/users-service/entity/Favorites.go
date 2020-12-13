@@ -2,6 +2,6 @@ package entity
 
 type Favorites struct {
 	Fid   int64  `json:"fid"`
-	Uid   string `json:"uid"`
+	Uid   int64  `json:"uid"`
 	Title string `json:"title"`
 }

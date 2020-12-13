@@ -7,8 +7,7 @@ package mock
 import (
 	gomock "github.com/golang/mock/gomock"
 	dao "github.com/zhanghanchong/users-service/dao"
-	entity "github.com/zhanghanchong/users-service/entity"
-	bson "gopkg.in/mgo.v2/bson"
+	service "github.com/zhanghanchong/users-service/service"
 	reflect "reflect"
 )
 
@@ -47,66 +46,6 @@ func (mr *MockUsersServiceMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersService)(nil).Destruct))
 }
 
-// FindUserByEmail mocks base method
-func (m *MockUsersService) FindUserByEmail(arg0 string) (entity.Users, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByEmail", arg0)
-	ret0, _ := ret[0].(entity.Users)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByEmail indicates an expected call of FindUserByEmail
-func (mr *MockUsersServiceMockRecorder) FindUserByEmail(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmail", reflect.TypeOf((*MockUsersService)(nil).FindUserByEmail), arg0)
-}
-
-// FindUserByName mocks base method
-func (m *MockUsersService) FindUserByName(arg0 string) (entity.Users, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByName", arg0)
-	ret0, _ := ret[0].(entity.Users)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByName indicates an expected call of FindUserByName
-func (mr *MockUsersServiceMockRecorder) FindUserByName(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByName", reflect.TypeOf((*MockUsersService)(nil).FindUserByName), arg0)
-}
-
-// FindUserByOidAndAccountType mocks base method
-func (m *MockUsersService) FindUserByOidAndAccountType(arg0 string, arg1 int8) (entity.Users, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByOidAndAccountType", arg0, arg1)
-	ret0, _ := ret[0].(entity.Users)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByOidAndAccountType indicates an expected call of FindUserByOidAndAccountType
-func (mr *MockUsersServiceMockRecorder) FindUserByOidAndAccountType(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByOidAndAccountType", reflect.TypeOf((*MockUsersService)(nil).FindUserByOidAndAccountType), arg0, arg1)
-}
-
-// FindUserByUid mocks base method
-func (m *MockUsersService) FindUserByUid(arg0 bson.ObjectId) (entity.Users, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByUid", arg0)
-	ret0, _ := ret[0].(entity.Users)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindUserByUid indicates an expected call of FindUserByUid
-func (mr *MockUsersServiceMockRecorder) FindUserByUid(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByUid", reflect.TypeOf((*MockUsersService)(nil).FindUserByUid), arg0)
-}
-
 // Init mocks base method
 func (m *MockUsersService) Init(arg0 ...dao.UsersDao) error {
 	m.ctrl.T.Helper()
@@ -125,46 +64,92 @@ func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersService)(nil).Init), arg0...)
 }
 
-// InsertFavorite mocks base method
-func (m *MockUsersService) InsertFavorite(arg0 entity.Favorites) (int64, error) {
+// Login mocks base method
+func (m *MockUsersService) Login(arg0 service.ReqLogin) (service.ResLogin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertFavorite", arg0)
-	ret0, _ := ret[0].(int64)
+	ret := m.ctrl.Call(m, "Login", arg0)
+	ret0, _ := ret[0].(service.ResLogin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// InsertFavorite indicates an expected call of InsertFavorite
-func (mr *MockUsersServiceMockRecorder) InsertFavorite(arg0 interface{}) *gomock.Call {
+// Login indicates an expected call of Login
+func (mr *MockUsersServiceMockRecorder) Login(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFavorite", reflect.TypeOf((*MockUsersService)(nil).InsertFavorite), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUsersService)(nil).Login), arg0)
 }
 
-// InsertUser mocks base method
-func (m *MockUsersService) InsertUser(arg0 entity.Users) (bson.ObjectId, error) {
+// OAuthGithub mocks base method
+func (m *MockUsersService) OAuthGithub(arg0, arg1 string) (service.ResOAuthGithub, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InsertUser", arg0)
-	ret0, _ := ret[0].(bson.ObjectId)
+	ret := m.ctrl.Call(m, "OAuthGithub", arg0, arg1)
+	ret0, _ := ret[0].(service.ResOAuthGithub)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// InsertUser indicates an expected call of InsertUser
-func (mr *MockUsersServiceMockRecorder) InsertUser(arg0 interface{}) *gomock.Call {
+// OAuthGithub indicates an expected call of OAuthGithub
+func (mr *MockUsersServiceMockRecorder) OAuthGithub(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUser", reflect.TypeOf((*MockUsersService)(nil).InsertUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OAuthGithub", reflect.TypeOf((*MockUsersService)(nil).OAuthGithub), arg0, arg1)
 }
 
-// UpdateUser mocks base method
-func (m *MockUsersService) UpdateUser(arg0 entity.Users) error {
+// Passwd mocks base method
+func (m *MockUsersService) Passwd(arg0 string, arg1 service.ReqPasswd) (service.ResPasswd, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "Passwd", arg0, arg1)
+	ret0, _ := ret[0].(service.ResPasswd)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// UpdateUser indicates an expected call of UpdateUser
-func (mr *MockUsersServiceMockRecorder) UpdateUser(arg0 interface{}) *gomock.Call {
+// Passwd indicates an expected call of Passwd
+func (mr *MockUsersServiceMockRecorder) Passwd(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUsersService)(nil).UpdateUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Passwd", reflect.TypeOf((*MockUsersService)(nil).Passwd), arg0, arg1)
+}
+
+// Register mocks base method
+func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegister, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Register", arg0)
+	ret0, _ := ret[0].(service.ResRegister)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Register indicates an expected call of Register
+func (mr *MockUsersServiceMockRecorder) Register(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUsersService)(nil).Register), arg0)
+}
+
+// VerificationCode mocks base method
+func (m *MockUsersService) VerificationCode(arg0 bool, arg1 string) (service.ResVerificationCode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerificationCode", arg0, arg1)
+	ret0, _ := ret[0].(service.ResVerificationCode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerificationCode indicates an expected call of VerificationCode
+func (mr *MockUsersServiceMockRecorder) VerificationCode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerificationCode", reflect.TypeOf((*MockUsersService)(nil).VerificationCode), arg0, arg1)
+}
+
+// Verify mocks base method
+func (m *MockUsersService) Verify(arg0 string, arg1 int64) (service.ResVerify, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Verify", arg0, arg1)
+	ret0, _ := ret[0].(service.ResVerify)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Verify indicates an expected call of Verify
+func (mr *MockUsersServiceMockRecorder) Verify(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Verify", reflect.TypeOf((*MockUsersService)(nil).Verify), arg0, arg1)
 }
