@@ -1,5 +1,5 @@
 <template>
-  <div >
+  <div>
     <a-col :span="20" :offset="2">
       <a-row>
         <div>
@@ -46,7 +46,7 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
-import server from "@/http/request.js";
+import {server} from "@/http/request.js";
 const data = {
   code: 0,
   qid: 234,
@@ -124,7 +124,7 @@ export default {
   methods: {
     handleOrderClick(e) {
       this.orderNow = orderBy[e.key];
-    }
+    },
     onWriteAnswer(){
       window.scrollTo(0,window.outerHeight);
       if (this.writeAnswer){

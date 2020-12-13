@@ -14,13 +14,6 @@
       <QuestionForSearch v-for="(item) in recommendedQuestionData" v-bind:key="item.id" :ques="item" />
     </a-col>
     <a-col :span="4">
-<!--      <a-card  size="small" :bordered="false">热榜</a-card>-->
-<!--      <a-card  size="small"  v-for="(item) in hotRankData" v-bind:key="item.index">-->
-<!--        <a-row type="flex" justify="space-between">-->
-<!--          <a style="color: #000000">{{item.index}} {{ item.name}}</a>-->
-<!--          <a style="color: #000000">1242535</a>-->
-<!--        </a-row>-->
-<!--      </a-card>-->
       <a-table
           :columns="columns"
           :data-source="hotRankData"
@@ -41,40 +34,61 @@ import UserForSearch from "@/components/UserForSearch";
 import CardForSearch from "@/components/CardForSearch";
 const recommendedQuestionData = [
   {
-    id: 1,
-    title: "Ant Design Title 1",
-    user: "akvfcdg",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 1,
+    owner: {
+      user_id: 1,
+      user_name: "阿钪",
+      user_icon:
+          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+
+    follow_count: 234
   },
   {
-    id: 2,
-    title: "A7654 Title 1",
-    user: "dfsfskang",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   },
   {
-    id: 3,
-    title: "gfds 1",
-    user: "ererang",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   },
   {
-    id: 4,
-    title: "ytre",
-    user: "akgfds",
-    description: "dfghjklfcghjm,dfgbndghjkrewqwertyuiytr",
-    likeNum: 123,
-    dislikeNum: 4567,
-    commentNum: 7890
+    qid: 345,
+    owner: {
+      user_id: 3,
+      user_name: "violedo",
+      user_icon:
+          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
+    },
+    title: "如何看待上海交通大学花店事件",
+    description:
+        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+    answer_count: 4,
+    follow_count: 234
   }
 ];
 const userData=[{
