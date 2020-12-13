@@ -17,6 +17,4 @@ type UsersService interface {
 	InsertFavorite(favorite entity.Favorites) (fid int64, err error)
 	InsertUser(user entity.Users) (uid bson.ObjectId, err error)
 	UpdateUser(user entity.Users) (err error)
-
-	Login(name string, password string) (suc bool, role int8, id int64, tpy int8)
 }
