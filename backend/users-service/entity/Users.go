@@ -30,8 +30,7 @@ type Users struct {
 	Oid              string        `bson:"oid"`
 	Name             string        `bson:"name"`
 	Nickname         string        `bson:"nickname"`
-	Salt             string        `bson:"salt"`
-	PasswordHash     string        `bson:"password_hash"`
+	Password         string        `bson:"password"`
 	Email            string        `bson:"email"`
 	Icon             string        `bson:"icon"`
 	Gender           int8          `bson:"gender"`
