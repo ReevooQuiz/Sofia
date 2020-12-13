@@ -3,28 +3,28 @@
     <a-row type="flex" justify="space-between" align="middle">
       <img alt="Sofia" src="../assets/Sofia.png" height="25" width="65" style="marginLeft:20px" />
       <a-menu v-model:selectedKeys="current" mode="horizontal" inlineIndent="0" align="middle">
-        <a-menu-item key="home">
-          <router-link to="/">首页</router-link>
-        </a-menu-item>
-        <a-menu-item key="category">分类</a-menu-item>
-        <a-menu-item key="recommend">推荐</a-menu-item>
+
+                <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
+                <a-menu-item key="category">分类</a-menu-item>
+              <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
         <a-menu-item key="explore">探索</a-menu-item>
         <a-menu-item key="ban">
           <router-link to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
-          <router-link to="/personal">我的</router-link>
-        </a-menu-item>
-      </a-menu>
-      <a-space :size="10" style="marginRight:20px">
-        <router-link to="/">
-          <a-button type="primary" shape="circle">
-            <template #icon>
-              <SearchOutlined style="color:'#FFFFFF'" />
-            </template>
-          </a-button>
-        </router-link>
-        <a-button type="primary" shape="round" size="small">提问</a-button>
-        <a-avatar @click="goToPersonal">
+          <router-link to="/personal">我的</router-link></a-menu-item>
+            </a-menu>
+            <a-space :size="10" style="marginRight:20px">
+                <router-link to="/">
+                    <a-button type="primary" shape="circle" >
+                        <template #icon>
+                            <SearchOutlined style="color:'#FFFFFF'"/>
+                        </template>
+                    </a-button>
+                </router-link>
+                <a-button type="primary" shape="round" size="small">
+                  <router-link to="/postQuestion">提问</router-link>
+                </a-button>
+                <a-avatar@click="goToPersonal">
           <img v-if="this.logStatus" src="'data:image/png;base64,'+this.avtar" alt="图片未上传" />
           <template #icon>
             <UserOutlined />
