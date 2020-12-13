@@ -26,8 +26,8 @@ func (u *UsersServiceImpl) FindUserByEmail(email string) (user entity.Users, err
 	return u.usersDao.FindUserByEmail(email)
 }
 
-func (u *UsersServiceImpl) FindUserByNickname(nickname string) (user entity.Users, err error) {
-	return u.usersDao.FindUserByNickname(nickname)
+func (u *UsersServiceImpl) FindUserByName(name string) (user entity.Users, err error) {
+	return u.usersDao.FindUserByName(name)
 }
 
 func (u *UsersServiceImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
@@ -36,6 +36,10 @@ func (u *UsersServiceImpl) FindUserByOidAndAccountType(oid string, accountType i
 
 func (u *UsersServiceImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
 	return u.usersDao.FindUserByUid(uid)
+}
+
+func (u *UsersServiceImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err error) {
+	return u.usersDao.InsertFavorite(favorite)
 }
 
 func (u *UsersServiceImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {

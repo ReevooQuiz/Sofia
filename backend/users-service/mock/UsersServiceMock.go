@@ -62,19 +62,19 @@ func (mr *MockUsersServiceMockRecorder) FindUserByEmail(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByEmail", reflect.TypeOf((*MockUsersService)(nil).FindUserByEmail), arg0)
 }
 
-// FindUserByNickname mocks base method
-func (m *MockUsersService) FindUserByNickname(arg0 string) (entity.Users, error) {
+// FindUserByName mocks base method
+func (m *MockUsersService) FindUserByName(arg0 string) (entity.Users, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindUserByNickname", arg0)
+	ret := m.ctrl.Call(m, "FindUserByName", arg0)
 	ret0, _ := ret[0].(entity.Users)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindUserByNickname indicates an expected call of FindUserByNickname
-func (mr *MockUsersServiceMockRecorder) FindUserByNickname(arg0 interface{}) *gomock.Call {
+// FindUserByName indicates an expected call of FindUserByName
+func (mr *MockUsersServiceMockRecorder) FindUserByName(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByNickname", reflect.TypeOf((*MockUsersService)(nil).FindUserByNickname), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByName", reflect.TypeOf((*MockUsersService)(nil).FindUserByName), arg0)
 }
 
 // FindUserByOidAndAccountType mocks base method
@@ -123,6 +123,21 @@ func (m *MockUsersService) Init(arg0 ...dao.UsersDao) error {
 func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersService)(nil).Init), arg0...)
+}
+
+// InsertFavorite mocks base method
+func (m *MockUsersService) InsertFavorite(arg0 entity.Favorites) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertFavorite", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertFavorite indicates an expected call of InsertFavorite
+func (mr *MockUsersServiceMockRecorder) InsertFavorite(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFavorite", reflect.TypeOf((*MockUsersService)(nil).InsertFavorite), arg0)
 }
 
 // InsertUser mocks base method

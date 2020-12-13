@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/service"
+	"github.com/zhanghanchong/users-service/util"
 	"gopkg.in/gomail.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type UsersController struct {
@@ -36,7 +38,9 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	u.usersService = usersService
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/activate", u.Activate)
+	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
+	http.HandleFunc("/passwd", u.Passwd)
 	http.HandleFunc("/register", u.Register)
 	go func() {
 		defer group.Done()
@@ -90,13 +94,20 @@ func (u *UsersController) Activate(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(object)
 }
 
-func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
+func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
 	var res struct {
 		Code   int8 `json:"code"`
 		Result struct {
-			First        bool          `json:"first"`
+			Type         int8          `json:"type"`
 			Role         int8          `json:"role"`
-			Id           bson.ObjectId `json:"id"`
+			Uid          bson.ObjectId `json:"uid"`
+			Icon         string        `json:"icon"`
+			Name         string        `json:"name"`
+			Nickname     string        `json:"nickname"`
 			Token        string        `json:"token"`
 			RefreshToken string        `json:"refresh_token"`
 		} `json:"result"`
@@ -106,6 +117,96 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var user entity.Users
+	user, err = u.usersService.FindUserByName(req.Name)
+	if err != nil || req.Password != user.Password {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if user.Role == entity.DISABLE {
+		res.Code = 1
+		res.Result.Type = 0
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if user.Role == entity.NOTACTIVE {
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var token string
+	token, err = util.SignToken(user.Uid, user.Role, false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var refreshToken string
+	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res.Code = 0
+	res.Result.Role = user.Role
+	res.Result.Uid = user.Uid
+	res.Result.Icon = user.Icon
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
+	res.Result.Token = token
+	res.Result.RefreshToken = refreshToken
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
+	var res struct {
+		Code   int8 `json:"code"`
+		Result struct {
+			Type         int8          `json:"type"`
+			First        bool          `json:"first"`
+			Role         int8          `json:"role"`
+			Uid          bson.ObjectId `json:"uid"`
+			Token        string        `json:"token"`
+			RefreshToken string        `json:"refresh_token"`
+		} `json:"result"`
+	}
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -114,6 +215,14 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.FormValue("error") == "access_denied" {
+		res.Code = 1
+		res.Result.Type = 1
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -123,6 +232,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -134,6 +244,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -149,6 +260,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -157,6 +269,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -167,6 +280,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -210,6 +324,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -217,24 +332,137 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var user entity.Users
 	user, err = u.usersService.FindUserByOidAndAccountType(strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
 	if err == nil {
+		if user.Role == entity.DISABLE {
+			res.Code = 1
+			res.Result.Type = 0
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var token string
+		token, err = util.SignToken(user.Uid, user.Role, false)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Type = 2
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var refreshToken string
+		refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			res.Result.Type = 2
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
 		res.Code = 0
 		res.Result.First = false
 		res.Result.Role = user.Role
-		res.Result.Id = user.Uid
+		res.Result.Uid = user.Uid
+		res.Result.Token = token
+		res.Result.RefreshToken = refreshToken
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.NOTACTIVE, AccountType: entity.GITHUB}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now()}
 	user.Uid, err = u.usersService.InsertUser(user)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid.Hex()
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersService.InsertFavorite(favorite)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
 	} else {
 		res.Code = 0
 		res.Result.First = true
 		res.Result.Role = user.Role
-		res.Result.Id = user.Uid
+		res.Result.Uid = user.Uid
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Old string `json:"old"`
+		New string `json:"new"`
+	}
+	var res struct {
+		Code   int8 `json:"code"`
+		Result struct {
+			Type int8 `json:"type"`
+		} `json:"result"`
+	}
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(r.Header.Get("Authorization"))
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	user, err = u.usersService.FindUserByUid(user.Uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	if req.Old != user.Password {
+		res.Code = 1
+		res.Result.Type = 0
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	user.Password = req.New
+	err = u.usersService.UpdateUser(user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+	} else {
+		res.Code = 0
 	}
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
@@ -283,7 +511,11 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	user.Gender = req.Gender
 	user.Role = entity.NOTACTIVE
 	user.AccountType = entity.SOFIA
-	_, err = u.usersService.FindUserByNickname(user.Nickname)
+	user.Exp = 0
+	user.FollowerCount = 0
+	user.FollowingCount = 0
+	user.NotificationTime = time.Now()
+	_, err = u.usersService.FindUserByName(user.Name)
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 0
@@ -300,6 +532,18 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Uid, err = u.usersService.InsertUser(user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid.Hex()
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersService.InsertFavorite(favorite)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1

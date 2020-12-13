@@ -36,5 +36,8 @@ type Users struct {
 	Gender           int8          `bson:"gender"`
 	Role             int8          `bson:"role"`
 	AccountType      int8          `bson:"account_type"`
+	Exp              int64         `bson:"exp"`
+	FollowerCount    int64         `bson:"follower_count"`
+	FollowingCount   int64         `bson:"following_count"`
 	NotificationTime time.Time     `bson:"notification_time"`
 }

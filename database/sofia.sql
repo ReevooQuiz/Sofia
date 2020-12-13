@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 17/11/2020 18:05:51
+ Date: 12/12/2020 20:09:41
 */
 
 SET NAMES utf8mb4;
@@ -51,6 +51,16 @@ CREATE TABLE `favorites`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for followers
+-- ----------------------------
+DROP TABLE IF EXISTS `followers`;
+CREATE TABLE `followers`  (
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `follower` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`uid`, `follower`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for hotlist_items
 -- ----------------------------
 DROP TABLE IF EXISTS `hotlist_items`;
@@ -61,30 +71,6 @@ CREATE TABLE `hotlist_items`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for kcard_attrs
--- ----------------------------
-DROP TABLE IF EXISTS `kcard_attrs`;
-CREATE TABLE `kcard_attrs`  (
-  `kid` bigint(20) NOT NULL,
-  `name` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `value` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `origin` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  PRIMARY KEY (`kid`, `name`, `value`, `origin`) USING BTREE,
-  CONSTRAINT `kcard_attrs_ibfk_1` FOREIGN KEY (`kid`) REFERENCES `kcards` (`kid`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Table structure for kcards
--- ----------------------------
-DROP TABLE IF EXISTS `kcards`;
-CREATE TABLE `kcards`  (
-  `kid` bigint(20) NOT NULL AUTO_INCREMENT,
-  `title` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  PRIMARY KEY (`kid`) USING BTREE,
-  UNIQUE INDEX `title`(`title`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
 -- Table structure for labels
 -- ----------------------------
 DROP TABLE IF EXISTS `labels`;
@@ -93,7 +79,7 @@ CREATE TABLE `labels`  (
   `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`lid`) USING BTREE,
   UNIQUE INDEX `title`(`title`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for like_answers
@@ -116,5 +102,17 @@ CREATE TABLE `question_labels`  (
   INDEX `lid`(`lid`) USING BTREE,
   CONSTRAINT `question_labels_ibfk_1` FOREIGN KEY (`lid`) REFERENCES `labels` (`lid`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for user_labels
+-- ----------------------------
+DROP TABLE IF EXISTS `user_labels`;
+CREATE TABLE `user_labels`  (
+  `uid` varchar(24) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `lid` bigint(20) NOT NULL,
+  PRIMARY KEY (`uid`, `lid`) USING BTREE,
+  INDEX `lid`(`lid`) USING BTREE,
+  CONSTRAINT `user_labels_ibfk_1` FOREIGN KEY (`lid`) REFERENCES `labels` (`lid`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 SET FOREIGN_KEY_CHECKS = 1;
