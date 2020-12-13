@@ -17,6 +17,15 @@ const routes: Array<RouteRecordRaw> = [
       import(/* webpackChunkName: "about" */ "../views/Search.vue")
   },
   {
+    path: "/ban",
+    name: "BanLift",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/BanLift.vue")
+  },
+  {
     path: "/question",
     name: "Question",
     // route level code-splitting
@@ -32,7 +41,61 @@ const routes: Array<RouteRecordRaw> = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/Personal.vue")
+      import(/* webpackChunkName: "about" */ "../views//personalView/Personal.vue")
+  },
+  {
+    path: "/personalFollowing",
+    name: "PersonalFollowing",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalFollowing.vue")
+  },
+  {
+    path: "/personalFollower",
+    name: "PersonalFollower",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalFollower.vue")
+  },
+  {
+    path: "/personalQuestion",
+    name: "PersonalQuestion",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalQuestion.vue")
+  },
+  {
+    path: "/personalAnswer",
+    name: "PersonalAnswer",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalAnswer.vue")
+  },
+  {
+    path: "/personalMessage",
+    name: "PersonalMessage",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalMessage.vue")
+  },
+  {
+    path: "/personalSet",
+    name: "PersonalSet",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalSet.vue")
   },
   {
     path: "/login",

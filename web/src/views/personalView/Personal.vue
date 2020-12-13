@@ -17,13 +17,16 @@
     </a-row>
     <br />
 
-    <a-row justify="center">
-      <a-list :grid="{ gutter: 16, column: 4 }"  :data-source="dataa">
-        <a-list-item slot="renderItem" slot-scope="item,index">
-        <!-- {{item.title}} -->
-        {{index}}
-        </a-list-item>
-      </a-list>
+    <a-row>
+      <a-col :span="20" :offset="2">
+        <span @click="goToFollowing">关注</span>
+        <a-list :grid="{ gutter: 16, column: 4 }" :data-source="dataa">
+          <a-list-item slot="renderItem" slot-scope="item,index">
+            <!-- {{item.title}} -->
+            {{index}}
+          </a-list-item>
+        </a-list>
+      </a-col>
     </a-row>
   </div>
 </template>
@@ -52,7 +55,7 @@ export default {
   },
   data() {
     return {
-      dataa : data1,
+      dataa: data1
     };
   },
   methods: {
@@ -60,13 +63,17 @@ export default {
       if (value != "") {
         this.$router.push({ path: "/search", query: { content: value } });
       }
+    },
+    goToFollowing() {
+      this.$router.push({ path: "/personalFollowing" });
     }
   }
 };
 </script>
 
 <style>
-#search {
+body {
+  height: 100%;
   background-color: #edeeed;
 }
 </style>

@@ -9,7 +9,8 @@
         <a-menu-item key="category">分类</a-menu-item>
         <a-menu-item key="recommend">推荐</a-menu-item>
         <a-menu-item key="explore">探索</a-menu-item>
-        <a-menu-item key="ban">封禁</a-menu-item>
+        <a-menu-item key="ban">
+          <router-link to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
           <router-link to="/personal">我的</router-link>
         </a-menu-item>
@@ -83,26 +84,26 @@ export default {
         sessionStorage.removeItem("user");
       }
       this.logStatus = false;
-
+      // this.$store.state.loginStatus=false;
       message.success("成功登出");
       this.$router.push({ path: "/" });
     }
   },
-  computed: {
-    user: function() {
-      return sessionStorage.getItem("user");
-    }
-  },
-  watch: {
-    user: function(newType) {
-      if (newType !== null) {
-        this.logStatus = true;
-        this.avtar = JSON.parse(newType).icon;
-      } else {
-        this.logStatus = true;
-      }
-    }
-  }
+  // computed: {
+  //   user: function() {
+  //     return this.$store.state.loginStatus;
+  //   }
+  // },
+  // watch: {
+  //   user: function(newType) {
+  //     if (newType) {
+  //       this.logStatus = true;
+  //       this.avtar = JSON.parse(newType).icon;
+  //     } else {
+  //       this.logStatus = true;
+  //     }
+  //   }
+  // }
 };
 </script>
 

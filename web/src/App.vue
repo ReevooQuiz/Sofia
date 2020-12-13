@@ -40,6 +40,7 @@ export default {
   min-height: 683px;
   background-color: #edeeed;
 }
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

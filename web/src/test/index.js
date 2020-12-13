@@ -122,7 +122,7 @@ apiRoutes.post("/login", function (req, res) {
         jsonResponse,
         Mock.mock({
             // data: {
-            status:200,
+            status: 200,
             code: 0,
             result: {
                 role: 0,
@@ -133,6 +133,86 @@ apiRoutes.post("/login", function (req, res) {
                 token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
                 refresh_token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg"
             }
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+
+apiRoutes.post("/publicInfo", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+            status: 200,
+            code: 0,
+           
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+apiRoutes.get("/followers", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+            code: 0,
+            result: [
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                },
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                },
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                },
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                },
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                },
+                {
+                    icon: "https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1",
+                    name: "akang",
+                    nickname: "nickname of akang",
+                    profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
+                }]
         })
     );
 

@@ -1,5 +1,5 @@
 <template>
-  <div id="Question">
+  <div >
     <a-col :span="20" :offset="2">
       <a-row>
         <div>
@@ -119,8 +119,8 @@ export default {
 </script>
 
 <style>
-#search {
-  min-height: 667px;
+body {
+  height: 100%;
   background-color: #edeeed;
 }
 </style>

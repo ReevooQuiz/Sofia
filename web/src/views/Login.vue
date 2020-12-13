@@ -78,13 +78,15 @@ export default {
     },
     handleLogin(response) {
       // 问题： 应该返回头像信息
+      console.log(response)
       if (response.code == 0) {
         
         message.success("登录成功");
 
        console.log(response.result);
         sessionStorage.setItem("user", JSON.stringify(response.result));
-    
+        // this.$store.commit('modify',"改变值！")
+    //  this.$store.state.loginStatus=true;
       this.$router.back();
       
       }
