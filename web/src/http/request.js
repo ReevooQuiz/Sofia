@@ -1,18 +1,22 @@
 import axios from 'axios'
 import router from "@/router/index.ts";
 const server = axios.create({
-    baseURL:"http://localhost:4000/",
-    timeout:5000,
+    baseURL: "http://localhost:4000/",
+    // baseURL: "http://private-74c97e-reevooapi.apiary-mock.com/",
+    timeout: 5000,
 });
 // 设置拦截器
 // 请求拦截器
 server.interceptors.request.use(
-    (config)=>{
-        if(config.method==="post"){
-            config.headers['Content-Type']='text/plain';
-        }
+    (config) => {
+
+        config.headers['Content-Type'] = "application/json";
+        config.headers['Authorization'] = JSON.parse(sessionStorage.getItem("user"))
+            ? JSON.parse(sessionStorage.getItem("user")).token
+            : null;
         return config;
-    },(error)=>{
+    },
+    (error) => {
         this.$dialog.alert(error);
         return Promise.reject(error);
     }
@@ -20,19 +24,21 @@ server.interceptors.request.use(
 // 响应拦截器
 server.interceptors.response.use(
     response => {
-        if(response.data.code === 200){
+        console.log(response);
+
+        if (response.data.status === 200) {
             console.log("操作成功")
-        }else if(response.data.code === 300){
+        } else if (response.data.status === 300) {
             console.log("没有这条数据或者查询失败")
-        }else{
+        } else {
             console.log("操作成功")
         }
         return response;
     },
     error => {
         switch (
-            error.response.status
-            ) {
+        error.response.status
+        ) {
             case 500:
                 router.push({
                     path: "/404"
@@ -47,4 +53,52 @@ server.interceptors.response.use(
     }
 );
 
-export default server;
+let postRequest = (url, body, callback, { errorCallback }) => {
+    // let _url = new URL(hostUrl + url);
+
+    // server.interceptors.request.use(
+    //     (config) => {
+
+    //         config.headers['Content-Type'] = "application/json";
+    //         config.headers['Authorization'] = JSON.parse(sessionStorage.getItem("user"))
+    //             ? JSON.parse(sessionStorage.getItem("user")).token
+    //             : null;
+    //         return config;
+    //     }, (error) => {
+    //         this.$dialog.alert(error);
+    //         return Promise.reject(error);
+    //     }
+    // );
+    console.log("here");
+    server
+        .post(url,
+            body,
+        )
+        .catch(function (error) {
+            console.log("error");
+            errorCallback(error)
+        })
+        .then(response => {
+            console.log("callback");
+            callback(response.data);
+
+        });
+
+
+};
+
+let getRequest = (url, callback, { errorCallback, params }) => {
+
+
+    server
+        .get(url,
+            params
+        )
+        .catch(function (error) {
+            errorCallback(error)
+        })
+        .then(response => {
+            callback(response.data);
+        });
+};
+export { server, postRequest, getRequest };

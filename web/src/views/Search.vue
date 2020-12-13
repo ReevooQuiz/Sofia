@@ -122,17 +122,6 @@ export default {
     this.searchValue=this.$route.query.content;
     this.inputValue=this.$route.query.content;
     console.log(this.inputValue);
-    // server
-    //   .post("/search", {
-    //     value: this.searchValue
-    //   })
-    //   .catch(function(error) {
-    //     console.log(error);
-    //   })
-    //   .then(response => {
-    //     this.questionData= response.data.questionData;
-    //   });
-    //todo:search function
   },
   methods: {
     onSearch(value) {
@@ -174,21 +163,13 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 #search {
   min-height: 667px;
   background-color: #edeeed;
 }
 
 .ant-input-affix-wrapper {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-variant: tabular-nums;
-  list-style: none;
-  font-feature-settings: "tnum";
-  position: relative;
-  display: inline-flex;
   border: 1px solid #d9d9d9;
   border-radius: 20px;
   padding: 4px 11px;
@@ -197,7 +178,6 @@ export default {
   background-color: #fff;
   background-image: none;
   color: rgba(0, 0, 0, 0.65);
-  font-size: 14px;
-  line-height: 1.5715;
+ 
 }
 </style>
