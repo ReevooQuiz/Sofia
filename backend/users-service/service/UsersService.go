@@ -2,19 +2,15 @@ package service
 
 import (
 	"github.com/zhanghanchong/users-service/dao"
-	"github.com/zhanghanchong/users-service/entity"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type UsersService interface {
 	Init(usersDAO ...dao.UsersDao) (err error)
 	Destruct()
-
-	FindUserByEmail(email string) (user entity.Users, err error)
-	FindUserByName(name string) (user entity.Users, err error)
-	FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error)
-	FindUserByUid(uid bson.ObjectId) (user entity.Users, err error)
-	InsertFavorite(favorite entity.Favorites) (fid int64, err error)
-	InsertUser(user entity.Users) (uid bson.ObjectId, err error)
-	UpdateUser(user entity.Users) (err error)
+	Login(req ReqLogin) (res ResLogin, err error)
+	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)
+	Passwd(token string, req ReqPasswd) (res ResPasswd, err error)
+	Register(req ReqRegister) (res ResRegister, err error)
+	VerificationCode(register bool, email string) (res ResVerificationCode, err error)
+	Verify(email string, code int64) (res ResVerify, err error)
 }

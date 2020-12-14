@@ -5,7 +5,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/mgo.v2/bson"
 	"os"
 	"time"
 )
@@ -24,7 +23,7 @@ func init() {
 	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 }
 
-func ParseToken(tokenString string) (successful bool, uid bson.ObjectId, role int8, err error) {
+func ParseToken(tokenString string) (successful bool, uid int64, role int8, err error) {
 	var token *jwt.Token
 	token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -36,14 +35,16 @@ func ParseToken(tokenString string) (successful bool, uid bson.ObjectId, role in
 		return false, uid, role, err
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		uid = bson.ObjectIdHex(claims["uid"].(string))
-		role = int8(claims["role"].(float64))
-		return true, uid, role, err
+		uidFloat, uidOk := claims["uid"].(float64)
+		roleFloat, roleOk := claims["role"].(float64)
+		if uidOk && roleOk {
+			return true, int64(uidFloat), int8(roleFloat), err
+		}
 	}
 	return false, uid, role, err
 }
 
-func SignToken(uid bson.ObjectId, role int8, ref bool) (tokenString string, err error) {
+func SignToken(uid int64, role int8, ref bool) (tokenString string, err error) {
 	var exp int64
 	if ref {
 		exp = time.Now().Add(refTokenDuration).Unix()

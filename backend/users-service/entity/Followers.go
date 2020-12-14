@@ -1,6 +1,6 @@
 package entity
 
 type Followers struct {
-	Uid      string `json:"uid"`
-	Follower string `json:"follower"`
+	Uid      int64 `json:"uid"`
+	Follower int64 `json:"follower"`
 }

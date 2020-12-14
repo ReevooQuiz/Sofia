@@ -1,10 +1,5 @@
 package entity
 
-import (
-	"gopkg.in/mgo.v2/bson"
-	"time"
-)
-
 const (
 	MALE = iota
 	FEMALE
@@ -15,7 +10,7 @@ const (
 	ADMIN = iota
 	USER
 	DISABLE
-	NOTACTIVE
+	NOT_ACTIVE
 )
 
 const (
@@ -26,18 +21,20 @@ const (
 )
 
 type Users struct {
-	Uid              bson.ObjectId `bson:"_id"`
-	Oid              string        `bson:"oid"`
-	Name             string        `bson:"name"`
-	Nickname         string        `bson:"nickname"`
-	Password         string        `bson:"password"`
-	Email            string        `bson:"email"`
-	Icon             string        `bson:"icon"`
-	Gender           int8          `bson:"gender"`
-	Role             int8          `bson:"role"`
-	AccountType      int8          `bson:"account_type"`
-	Exp              int64         `bson:"exp"`
-	FollowerCount    int64         `bson:"follower_count"`
-	FollowingCount   int64         `bson:"following_count"`
-	NotificationTime time.Time     `bson:"notification_time"`
+	Uid              int64  `json:"uid"`
+	Oid              string `json:"oid"`
+	Name             string `json:"name"`
+	Nickname         string `json:"nickname"`
+	Salt             string `json:"salt"`
+	HashPassword     string `json:"hash_password"`
+	Email            string `json:"email"`
+	Gender           int8   `json:"gender"`
+	Role             int8   `json:"role"`
+	AccountType      int8   `json:"account_type"`
+	ActiveCode       int64  `json:"active_code"`
+	PasswdCode       int64  `json:"passwd_code"`
+	Exp              int64  `json:"exp"`
+	FollowerCount    int64  `json:"follower_count"`
+	FollowingCount   int64  `json:"following_count"`
+	NotificationTime int64  `json:"notification_time"`
 }

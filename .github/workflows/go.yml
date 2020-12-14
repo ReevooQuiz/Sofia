@@ -2,9 +2,9 @@ name: Go
 
 on:
   push:
-    branches: [ master, develop, feature-zhc ]
+    branches: [ master, develop, feature-skfe, feature-zhc ]
   pull_request:
-    branches: [ master, develop, feature-zhc ]
+    branches: [ master, develop, feature-skfe, feature-zhc ]
 
 jobs:
   users-service:

@@ -1,6 +1,6 @@
 package entity
 
 type ApproveAnswers struct {
-	Uid string `json:"uid"`
-	Aid string `json:"aid"`
+	Uid int64 `json:"uid"`
+	Aid int64 `json:"aid"`
 }

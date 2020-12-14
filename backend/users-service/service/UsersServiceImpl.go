@@ -2,26 +2,140 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/zhanghanchong/users-service/dao"
 	"github.com/zhanghanchong/users-service/entity"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/zhanghanchong/users-service/util"
+	"gopkg.in/gomail.v2"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
-const (
-	SaltSize = 16
+var (
+	emailPassword     string
+	emailUsername     string
+	oAuthGithubId     string
+	oAuthGithubSecret string
 )
 
 type UsersServiceImpl struct {
 	usersDao dao.UsersDao
 }
 
+type ReqLogin struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+type ReqPasswd struct {
+	Old string `json:"old"`
+	New string `json:"new"`
+}
+
+type ReqRegister struct {
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Icon     string `json:"icon"`
+	Gender   int8   `json:"gender"`
+}
+
+type ResLogin struct {
+	Code   int8        `json:"code"`
+	Result ResultLogin `json:"result"`
+}
+
+type ResOAuthGithub struct {
+	Code   int8              `json:"code"`
+	Result ResultOAuthGithub `json:"result"`
+}
+
+type ResPasswd struct {
+	Code   int8         `json:"code"`
+	Result ResultPasswd `json:"result"`
+}
+
+type ResRegister struct {
+	Code   int8           `json:"code"`
+	Result ResultRegister `json:"result"`
+}
+
+type ResVerificationCode struct {
+	Code   int8                   `json:"code"`
+	Result ResultVerificationCode `json:"result"`
+}
+
+type ResVerify struct {
+	Code int8 `json:"code"`
+}
+
+type ResultLogin struct {
+	Type         int8   `json:"type"`
+	Role         int8   `json:"role"`
+	Uid          string `json:"uid"`
+	Icon         string `json:"icon"`
+	Name         string `json:"name"`
+	Nickname     string `json:"nickname"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type ResultOAuthGithub struct {
+	Type         int8   `json:"type"`
+	First        bool   `json:"first"`
+	Role         int8   `json:"role"`
+	Uid          string `json:"uid"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type ResultPasswd struct {
+	Type int8 `json:"type"`
+}
+
+type ResultRegister struct {
+	Type int8 `json:"type"`
+}
+
+type ResultVerificationCode struct {
+	Type int8 `json:"type"`
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+	_ = godotenv.Load(os.Getenv("WORK_DIR") + "credentials.env")
+	emailPassword = os.Getenv("EMAIL_PASSWORD")
+	emailUsername = os.Getenv("EMAIL_USERNAME")
+	oAuthGithubId = os.Getenv("OAUTH_GITHUB_ID")
+	oAuthGithubSecret = os.Getenv("OAUTH_GITHUB_SECRET")
+}
+
+func (u *UsersServiceImpl) encryptPassword(password string, salt string) (hashPassword string) {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(password+salt)))
+}
+
+func (u *UsersServiceImpl) generateCode() (code int64) {
+	return rand.Int63n(9e5) + 1e5
+}
+
+func (u *UsersServiceImpl) generateSalt() (salt string) {
+	b := make([]byte, 16)
+	for i := range b {
+		b[i] = byte(rand.Uint32() & 0xFF)
+	}
+	return fmt.Sprintf("%x", b)
+}
+
 func (u *UsersServiceImpl) Init(usersDao ...dao.UsersDao) (err error) {
 	if len(usersDao) == 0 {
 		usersDao = append(usersDao, &dao.UsersDaoImpl{})
-		rand.Seed(time.Now().UnixNano())
 	}
 	u.usersDao = usersDao[0]
 	return u.usersDao.Init()
@@ -31,42 +145,356 @@ func (u *UsersServiceImpl) Destruct() {
 	u.usersDao.Destruct()
 }
 
-func (u *UsersServiceImpl) FindUserByEmail(email string) (user entity.Users, err error) {
-	return u.usersDao.FindUserByEmail(email)
-}
-
-func (u *UsersServiceImpl) FindUserByName(name string) (user entity.Users, err error) {
-	return u.usersDao.FindUserByName(name)
-}
-
-func (u *UsersServiceImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
-	return u.usersDao.FindUserByOidAndAccountType(oid, accountType)
-}
-
-func (u *UsersServiceImpl) FindUserByUid(uid bson.ObjectId) (user entity.Users, err error) {
-	return u.usersDao.FindUserByUid(uid)
-}
-
-func (u *UsersServiceImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err error) {
-	return u.usersDao.InsertFavorite(favorite)
-}
-
-func (u *UsersServiceImpl) InsertUser(user entity.Users) (uid bson.ObjectId, err error) {
-	return u.usersDao.InsertUser(user)
-}
-
-func (u *UsersServiceImpl) UpdateUser(user entity.Users) (err error) {
-	return u.usersDao.UpdateUser(user)
-}
-
-func (u *UsersServiceImpl) HashPassword(password string, salt string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(password + salt)))
-}
-
-func (u *UsersServiceImpl) generateSalt() string {
-	b := make([]byte, SaltSize)
-	for i := range b {
-		b[i] = byte(rand.Uint32() & 0xFF)
+func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
+	var user entity.Users
+	user, err = u.usersDao.FindUserByName(req.Name)
+	if err != nil || u.encryptPassword(req.Password, user.Salt) != user.HashPassword {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
 	}
-	return fmt.Sprintf("%x", b)
+	if user.Role == entity.DISABLE {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
+	if user.Role == entity.NOT_ACTIVE {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	var userDetail entity.UserDetails
+	userDetail, err = u.usersDao.FindUserDetailByUid(user.Uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		return res, err
+	}
+	var token string
+	token, err = util.SignToken(user.Uid, user.Role, false)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		return res, err
+	}
+	var refreshToken string
+	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		return res, err
+	}
+	res.Code = 0
+	res.Result.Role = user.Role
+	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	res.Result.Icon = userDetail.Icon
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
+	res.Result.Token = token
+	res.Result.RefreshToken = refreshToken
+	return res, err
+}
+
+func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthGithub, err error) {
+	if error == "access_denied" {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	var request *http.Request
+	request, err = http.NewRequest("POST", "https://github.com/login/oauth/access_token?client_id="+oAuthGithubId+"&client_secret="+oAuthGithubSecret+"&code="+code, nil)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	request.Header.Set("Accept", "application/json")
+	client := http.Client{}
+	var response *http.Response
+	response, err = client.Do(request)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	var responseBodyJson []byte
+	responseBodyJson, err = ioutil.ReadAll(response.Body)
+	var responseBodyToken struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+		Scope       string `json:"scope"`
+	}
+	err = json.Unmarshal(responseBodyJson, &responseBodyToken)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	request, err = http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("Authorization", "token "+responseBodyToken.AccessToken)
+	response, err = client.Do(request)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	responseBodyJson, err = ioutil.ReadAll(response.Body)
+	var responseBodyInfo struct {
+		Login             string `json:"login"`
+		Id                int64  `json:"id"`
+		NodeId            string `json:"node_id"`
+		AvatarUrl         string `json:"avatar_url"`
+		GravatarId        string `json:"gravatar_id"`
+		Url               string `json:"url"`
+		HtmlUrl           string `json:"html_url"`
+		FollowersUrl      string `json:"followers_url"`
+		FollowingUrl      string `json:"following_url"`
+		GistsUrl          string `json:"gists_url"`
+		StarredUrl        string `json:"starred_url"`
+		SubscriptionsUrl  string `json:"subscriptions_url"`
+		OrganizationsUrl  string `json:"organizations_url"`
+		ReposUrl          string `json:"repos_url"`
+		EventsUrl         string `json:"events_url"`
+		ReceivedEventsUrl string `json:"received_events_url"`
+		Type              string `json:"type"`
+		SiteAdmin         bool   `json:"site_admin"`
+		Name              string `json:"name"`
+		Company           string `json:"company"`
+		Blog              string `json:"blog"`
+		Location          string `json:"location"`
+		Email             string `json:"email"`
+		Hireable          string `json:"hireable"`
+		Bio               string `json:"bio"`
+		TwitterUsername   string `json:"twitter_username"`
+		PublicRepos       int64  `json:"public_repos"`
+		PublicGists       int64  `json:"public_gists"`
+		Followers         int64  `json:"followers"`
+		Following         int64  `json:"following"`
+		CreatedAt         string `json:"created_at"`
+		UpdatedAt         string `json:"updated_at"`
+	}
+	err = json.Unmarshal(responseBodyJson, &responseBodyInfo)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	var user entity.Users
+	user, err = u.usersDao.FindUserByOidAndAccountType(strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
+	if err == nil {
+		if user.Role == entity.DISABLE {
+			res.Code = 1
+			res.Result.Type = 0
+			return res, err
+		}
+		var token string
+		token, err = util.SignToken(user.Uid, user.Role, false)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 2
+			return res, err
+		}
+		var refreshToken string
+		refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 2
+			return res, err
+		}
+		res.Code = 0
+		res.Result.First = false
+		res.Result.Role = user.Role
+		res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+		res.Result.Token = token
+		res.Result.RefreshToken = refreshToken
+		return res, err
+	}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
+	user.Uid, err = u.usersDao.InsertUser(user)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersDao.InsertFavorite(favorite)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+	} else {
+		res.Code = 0
+		res.Result.First = true
+		res.Result.Role = user.Role
+		res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	}
+	return res, err
+}
+
+func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, err error) {
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+		return res, err
+	}
+	user, err = u.usersDao.FindUserByUid(user.Uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	if u.encryptPassword(req.Old, user.Salt) != user.HashPassword {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
+	user.HashPassword = u.encryptPassword(req.New, user.Salt)
+	err = u.usersDao.UpdateUser(user)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+	} else {
+		res.Code = 0
+	}
+	return res, err
+}
+
+func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error) {
+	var user entity.Users
+	user, err = u.usersDao.FindUserByEmail(req.Email)
+	if err != nil || user.ActiveCode > 0 {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	if user.Role != entity.NOT_ACTIVE {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	user.Name = req.Name
+	user.Nickname = req.Nickname
+	user.Salt = u.generateSalt()
+	user.HashPassword = u.encryptPassword(req.Password, user.Salt)
+	user.Gender = req.Gender
+	user.Role = entity.USER
+	err = u.usersDao.UpdateUser(user)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
+	var userDetail entity.UserDetails
+	userDetail.Uid = user.Uid
+	userDetail.Icon = req.Icon
+	err = u.usersDao.InsertUserDetail(userDetail)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		return res, err
+	}
+	var favorite entity.Favorites
+	favorite.Uid = user.Uid
+	favorite.Title = "Default"
+	favorite.Fid, err = u.usersDao.InsertFavorite(favorite)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+	} else {
+		res.Code = 0
+	}
+	return res, err
+}
+
+func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res ResVerificationCode, err error) {
+	var code int64
+	if register {
+		var user entity.Users
+		user.Name = email
+		user.Email = email
+		user.Role = entity.NOT_ACTIVE
+		user.AccountType = entity.SOFIA
+		user.ActiveCode = u.generateCode()
+		user.PasswdCode = 0
+		user.Exp = 0
+		user.FollowerCount = 0
+		user.FollowingCount = 0
+		user.NotificationTime = time.Now().Unix()
+		_, err = u.usersDao.InsertUser(user)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 0
+			return res, err
+		}
+		code = user.ActiveCode
+	} else {
+		var user entity.Users
+		user, err = u.usersDao.FindUserByEmail(email)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 0
+			return res, err
+		}
+		user.PasswdCode = u.generateCode()
+		err = u.usersDao.UpdateUser(user)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 1
+			return res, err
+		}
+		code = user.PasswdCode
+	}
+	message := gomail.NewMessage()
+	message.SetHeader("From", message.FormatAddress(emailUsername, "Sofia"))
+	message.SetHeader("To", email)
+	message.SetHeader("Subject", "Sofia")
+	message.SetBody("text/html", strconv.FormatInt(code, 10))
+	err = gomail.NewDialer("smtp.qq.com", 587, emailUsername, emailPassword).DialAndSend(message)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+	} else {
+		res.Code = 0
+	}
+	return res, err
+}
+
+func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err error) {
+	var user entity.Users
+	user, err = u.usersDao.FindUserByEmail(email)
+	if err != nil {
+		res.Code = 1
+		return res, err
+	}
+	if user.ActiveCode > 0 {
+		if code != user.ActiveCode {
+			res.Code = 1
+			return res, err
+		}
+		user.ActiveCode = 0
+	}
+	if user.PasswdCode > 0 {
+		if code != user.PasswdCode {
+			res.Code = 1
+			return res, err
+		}
+		user.Role = entity.NOT_ACTIVE
+		user.PasswdCode = 0
+	}
+	err = u.usersDao.UpdateUser(user)
+	if err != nil {
+		res.Code = 1
+	} else {
+		res.Code = 0
+	}
+	return res, err
 }

@@ -12,13 +12,15 @@ import (
 	"os"
 )
 
+var (
+	mongoUrl string
+	mysqlUrl string
+)
+
 type QaDaoImpl struct {
 	db      *sql.DB
 	session *mgo.Session
 }
-
-var mongoUrl string
-var mysqlUrl string
 
 func init() {
 	log.SetFormatter(&log.JSONFormatter{})
