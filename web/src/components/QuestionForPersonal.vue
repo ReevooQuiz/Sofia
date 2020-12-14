@@ -39,7 +39,7 @@
         <a-col :span="18" :offset="1">
           <a-comment>
             <template #actions>
-              <span key="comment-basic-like">
+              <!-- <span key="comment-basic-like">
                 <a-tooltip title="赞">
                   <template v-if="action === 'liked'">
                     <LikeFilled @click="like" />
@@ -62,7 +62,14 @@
                   </template>
                 </a-tooltip>
                 <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
+              </span> -->
+               <span key="comment-basic-reply-to">
+                <a-tooltip title="赞">
+                 <LikeOutlined />
+                    {{ques.favorite_count}}
+                </a-tooltip>
               </span>
+              
               <span key="comment-basic-reply-to">
                 <a-tooltip title="浏览量">
                   <FireOutlined />
@@ -82,12 +89,12 @@
                 </a-tooltip>
               </span>
             </template>
-            <template #author>
+            <!-- <template #author>
               <a>{{ques.owner.user_name}}</a>
             </template>
             <template #avatar>
               <a-avatar :src="ques.owner.user_icon" alt="avatar" />
-            </template>
+            </template> -->
             <template #content>
               <p @click="toQuestion">{{ques.head}}</p>
             </template>

@@ -231,6 +231,142 @@ apiRoutes.get("/publicInfo", function (req, res) {
         res.json(jsonResponse);
     }, 200);
 });
+apiRoutes.get("/userAnswers", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+
+            code: 0,
+            result: [
+                {
+
+
+                    question: {
+                        qid: "234",
+                        title: "Favourite programming language?",
+                        category: "study",
+                        labels: ["programming"],
+                        head: "What if we put"
+                    },
+                    answer: {
+                        aid: "234",
+                        like_count: 2,
+                        criticism_count: 4,
+                        approval_count: 2,
+                        comment_count: 2,
+                        head: "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前",
+                        time: "2015-08-05T08:40:51.620Z",
+                        pictureUrls: [
+                            "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
+                            "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                        ],
+                        liked: false,
+                        approved: true,
+                        approvable: true
+                    }
+                },
+            ]
+
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+apiRoutes.get("/userQuestions", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+
+            code: 0,
+            result: [{
+                qid: 1,
+
+                title: "如何看待上海交通大学花店事件",
+                time: "2015-08-05T08:40:51.620Z",
+                answer_count: 5,
+                view_count: 10,
+                favorite_count: 20,
+                category: "study",
+                labels: ["programming", "campus"],
+                pictureUrls: [
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                ],
+                head:
+                    "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+
+
+
+            },
+            {
+                qid: 1,
+
+                title: "如何看待上海交通大学花店事件",
+                time: "2015-08-05T08:40:51.620Z",
+                answer_count: 5,
+                view_count: 10,
+                favorite_count: 20,
+                category: "study",
+                labels: ["programming", "campus"],
+                pictureUrls: [
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                ],
+                head:
+                    "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+
+
+
+            },
+            {
+                qid: 1,
+
+                title: "如何看待上海交通大学花店事件",
+                time: "2015-08-05T08:40:51.620Z",
+                answer_count: 5,
+                view_count: 10,
+                favorite_count: 20,
+                category: "study",
+                labels: ["programming", "campus"],
+                pictureUrls: [
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
+                    "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                ],
+                head:
+                    "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
+
+
+
+            }]
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
 apiRoutes.get("/followers", function (req, res) {
     let jsonResponse = {};
     res.vary(

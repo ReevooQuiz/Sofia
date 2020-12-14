@@ -276,24 +276,7 @@ function getBase64(img, callback) {
   reader.addEventListener("load", () => callback(reader.result));
   reader.readAsDataURL(img);
 }
-// const data = {
-//   username: "akangakang",
-//   nickname: "aaaaaaa",
-//   gender: 0,
-//   email: "11111111@sjtu.edu.cn",
-//   profile:
-//     "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介",
-//   icon: "https://img.pc841.com/2018/0516/20180516050738880.jpg",
-//   level: 2,
 
-//   account_type: 1,
-//   label: "math",
-//   like_count: 10,
-//   question_count: 10,
-//   answer_count: 10,
-//   follower_count: 10,
-//   followed_count: 10
-// };
 export default {
   components: {
     SubMenu,
