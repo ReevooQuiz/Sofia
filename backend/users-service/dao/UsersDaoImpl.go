@@ -118,7 +118,7 @@ func (u *UsersDaoImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err
 
 func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid int64, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	stmt, err = u.db.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return uid, err
 	}
@@ -145,4 +145,8 @@ func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
 	defer stmt.Close()
 	_, err = stmt.Exec(user.Oid, user.Name, user.Nickname, user.Salt, user.HashPassword, user.Email, user.Gender, user.Profile, user.Role, user.AccountType, user.ActiveCode, user.PasswdCode, user.Exp, user.FollowerCount, user.FollowingCount, user.NotificationTime, user.Uid)
 	return err
+}
+
+func (u *UsersDaoImpl) UpdateUserDetail(userDetail entity.UserDetails) (err error) {
+	return u.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
 }

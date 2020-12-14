@@ -16,4 +16,5 @@ type UsersDao interface {
 	InsertUser(user entity.Users) (uid int64, err error)
 	InsertUserDetail(userDetail entity.UserDetails) (err error)
 	UpdateUser(user entity.Users) (err error)
+	UpdateUserDetail(userDetail entity.UserDetails) (err error)
 }
