@@ -127,7 +127,7 @@ apiRoutes.post("/login", function (req, res) {
             result: {
                 role: 0,
                 uid: "hdfuighduhhhdfhu",
-                icon:"https://img.pc841.com/2018/0516/20180516050738880.jpg",
+                icon: "https://img.pc841.com/2018/0516/20180516050738880.jpg",
                 name: "sk",
                 nickname: "sk",
                 token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
@@ -157,7 +157,7 @@ apiRoutes.get("/oauth/github", function (req, res) {
             result: {
                 role: 0,
                 uid: "hdfuighduhhhdfhu",
-                icon:"https://img.pc841.com/2018/0516/20180516050738880.jpg",
+                icon: "https://img.pc841.com/2018/0516/20180516050738880.jpg",
                 name: "sk",
                 nickname: "sk",
                 token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJ0ZXN0XzAwMDAwMSIsInJvbGUiOjAsImlzUmVmcmVzaCI6ZmFsc2UsInN1YiI6InRlc3RfMDAwMDAxIiwiaXNzIjoidXNlciIsImlhdCI6MTU5NjAwOTA4NCwiZXhwIjo5MjIzMzcyMDM2ODU0Nzc1fQ.PJWiCD-9cBvKdU2qFcjcabyNRCcZXT6B5pa9vDfPDvg",
@@ -184,7 +184,46 @@ apiRoutes.post("/publicInfo", function (req, res) {
             // data: {
             status: 200,
             code: 0,
-           
+
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+
+apiRoutes.get("/publicInfo", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+
+            code: 0,
+            result: {
+                username: "sxs",
+                nickname: "ao",
+                profile: "a brief profile of me",
+                icon: "https://img.pc841.com/2018/0516/20180516050738880.jpg",
+                level: 2,
+                gender: 0,
+                email: "test@sjtu.edu.cn",
+                account_type: 1,
+                label: "math",
+                like_count: 10,
+                question_count: 10,
+                answer_count: 10,
+                follower_count: 10,
+                followed_count: 10
+            }
+
         })
     );
 

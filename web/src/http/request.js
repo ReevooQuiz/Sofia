@@ -54,21 +54,7 @@ server.interceptors.response.use(
 );
 
 let postRequest = (url, body, callback, { errorCallback }) => {
-    // let _url = new URL(hostUrl + url);
 
-    // server.interceptors.request.use(
-    //     (config) => {
-
-    //         config.headers['Content-Type'] = "application/json";
-    //         config.headers['Authorization'] = JSON.parse(sessionStorage.getItem("user"))
-    //             ? JSON.parse(sessionStorage.getItem("user")).token
-    //             : null;
-    //         return config;
-    //     }, (error) => {
-    //         this.$dialog.alert(error);
-    //         return Promise.reject(error);
-    //     }
-    // );
     console.log("here");
     server
         .post(url,
