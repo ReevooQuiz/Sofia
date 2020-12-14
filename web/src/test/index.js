@@ -231,6 +231,100 @@ apiRoutes.get("/publicInfo", function (req, res) {
         res.json(jsonResponse);
     }, 200);
 });
+
+apiRoutes.get("/notifications", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+
+            code: 0,
+            result: {
+                list: [
+                    {
+                        type: 0,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "657x575c7576",
+                        title: "What is a bird?",
+                        new_answer_count: 2
+                    },
+
+                    {
+                        type: 1,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "384cb234cb",
+                        question_title: "What is a board?",
+                        aid: "234b2v34",
+                        answer_head: "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+                        近日，有消息称上海一花店老板因差评进",
+                        new_like_count: 2
+                    },
+                    {
+                        type: 2,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "384cb234cb",
+                        question_title: "What is a board?",
+                        aid: "234b2v34",
+                        answer_head: "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+                        近日，有消息称上海一花店老板因差评进",
+                        new_comment_count: 2
+                    },
+
+                    {
+                        type: 3,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "384cb234cb",
+                        question_title: "What is a board?",
+                        aid: "234b2v34",
+                        answer_head: "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+                        近日，有消息称上海一花店老板因差评进",
+                        new_criticism_count: 2
+                    },
+                    { type: 4, time: "2015-08-05T08:40:51.620Z", new_follower_count: 3 },
+                    {
+                        type: 0,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "657x575c7576",
+                        title: "What is a bird?",
+                        new_answer_count: 2
+                    },
+                    {
+                        type: 3,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "384cb234cb",
+                        question_title: "What is a board?",
+                        aid: "234b2v34",
+                        answer_head: "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
+                        近日，有消息称上海一花店老板因差评进",
+                        new_criticism_count: 2
+                    },
+                    { type: 4, time: "2015-08-05T08:40:51.620Z", new_follower_count: 3 },
+                    {
+                        type: 0,
+                        time: "2015-08-05T08:40:51.620Z",
+                        qid: "657x575c7576",
+                        title: "What is a bird?",
+                        new_answer_count: 2
+                    },
+                ]
+            }
+
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+
+
 apiRoutes.get("/userAnswers", function (req, res) {
     let jsonResponse = {};
     res.vary(
