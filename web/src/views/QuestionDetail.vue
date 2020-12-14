@@ -1,5 +1,5 @@
 <template>
-  <div >
+  <div>
     <a-col :span="20" :offset="2">
       <a-row>
         <div>
@@ -21,9 +21,18 @@
               <DownOutlined />
             </a-button>
           </a-dropdown>
-          <a-button>我要回答</a-button>
+          <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
+                <a-button v-else @click="onWriteAnswer">我要回答</a-button>
         </a-space>
       </a-row>
+        <br/>
+        <v-md-editor v-if="writeAnswer" v-model="writeAnswerValue"></v-md-editor>
+        <span v-if="writeAnswer">
+          <br/>
+              <a-row type="flex" justify="end">
+                <a-button @click="onCommitAnswer" type="primary" shape="pill" size="small">提交回答</a-button>
+              </a-row>
+        </span>
       <br />
       <a-row>
         <AnswerCard v-for="(item) in data.answer_list" v-bind:key="item.aid" :ans="item" />
@@ -37,7 +46,7 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
-import server from "@/http/request.js";
+import {server} from "@/http/request.js";
 const data = {
   code: 0,
   qid: 234,
@@ -67,7 +76,7 @@ const data = {
       content: "asadqwf"
     }
   ]
-  
+
 };
 
 const orderBy = ["按热度排序", "按时间排序"];
@@ -81,7 +90,9 @@ export default {
   data() {
     return {
       data,
-      orderNow: "按热度排序",
+      orderNow:"按热度排序",
+      writeAnswer:false,
+      writeAnswerValue:"",
       questionHead:{}
     };
   },
@@ -113,6 +124,20 @@ export default {
   methods: {
     handleOrderClick(e) {
       this.orderNow = orderBy[e.key];
+    },
+    onWriteAnswer(){
+      window.scrollTo(0,window.outerHeight);
+      if (this.writeAnswer){
+        this.writeAnswer=false;
+        this.writeAnswerValue="";
+        return;
+      }
+        this.writeAnswer=true;
+    },
+    onCommitAnswer(){
+
+      this.writeAnswer=false;
+      this.writeAnswerValue="";
     }
   }
 };
