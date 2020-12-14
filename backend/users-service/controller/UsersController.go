@@ -13,6 +13,10 @@ type UsersController struct {
 	usersService service.UsersService
 }
 
+func (u *UsersController) SetUsersService(usersService service.UsersService) {
+	u.usersService = usersService
+}
+
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) (server *http.Server) {
 	u.usersService = usersService
 	server = &http.Server{Addr: ":9092"}
@@ -34,7 +38,16 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqLogin
 	var res service.ResLogin
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -53,7 +66,16 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var res service.ResOAuthGithub
-	err := r.ParseForm()
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -73,7 +95,16 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqPasswd
 	var res service.ResPasswd
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -93,7 +124,16 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqRegister
 	var res service.ResRegister
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 3
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -112,7 +152,16 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 
 func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Request) {
 	var res service.ResVerificationCode
-	err := r.ParseForm()
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -130,7 +179,15 @@ func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Reques
 
 func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 	var res service.ResVerify
-	err := r.ParseForm()
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1

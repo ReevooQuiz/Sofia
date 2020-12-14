@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 14/12/2020 02:03:03
+ Date: 14/12/2020 21:09:19
 */
 
 SET NAMES utf8mb4;
@@ -182,6 +182,7 @@ CREATE TABLE `questions`  (
   `view_count` bigint(20) NOT NULL,
   `favorite_count` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
+  `scanned` tinyint(4) NOT NULL,
   PRIMARY KEY (`qid`) USING BTREE,
   INDEX `questions_ibfk_1`(`raiser`) USING BTREE,
   INDEX `questions_ibfk_2`(`accepted_answer`) USING BTREE,

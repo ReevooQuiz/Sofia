@@ -48,54 +48,64 @@ type ReqRegister struct {
 }
 
 type ResLogin struct {
-	Code   int8 `json:"code"`
-	Result struct {
-		Type         int8   `json:"type"`
-		Role         int8   `json:"role"`
-		Uid          string `json:"uid"`
-		Icon         string `json:"icon"`
-		Name         string `json:"name"`
-		Nickname     string `json:"nickname"`
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
-	} `json:"result"`
+	Code   int8        `json:"code"`
+	Result ResultLogin `json:"result"`
 }
 
 type ResOAuthGithub struct {
-	Code   int8 `json:"code"`
-	Result struct {
-		Type         int8   `json:"type"`
-		First        bool   `json:"first"`
-		Role         int8   `json:"role"`
-		Uid          string `json:"uid"`
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
-	} `json:"result"`
+	Code   int8              `json:"code"`
+	Result ResultOAuthGithub `json:"result"`
 }
 
 type ResPasswd struct {
-	Code   int8 `json:"code"`
-	Result struct {
-		Type int8 `json:"type"`
-	} `json:"result"`
+	Code   int8         `json:"code"`
+	Result ResultPasswd `json:"result"`
 }
 
 type ResRegister struct {
-	Code   int8 `json:"code"`
-	Result struct {
-		Type int8 `json:"type"`
-	} `json:"result"`
+	Code   int8           `json:"code"`
+	Result ResultRegister `json:"result"`
 }
 
 type ResVerificationCode struct {
-	Code   int8 `json:"code"`
-	Result struct {
-		Type int8 `json:"type"`
-	} `json:"result"`
+	Code   int8                   `json:"code"`
+	Result ResultVerificationCode `json:"result"`
 }
 
 type ResVerify struct {
 	Code int8 `json:"code"`
+}
+
+type ResultLogin struct {
+	Type         int8   `json:"type"`
+	Role         int8   `json:"role"`
+	Uid          string `json:"uid"`
+	Icon         string `json:"icon"`
+	Name         string `json:"name"`
+	Nickname     string `json:"nickname"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type ResultOAuthGithub struct {
+	Type         int8   `json:"type"`
+	First        bool   `json:"first"`
+	Role         int8   `json:"role"`
+	Uid          string `json:"uid"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+type ResultPasswd struct {
+	Type int8 `json:"type"`
+}
+
+type ResultRegister struct {
+	Type int8 `json:"type"`
+}
+
+type ResultVerificationCode struct {
+	Type int8 `json:"type"`
 }
 
 func init() {
@@ -136,13 +146,6 @@ func (u *UsersServiceImpl) Destruct() {
 }
 
 func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
-		res.Code = 1
-		res.Result.Type = 3
-		return res, err
-	}
 	var user entity.Users
 	user, err = u.usersDao.FindUserByName(req.Name)
 	if err != nil || u.encryptPassword(req.Password, user.Salt) != user.HashPassword {
@@ -193,13 +196,6 @@ func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
 }
 
 func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthGithub, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
-		res.Code = 1
-		res.Result.Type = 2
-		return res, err
-	}
 	if error == "access_denied" {
 		res.Code = 1
 		res.Result.Type = 1
@@ -319,7 +315,7 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 		res.Result.RefreshToken = refreshToken
 		return res, err
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
 	user.Uid, err = u.usersDao.InsertUser(user)
 	if err != nil {
 		res.Code = 1
@@ -343,13 +339,6 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 }
 
 func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
-		res.Code = 1
-		res.Result.Type = 1
-		return res, err
-	}
 	var user entity.Users
 	var successful bool
 	successful, user.Uid, user.Role, err = util.ParseToken(token)
@@ -380,16 +369,14 @@ func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, e
 }
 
 func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
+	var user entity.Users
+	user, err = u.usersDao.FindUserByEmail(req.Email)
+	if err != nil || user.ActiveCode > 0 {
 		res.Code = 1
 		res.Result.Type = 2
 		return res, err
 	}
-	var user entity.Users
-	user, err = u.usersDao.FindUserByEmail(req.Email)
-	if err != nil || user.Role != entity.USER {
+	if user.Role != entity.NOT_ACTIVE {
 		res.Code = 1
 		res.Result.Type = 1
 		return res, err
@@ -399,6 +386,7 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	user.Salt = u.generateSalt()
 	user.HashPassword = u.encryptPassword(req.Password, user.Salt)
 	user.Gender = req.Gender
+	user.Role = entity.USER
 	err = u.usersDao.UpdateUser(user)
 	if err != nil {
 		res.Code = 1
@@ -411,7 +399,7 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	err = u.usersDao.InsertUserDetail(userDetail)
 	if err != nil {
 		res.Code = 1
-		res.Result.Type = 2
+		res.Result.Type = 3
 		return res, err
 	}
 	var favorite entity.Favorites
@@ -420,7 +408,7 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	favorite.Fid, err = u.usersDao.InsertFavorite(favorite)
 	if err != nil {
 		res.Code = 1
-		res.Result.Type = 2
+		res.Result.Type = 3
 	} else {
 		res.Code = 0
 	}
@@ -428,13 +416,6 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 }
 
 func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res ResVerificationCode, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
-		res.Code = 1
-		res.Result.Type = 1
-		return res, err
-	}
 	var code int64
 	if register {
 		var user entity.Users
@@ -488,12 +469,6 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 }
 
 func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err error) {
-	err = u.Init()
-	defer u.Destruct()
-	if err != nil {
-		res.Code = 1
-		return res, err
-	}
 	var user entity.Users
 	user, err = u.usersDao.FindUserByEmail(email)
 	if err != nil {
@@ -505,7 +480,6 @@ func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err 
 			res.Code = 1
 			return res, err
 		}
-		user.Role = entity.USER
 		user.ActiveCode = 0
 	}
 	if user.PasswdCode > 0 {
@@ -513,6 +487,7 @@ func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err 
 			res.Code = 1
 			return res, err
 		}
+		user.Role = entity.NOT_ACTIVE
 		user.PasswdCode = 0
 	}
 	err = u.usersDao.UpdateUser(user)
