@@ -421,6 +421,7 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 		var user entity.Users
 		user.Name = email
 		user.Email = email
+		user.Profile = ""
 		user.Role = entity.NOT_ACTIVE
 		user.AccountType = entity.SOFIA
 		user.ActiveCode = u.generateCode()
