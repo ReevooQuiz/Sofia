@@ -28,7 +28,7 @@
                   <template #content>
                     <span>
                       你的问题
-                      <a>{{item.title}}</a>
+                      <a>『{{item.title}}』</a>
                       新增了 {{item.new_answer_count}} 个回答
                     </span>
                   </template>
@@ -43,11 +43,13 @@
                     <a>问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
+                    <span>你的回答</span>
+                    <br/>
                     <span>
-                      你的回答
-                      <a>{{item.answer_head}}</a>
-                      新增了 {{item.new_like_count}} 个赞
+                      <a>『{{item.answer_head}}』</a>
                     </span>
+                     <br/>
+                    <span>新增了 {{item.new_like_count}} 个赞</span>
                   </template>
                   <template #datetime>
                     <a-tooltip :title="moment(item.time).format('YYYY-MM-DD HH:mm:ss')">
@@ -60,9 +62,13 @@
                     <a>问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
+                    <span>你的回答</span>
+                    <br/>
                     <span>
-                      你的回答
-                      <a>{{item.answer_head}}</a>
+                      <a>『{{item.answer_head}}』</a>
+                    </span>
+                     <br/>
+                    <span>
                       新增了 {{new_comment_count}} 个评论
                     </span>
                   </template>
@@ -77,9 +83,13 @@
                     <a>问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
+                    <span>你的回答</span>
+                    <br/>
                     <span>
-                      你的回答
-                      <a>{{answer_head}}</a>
+                      <a>『{{item.answer_head}}』</a>
+                    </span>
+                     <br/>
+                    <span>
                       新增了 {{item.new_criticism_count}} 个反驳评论
                     </span>
                   </template>

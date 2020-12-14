@@ -6,11 +6,11 @@
         <a-row>
           <a-col :span="8">
             <a-input-search
-            id="ban-lift-input"
+            
               placeholder="输入封禁关键词"
               v-model:value="inputValue"
               @search="onSearch"
-              style="{'box-shadow': 5px 5px 10px gray}"
+             style=" border-radius: 25px;box-shadow: 3px 3px 2px #dcdfdf"
             />
           </a-col>
 
@@ -126,15 +126,6 @@ body {
   background-color: #edeeed;
 }
 
-.ban-lift-input .ant-input-affix-wrapper {
-  border: 1px solid #d9d9d9;
-  border-radius: 16px;
-  padding: 4px 11px;
-  width: 100%;
-  text-align: start;
-  background-color: #fff;
-  background-image: none;
-  color: rgba(0, 0, 0, 0.65);
-}
+
 
 </style>
