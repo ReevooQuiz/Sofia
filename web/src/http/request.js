@@ -98,6 +98,7 @@ let getRequest = (url, callback, { errorCallback, params }) => {
             errorCallback(error)
         })
         .then(response => {
+            console.log(response);
             callback(response.data);
         });
 };

@@ -15,13 +15,14 @@
         <a-row justify="center">
           <a-col>
             <img
+              v-if="this.edit===false"
               slot="cover"
               alt="example"
               src="https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1"
               style="height: 100px; border-radius: 50%"
             />
             <br />
-            <a-upload
+            <!-- <a-upload
               v-if="this.edit===true"
               v-model:fileList="fileList"
               name="file"
@@ -31,6 +32,27 @@
               @change="handleChange"
             >
               <CameraOutlined />
+            </a-upload>-->
+            <a-upload
+         
+              v-if="this.edit===true"
+              v-model:value="ruleForm.icon"
+              v-model:fileList="fileList"
+              name="icon"
+              list-type="picture-card"
+              class="avatar-uploader"
+              :show-upload-list="false"
+              action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+              :before-upload="beforeUpload"
+              @change="handleChange"
+            >
+              <img  style="width:100px" v-if="imageUrl" :src="imageUrl" alt="avatar" />
+              <div   v-else>
+                <!-- todo -->
+                <loading-outlined v-if="loading" />
+                <plus-outlined v-else />
+                <div class="ant-upload-text">上传头像</div>
+              </div>
             </a-upload>
           </a-col>
         </a-row>
@@ -73,8 +95,14 @@
 
         <a-button v-if="this.edit===false" block ghost @click="changeEditStatus">修改个人信息</a-button>
         <div v-if="this.edit===true">
-          <a-button ghost style="padding-left:5%;width:45%" @click="handleFinish">保存</a-button>
-          <a-button ghost style="padding-left:5%;width:45%" @click="handleCancle">取消</a-button>
+          <a-row>
+            <a-col :span="10" :offset="1">
+              <a-button ghost @click="handleFinish">保存</a-button>
+            </a-col>
+            <a-col :span="10" :offset="2">
+              <a-button ghost @click="handleCancle">取消</a-button>
+            </a-col>
+          </a-row>
         </div>
       </a-col>
 
@@ -217,6 +245,7 @@ import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
 import SubMenu from "../../components/PersonalNavigation";
 import { message } from "ant-design-vue";
+import { PlusOutlined, LoadingOutlined } from "@ant-design/icons-vue";
 import {
   CameraOutlined,
   FireOutlined,
@@ -227,7 +256,13 @@ import {
   FormOutlined,
   CopyOutlined
 } from "@ant-design/icons-vue";
-import { postRequest } from "@/http/request.js";
+import { postRequest,getRequest } from "@/http/request.js";
+
+function getBase64(img, callback) {
+  const reader = new FileReader();
+  reader.addEventListener("load", () => callback(reader.result));
+  reader.readAsDataURL(img);
+}
 const data = {
   username: "akangakang",
   nickname: "aaaaaaa",
@@ -235,7 +270,7 @@ const data = {
   email: "11111111@sjtu.edu.cn",
   profile:
     "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介",
-  icon: "icon data",
+  icon:"https://img.pc841.com/2018/0516/20180516050738880.jpg",
   level: 2,
 
   account_type: 1,
@@ -256,7 +291,9 @@ export default {
     TeamOutlined,
     LikeOutlined,
     FormOutlined,
-    CopyOutlined
+    CopyOutlined,
+    PlusOutlined,
+    LoadingOutlined
   },
   data() {
     let checkName = async (rule, value, callback) => {
@@ -296,6 +333,9 @@ export default {
 
     return {
       fileList: [],
+      loading: false,
+      imageUrl:"",
+      done: false,
       headers: {
         authorization: "authorization-text"
       },
@@ -324,33 +364,24 @@ export default {
     };
   },
   created() {
-    this.info = data;
+    // this.info = data;
+    getRequest("/publicInfo",this.handleCallback,{errorCallback:(e)=>{console.log(JSON.stringify(e))},params:{id:JSON.parse(sessionStorage.getItem("user")).uid}})
+     this.imageUrl=JSON.parse(sessionStorage.getItem("user")).icon,
+      this.ruleForm.username = this.info.username;
     this.ruleForm.username = this.info.username;
     this.ruleForm.nickname = this.info.nickname;
     this.ruleForm.email = this.info.email;
     this.ruleForm.gender = this.info.gender;
+    this.ruleForm.icon=JSON.parse(sessionStorage.getItem("user")).icon,
     this.ruleForm.profile = this.info.profile;
     let id = JSON.parse(sessionStorage.getItem("user")).uid;
-    // getRequest("/followers",this.handleCallback,{
-    //   errorCallback:(e)=>{console.log(e)},
-    //   params:{uid:id}
-    // })
   },
   methods: {
     handleCallback(response) {
       console.log(response);
       this.info = response.result;
     },
-    handleChange(info) {
-      if (info.file.status !== "uploading") {
-        console.log(info.file, info.fileList);
-      }
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} file uploaded successfully`);
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
+
     handleFinish() {
       console.log(this.ruleForm);
       console.log("finished");
@@ -383,6 +414,38 @@ export default {
       this.ruleForm.gender = this.info.gender;
       this.ruleForm.profile = this.info.profile;
       this.edit = !this.edit;
+    },
+    handleChange(info) {
+      if (info.file.status === "uploading") {
+        this.loading = true;
+        return;
+      }
+      if (info.file.status === "done") {
+        this.done = true;
+        // Get this url from response in real world.
+        getBase64(info.file.originFileObj, imageUrl => {
+          this.imageUrl = imageUrl;
+          this.loading = false;
+          let arr = imageUrl.split(",");
+          this.ruleForm.icon = arr[1];
+          console.log(arr);
+        });
+      }
+      if (info.file.status === "error") {
+        this.loading = false;
+      }
+    },
+    beforeUpload(file) {
+      const isJpgOrPng =
+        file.type === "image/jpeg" || file.type === "image/png";
+      if (!isJpgOrPng) {
+        message.error("You can only upload JPG file!");
+      }
+      const isLt2M = file.size / 1024 / 1024 < 2;
+      if (!isLt2M) {
+        message.error("Image must smaller than 2MB!");
+      }
+      return isJpgOrPng && isLt2M;
     }
   }
 };
@@ -402,7 +465,10 @@ export default {
 
   /* font-weight: bold; */
 }
-
+.avatar-uploader > .ant-upload {
+  width: 128px;
+  height: 128px;
+}
 body {
   height: 100%;
   background-color: #edeeed;
