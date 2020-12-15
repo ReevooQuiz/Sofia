@@ -51,7 +51,7 @@ func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err err
 		return user, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(email).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
+	err = stmt.QueryRow(email).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
 	return user, err
 }
 
@@ -62,7 +62,7 @@ func (u *UsersDaoImpl) FindUserByName(name string) (user entity.Users, err error
 		return user, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(name).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
+	err = stmt.QueryRow(name).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
 	return user, err
 }
 
@@ -73,7 +73,7 @@ func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8)
 		return user, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(oid, accountType).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
+	err = stmt.QueryRow(oid, accountType).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
 	return user, err
 }
 
@@ -84,7 +84,7 @@ func (u *UsersDaoImpl) FindUserByUid(uid int64) (user entity.Users, err error) {
 		return user, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(uid).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
+	err = stmt.QueryRow(uid).Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.NotificationTime)
 	return user, err
 }
 
@@ -118,13 +118,13 @@ func (u *UsersDaoImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err
 
 func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid int64, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, role, account_type, active_code, passwd_code, exp, follower_count, following_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	stmt, err = u.db.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return uid, err
 	}
 	defer stmt.Close()
 	var res sql.Result
-	res, err = stmt.Exec(user.Oid, user.Name, user.Nickname, user.Salt, user.HashPassword, user.Email, user.Gender, user.Role, user.AccountType, user.ActiveCode, user.PasswdCode, user.Exp, user.FollowerCount, user.FollowingCount, user.NotificationTime)
+	res, err = stmt.Exec(user.Oid, user.Name, user.Nickname, user.Salt, user.HashPassword, user.Email, user.Gender, user.Profile, user.Role, user.AccountType, user.ActiveCode, user.PasswdCode, user.Exp, user.FollowerCount, user.FollowingCount, user.NotificationTime)
 	if err != nil {
 		return uid, err
 	}
@@ -138,11 +138,15 @@ func (u *UsersDaoImpl) InsertUserDetail(userDetail entity.UserDetails) (err erro
 
 func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("update users set oid = ?, name = ?, nickname = ?, salt = ?, hash_password = ?, email = ?, gender = ?, role = ?, account_type = ?, active_code = ?, passwd_code = ?, exp = ?, follower_count = ?, following_count = ?, notification_time = ? where uid = ?")
+	stmt, err = u.db.Prepare("update users set oid = ?, name = ?, nickname = ?, salt = ?, hash_password = ?, email = ?, gender = ?, profile= ?, role = ?, account_type = ?, active_code = ?, passwd_code = ?, exp = ?, follower_count = ?, following_count = ?, notification_time = ? where uid = ?")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(user.Oid, user.Name, user.Nickname, user.Salt, user.HashPassword, user.Email, user.Gender, user.Role, user.AccountType, user.ActiveCode, user.PasswdCode, user.Exp, user.FollowerCount, user.FollowingCount, user.NotificationTime, user.Uid)
+	_, err = stmt.Exec(user.Oid, user.Name, user.Nickname, user.Salt, user.HashPassword, user.Email, user.Gender, user.Profile, user.Role, user.AccountType, user.ActiveCode, user.PasswdCode, user.Exp, user.FollowerCount, user.FollowingCount, user.NotificationTime, user.Uid)
 	return err
+}
+
+func (u *UsersDaoImpl) UpdateUserDetail(userDetail entity.UserDetails) (err error) {
+	return u.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
 }

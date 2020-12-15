@@ -109,6 +109,21 @@ func (mr *MockUsersServiceMockRecorder) Passwd(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Passwd", reflect.TypeOf((*MockUsersService)(nil).Passwd), arg0, arg1)
 }
 
+// PublicInfoPut mocks base method
+func (m *MockUsersService) PublicInfoPut(arg0 string, arg1 service.ReqPublicInfoPut) (service.ResPublicInfoPut, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PublicInfoPut", arg0, arg1)
+	ret0, _ := ret[0].(service.ResPublicInfoPut)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PublicInfoPut indicates an expected call of PublicInfoPut
+func (mr *MockUsersServiceMockRecorder) PublicInfoPut(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublicInfoPut", reflect.TypeOf((*MockUsersService)(nil).PublicInfoPut), arg0, arg1)
+}
+
 // Register mocks base method
 func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegister, error) {
 	m.ctrl.T.Helper()

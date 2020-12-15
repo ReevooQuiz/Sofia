@@ -38,6 +38,15 @@ type ReqPasswd struct {
 	New string `json:"new"`
 }
 
+type ReqPublicInfoPut struct {
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Profile  string `json:"profile"`
+	Icon     string `json:"icon"`
+	Gender   int8   `json:"gender"`
+	Email    string `json:"email"`
+}
+
 type ReqRegister struct {
 	Name     string `json:"name"`
 	Nickname string `json:"nickname"`
@@ -60,6 +69,11 @@ type ResOAuthGithub struct {
 type ResPasswd struct {
 	Code   int8         `json:"code"`
 	Result ResultPasswd `json:"result"`
+}
+
+type ResPublicInfoPut struct {
+	Code   int8                `json:"code"`
+	Result ResultPublicInfoPut `json:"result"`
 }
 
 type ResRegister struct {
@@ -97,6 +111,10 @@ type ResultOAuthGithub struct {
 }
 
 type ResultPasswd struct {
+	Type int8 `json:"type"`
+}
+
+type ResultPublicInfoPut struct {
 	Type int8 `json:"type"`
 }
 
@@ -315,8 +333,17 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 		res.Result.RefreshToken = refreshToken
 		return res, err
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Profile: "", Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
 	user.Uid, err = u.usersDao.InsertUser(user)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 2
+		return res, err
+	}
+	var userDetail entity.UserDetails
+	userDetail.Uid = user.Uid
+	userDetail.Icon = ""
+	err = u.usersDao.InsertUserDetail(userDetail)
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 2
@@ -368,7 +395,63 @@ func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, e
 	return res, err
 }
 
+func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (res ResPublicInfoPut, err error) {
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+		return res, err
+	}
+	user, err = u.usersDao.FindUserByUid(user.Uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	var userByName entity.Users
+	userByName, err = u.usersDao.FindUserByName(req.Name)
+	if err == nil && user.Uid != userByName.Uid {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
+	user.Name = req.Name
+	user.Nickname = req.Nickname
+	user.Profile = req.Profile
+	user.Gender = req.Gender
+	user.Email = req.Email
+	err = u.usersDao.UpdateUser(user)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	var userDetail entity.UserDetails
+	userDetail, err = u.usersDao.FindUserDetailByUid(user.Uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	userDetail.Icon = req.Icon
+	err = u.usersDao.UpdateUserDetail(userDetail)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+	} else {
+		res.Code = 0
+	}
+	return res, err
+}
+
 func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error) {
+	_, err = u.usersDao.FindUserByName(req.Name)
+	if err == nil {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
 	var user entity.Users
 	user, err = u.usersDao.FindUserByEmail(req.Email)
 	if err != nil || user.ActiveCode > 0 {
@@ -390,7 +473,7 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	err = u.usersDao.UpdateUser(user)
 	if err != nil {
 		res.Code = 1
-		res.Result.Type = 0
+		res.Result.Type = 3
 		return res, err
 	}
 	var userDetail entity.UserDetails
@@ -418,9 +501,15 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res ResVerificationCode, err error) {
 	var code int64
 	if register {
+		_, err = u.usersDao.FindUserByEmail(email)
+		if err == nil {
+			res.Code = 1
+			res.Result.Type = 0
+			return res, err
+		}
 		var user entity.Users
-		user.Name = email
 		user.Email = email
+		user.Profile = ""
 		user.Role = entity.NOT_ACTIVE
 		user.AccountType = entity.SOFIA
 		user.ActiveCode = u.generateCode()
@@ -432,7 +521,7 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 		_, err = u.usersDao.InsertUser(user)
 		if err != nil {
 			res.Code = 1
-			res.Result.Type = 0
+			res.Result.Type = 1
 			return res, err
 		}
 		code = user.ActiveCode

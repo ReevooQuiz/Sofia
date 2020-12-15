@@ -29,6 +29,7 @@ type Users struct {
 	HashPassword     string `json:"hash_password"`
 	Email            string `json:"email"`
 	Gender           int8   `json:"gender"`
+	Profile          string `json:"profile"`
 	Role             int8   `json:"role"`
 	AccountType      int8   `json:"account_type"`
 	ActiveCode       int64  `json:"active_code"`

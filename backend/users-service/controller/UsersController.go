@@ -23,6 +23,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
 	http.HandleFunc("/passwd", u.Passwd)
+	http.HandleFunc("/publicInfo", u.PublicInfo)
 	http.HandleFunc("/register", u.Register)
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
@@ -119,6 +120,36 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 	}
 	object, _ := json.Marshal(res)
 	_, _ = w.Write(object)
+}
+
+func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "PUT" {
+		var req service.ReqPublicInfoPut
+		var res service.ResPublicInfoPut
+		err := u.usersService.Init()
+		defer u.usersService.Destruct()
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		res, err = u.usersService.PublicInfoPut(r.Header.Get("Authorization"), req)
+		if err != nil {
+			log.Info(err)
+		}
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+	}
 }
 
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {

@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 14/12/2020 21:09:19
+ Date: 15/12/2020 01:18:26
 */
 
 SET NAMES utf8mb4;
@@ -216,6 +216,7 @@ CREATE TABLE `users`  (
   `hash_password` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `email` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `gender` tinyint(4) NOT NULL,
+  `profile` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `role` tinyint(4) NOT NULL,
   `account_type` tinyint(4) NOT NULL,
   `active_code` bigint(20) NOT NULL,
@@ -224,9 +225,7 @@ CREATE TABLE `users`  (
   `follower_count` bigint(20) NOT NULL,
   `following_count` bigint(20) NOT NULL,
   `notification_time` bigint(20) NOT NULL,
-  PRIMARY KEY (`uid`) USING BTREE,
-  UNIQUE INDEX `name`(`name`) USING BTREE,
-  UNIQUE INDEX `email`(`email`) USING BTREE
+  PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
