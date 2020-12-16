@@ -177,6 +177,12 @@ func TestServicePublicInfoPut(t *testing.T) {
 	userDetails := []entity.UserDetails{
 		{Uid: 1, Icon: "test"},
 	}
+	labels := []entity.Labels{
+		{Lid: 1, Title: "test"},
+	}
+	userLabels := []entity.UserLabels{
+		{Uid: 1, Lid: 1},
+	}
 	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
@@ -185,6 +191,18 @@ func TestServicePublicInfoPut(t *testing.T) {
 		mockUsersDao.EXPECT().UpdateUser(users[0]).Return(nil),
 		mockUsersDao.EXPECT().FindUserDetailByUid(users[0].Uid).Return(userDetails[0], nil),
 		mockUsersDao.EXPECT().UpdateUserDetail(userDetails[0]).Return(nil),
+		mockUsersDao.EXPECT().RemoveUserLabelsByUid(users[0].Uid).Return(nil),
+		mockUsersDao.EXPECT().FindLabelByTitle(labels[0].Title).Return(labels[0], nil),
+		mockUsersDao.EXPECT().InsertUserLabel(userLabels[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindUserByName(users[0].Name).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().UpdateUser(users[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(users[0].Uid).Return(userDetails[0], nil),
+		mockUsersDao.EXPECT().UpdateUserDetail(userDetails[0]).Return(nil),
+		mockUsersDao.EXPECT().RemoveUserLabelsByUid(users[0].Uid).Return(nil),
+		mockUsersDao.EXPECT().FindLabelByTitle(labels[0].Title).Return(entity.Labels{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().InsertLabel(gomock.Any()).Return(labels[0].Lid, nil),
+		mockUsersDao.EXPECT().InsertUserLabel(userLabels[0]).Return(nil),
 		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
 		mockUsersDao.EXPECT().FindUserByName(users[0].Name).Return(users[1], nil),
 		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
@@ -206,7 +224,8 @@ func TestServicePublicInfoPut(t *testing.T) {
 		args    args
 		wantRes service.ResPublicInfoPut
 	}{
-		{"Normal", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 0}},
+		{"NormalAndLabelFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
+		{"NormalAndLabelNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
 		{"NameFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 0}}},
 		{"UserNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},
 		{"UserDetailNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},

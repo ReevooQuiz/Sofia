@@ -39,12 +39,13 @@ type ReqPasswd struct {
 }
 
 type ReqPublicInfoPut struct {
-	Name     string `json:"name"`
-	Nickname string `json:"nickname"`
-	Profile  string `json:"profile"`
-	Icon     string `json:"icon"`
-	Gender   int8   `json:"gender"`
-	Email    string `json:"email"`
+	Name     string   `json:"name"`
+	Nickname string   `json:"nickname"`
+	Profile  string   `json:"profile"`
+	Icon     string   `json:"icon"`
+	Gender   int8     `json:"gender"`
+	Email    string   `json:"email"`
+	Labels   []string `json:"labels"`
 }
 
 type ReqRegister struct {
@@ -333,7 +334,7 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 		res.Result.RefreshToken = refreshToken
 		return res, err
 	}
-	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Profile: "", Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, NotificationTime: time.Now().Unix()}
+	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Profile: "", Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, QuestionCount: 0, AnswerCount: 0, LikeCount: 0, ApprovalCount: 0, NotificationTime: time.Now().Unix()}
 	user.Uid, err = u.usersDao.InsertUser(user)
 	if err != nil {
 		res.Code = 1
@@ -439,9 +440,34 @@ func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (re
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 1
-	} else {
-		res.Code = 0
+		return res, err
 	}
+	err = u.usersDao.RemoveUserLabelsByUid(user.Uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	for _, labelTitle := range req.Labels {
+		var label entity.Labels
+		label, err = u.usersDao.FindLabelByTitle(labelTitle)
+		if err != nil {
+			label = entity.Labels{Title: labelTitle}
+			label.Lid, err = u.usersDao.InsertLabel(label)
+			if err != nil {
+				res.Code = 1
+				res.Result.Type = 1
+				return res, err
+			}
+		}
+		err = u.usersDao.InsertUserLabel(entity.UserLabels{Uid: user.Uid, Lid: label.Lid})
+		if err != nil {
+			res.Code = 1
+			res.Result.Type = 1
+			return res, err
+		}
+	}
+	res.Code = 0
 	return res, err
 }
 
@@ -517,6 +543,10 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 		user.Exp = 0
 		user.FollowerCount = 0
 		user.FollowingCount = 0
+		user.QuestionCount = 0
+		user.AnswerCount = 0
+		user.LikeCount = 0
+		user.ApprovalCount = 0
 		user.NotificationTime = time.Now().Unix()
 		_, err = u.usersDao.InsertUser(user)
 		if err != nil {

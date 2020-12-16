@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 15/12/2020 01:18:26
+ Date: 17/12/2020 01:39:38
 */
 
 SET NAMES utf8mb4;
@@ -224,6 +224,10 @@ CREATE TABLE `users`  (
   `exp` bigint(20) NOT NULL,
   `follower_count` bigint(20) NOT NULL,
   `following_count` bigint(20) NOT NULL,
+  `question_count` bigint(20) NOT NULL,
+  `answer_count` bigint(20) NOT NULL,
+  `like_count` bigint(20) NOT NULL,
+  `approval_count` bigint(20) NOT NULL,
   `notification_time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;

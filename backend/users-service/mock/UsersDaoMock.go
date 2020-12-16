@@ -45,6 +45,21 @@ func (mr *MockUsersDaoMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersDao)(nil).Destruct))
 }
 
+// FindLabelByTitle mocks base method
+func (m *MockUsersDao) FindLabelByTitle(arg0 string) (entity.Labels, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLabelByTitle", arg0)
+	ret0, _ := ret[0].(entity.Labels)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLabelByTitle indicates an expected call of FindLabelByTitle
+func (mr *MockUsersDaoMockRecorder) FindLabelByTitle(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelByTitle", reflect.TypeOf((*MockUsersDao)(nil).FindLabelByTitle), arg0)
+}
+
 // FindUserByEmail mocks base method
 func (m *MockUsersDao) FindUserByEmail(arg0 string) (entity.Users, error) {
 	m.ctrl.T.Helper()
@@ -149,6 +164,21 @@ func (mr *MockUsersDaoMockRecorder) InsertFavorite(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFavorite", reflect.TypeOf((*MockUsersDao)(nil).InsertFavorite), arg0)
 }
 
+// InsertLabel mocks base method
+func (m *MockUsersDao) InsertLabel(arg0 entity.Labels) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertLabel", arg0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertLabel indicates an expected call of InsertLabel
+func (mr *MockUsersDaoMockRecorder) InsertLabel(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertLabel), arg0)
+}
+
 // InsertUser mocks base method
 func (m *MockUsersDao) InsertUser(arg0 entity.Users) (int64, error) {
 	m.ctrl.T.Helper()
@@ -176,6 +206,34 @@ func (m *MockUsersDao) InsertUserDetail(arg0 entity.UserDetails) error {
 func (mr *MockUsersDaoMockRecorder) InsertUserDetail(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUserDetail", reflect.TypeOf((*MockUsersDao)(nil).InsertUserDetail), arg0)
+}
+
+// InsertUserLabel mocks base method
+func (m *MockUsersDao) InsertUserLabel(arg0 entity.UserLabels) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertUserLabel", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertUserLabel indicates an expected call of InsertUserLabel
+func (mr *MockUsersDaoMockRecorder) InsertUserLabel(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUserLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertUserLabel), arg0)
+}
+
+// RemoveUserLabelsByUid mocks base method
+func (m *MockUsersDao) RemoveUserLabelsByUid(arg0 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveUserLabelsByUid", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveUserLabelsByUid indicates an expected call of RemoveUserLabelsByUid
+func (mr *MockUsersDaoMockRecorder) RemoveUserLabelsByUid(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserLabelsByUid", reflect.TypeOf((*MockUsersDao)(nil).RemoveUserLabelsByUid), arg0)
 }
 
 // UpdateUser mocks base method
