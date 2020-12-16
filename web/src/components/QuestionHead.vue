@@ -6,32 +6,50 @@
           {{111}}
         </a-tag> -->
       </template>
+
       <a-row>
-        <a-col :span="3">
-          <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
-        </a-col>
-        <a-col :span="19">
+        <a-col :span="22">
           <!-- <template> -->
           <a-comment>
             <template #author>
-              <a>{{ques.user}}</a>
+              <a>{{ques.raiser.name}}</a>
             </template>
             <template #avatar>
               <a-avatar
-                src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-                alt="Han Solo"
+                :src="ques.raiser.icon"
+                :alt="ques.raiser.name"
               />
             </template>
             <template #content>
               <p>{{ques.content}}</p>
             </template>
+            <template #actions>
+              <span key="comment-basic-approve">
+                <a-tooltip title="favorite">
+                  <template v-if="ans.favorited">
+                    <HeartFilled @click="onFavorite" />
+                  </template>
+                  <template v-else>
+                    <HeartOutlined @click="onFavorite" />
+                  </template>
+                </a-tooltip>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.favorite_count }}</span>
+              </span>
+            </template>
+            <template #datetime>
+              <a-tooltip :title="item.datetime.format('YYYY-MM-DD HH:mm:ss')">
+                <span>{{ time.fromNow() }}</span>
+              </a-tooltip>
+            </template>
           </a-comment>
         </a-col>
         <a-col :span="2" align="center">
+          <h2>{{ques.category}}</h2>
+          <br/>
           <h2>关注者</h2>
-          <h3>{{ques.followers}}</h3>
+          <h3>{{ques.favorite_count}}</h3>
           <h2>热度</h2>
-          <h3>{{ques.viewCount}}</h3>
+          <h3>{{ques.view_count}}</h3>
         </a-col>
       </a-row>
     </a-card>
@@ -44,41 +62,36 @@
 <script >
 import moment from "moment";
 import {
-  LikeFilled,
-  LikeOutlined,
-  DislikeFilled,
-  DislikeOutlined
+  HeartFilled,
+  HeartOutlined,
 } from "@ant-design/icons-vue";
+import {postRequest} from "@/http/request";
 export default {
   components: {
-    LikeFilled,
-    LikeOutlined,
-    DislikeFilled,
-    DislikeOutlined
+    HeartFilled,
+    HeartOutlined,
   },
   props: ["ques"],
 
   data() {
     return {
-      // likes: this.ques.likeNum,
-      // dislikes: this.ques.dislikeNum,
-      action: null,
-      moment,
-      followers: this.ques.followers,
-      content: this.ques.content
+      time:moment(this.ques.time),
     };
   },
   methods: {
-    like() {
-      this.likes = 1;
-      this.dislikes = 0;
-      this.action = "liked";
+    onFavorite(){
+      console.log("a");
+      /***********WAITING API**************/
+      // this.ques.favorited=!this.ques.favorited;
+      // if (this.ques.favorited)
+      //   this.ques.favorite_count++;
+      // else this.ques.favorite_count--;
+      // postRequest("/favorite", {qid:this.ques.qid,favorite:this.ques.favorited},(e)=>{
+      //   console.log(e);
+      // },{errorCallback:(e)=>{
+      //     console.log(e);
+      //   }});
     },
-    dislike() {
-      this.likes = 0;
-      this.dislikes = 1;
-      this.action = "disliked";
-    }
   }
 };
 </script>

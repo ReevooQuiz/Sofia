@@ -7,13 +7,13 @@
         </div>
       </a-row>
       <a-row justify="space-between">
-        <a-tag>{{data.answer_count}} 个回答</a-tag>
+        <a-tag>{{questionHead.answer_count}} 个回答</a-tag>
         <a-space :size="20">
           <a-dropdown>
             <template #overlay>
               <a-menu @click="handleOrderClick">
-                <a-menu-item key="0">按热度排序</a-menu-item>
-                <a-menu-item key="1">按时间排序</a-menu-item>
+                <a-menu-item key="0">按时间排序</a-menu-item>
+                <a-menu-item key="1">按热度排序</a-menu-item>
               </a-menu>
             </template>
             <a-button>
@@ -35,7 +35,7 @@
         </span>
       <br />
       <a-row>
-        <AnswerCard v-for="(item) in data.answer_list" v-bind:key="item.aid" :ans="item" />
+        <AnswerCard v-for="(item) in answerData" v-bind:key="item.aid" :ans="item" />
       </a-row>
     </a-col>
   </div>
@@ -46,40 +46,9 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
-import {server} from "@/http/request.js";
-const data = {
-  code: 0,
-  qid: 234,
-  owner: {
-    user_id: 1,
-    user_name: "abc",
-    user_icon: ""
-  },
-  title: "ababa",
-  content: "abaaba",
-  answer_count: 4,
-  follow_count: 234,
-  view_count: 123,
+import { postRequest,getRequest } from "@/http/request.js";
 
-  answer_list: [
-    {
-      aid: 234,
-      owner: {
-        user_id: 1,
-        user_name: "abc",
-        user_icon: ""
-      },
-      like_count: 2,
-      criticism_count: 4,
-      approval_count: 2,
-      comment_count: 2,
-      content: "asadqwf"
-    }
-  ]
-
-};
-
-const orderBy = ["按热度排序", "按时间排序"];
+const orderBy = ["按时间排序", "按热度排序"];
 
 export default {
   components: {
@@ -89,55 +58,69 @@ export default {
   },
   data() {
     return {
-      data,
-      orderNow:"按热度排序",
+      orderNow:"按时间排序",
+      orderKey:0,
       writeAnswer:false,
       writeAnswerValue:"",
-      questionHead:{}
+      questionHead:{},
+      answerData:[],
+      pageNow:0
     };
   },
   created() {
     console.log(this.$route.query.questionId);
     let p= this.$route.query.questionId;
-    server
-      .get("/question", {
-        params: p
-      })
-      .catch(function(error) {
-        console.log(error);
-      })
-      .then(response => {
-        console.log("!111");
-        console.log(response);
-        // console.log(response.data.question_list);
-        this.data = response.data;
-        // console.log(this.questionData);
-
-        this.questionHead.title = response.data.title;
-        this.questionHead.tags = response.data.tags;
-        this.questionHead.user = response.data.owner.user_name;
-        this.questionHead.content = response.data.content;
-        this.questionHead.followers = response.data.follower_count;
-        this.questionHead.viewCount = response.data.view_count;
-      });
+    getRequest("/question",
+        (response)=>{
+      this.questionHead=response.result
+    }, {
+      errorCallback:(e)=>{console.log(e)},
+      params:{qid:p}
+    });
+    this.getAnswers();
   },
   methods: {
+    getAnswers(){
+      getRequest("/answers",
+          (response)=>{this.answerData.append(response.result);},
+          {
+        errorCallback:(e)=>{console.log(e)},
+        params:{qid:p,page:this.pageNow++,sort:this.orderKey}
+      });
+
+    },
+    reorderAnswers(response){
+      this.answerData=response.result;
+      this.pageNow=1;
+    },
     handleOrderClick(e) {
       this.orderNow = orderBy[e.key];
+      this.orderKey=e.key;
+      getRequest("/answers",this.reorderAnswers, {
+        errorCallback:(event)=>{console.log(event)},
+        params:{qid:p,page:0,sort:e.key}
+      });
     },
     onWriteAnswer(){
-      window.scrollTo(0,window.outerHeight);
       if (this.writeAnswer){
         this.writeAnswer=false;
         this.writeAnswerValue="";
         return;
       }
-        this.writeAnswer=true;
+      this.writeAnswer=true;
     },
     onCommitAnswer(){
-
-      this.writeAnswer=false;
-      this.writeAnswerValue="";
+      postRequest("/answers", {qid:this.questionHead.qid,content:this.writeAnswerValue},(e)=>{
+        console.log(e);
+        this.writeAnswer=false;
+        this.writeAnswerValue="";
+        this.questionHead.answer_count++;
+        this.answerData=[];
+        this.pageNow=0;
+        this.getAnswers();
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
     }
   }
 };

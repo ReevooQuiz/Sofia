@@ -1,6 +1,15 @@
 <template>
   <a-row>
     <a-col :span="18" :offset="2">
+      <a-row>
+        <a-col :span="18">
+          <a-textarea v-model:value="title" placeholder="请输入标题" showCount :maxlength="100" />
+        </a-col>
+        <a-col :span="5" :offset="1">
+          请输入您想标注的标签
+          <a-textarea v-model:value="labelString" placeholder="格式：label1#label2#" showCount :maxlength="100" />
+        </a-col>
+      </a-row>
       <v-md-editor v-model="questionValue" height="400px"></v-md-editor>
     </a-col>
     <a-col :span="2" :offset="1" >
@@ -27,16 +36,38 @@
 </template>
 
 <script>
+import {postRequest} from "@/http/request";
+
 export default {
   data(){
     return {
       questionValue:"",
       category:"study",
+      title:"",
+      labelString:"",
+      labels:[]
     };
   },
   methods: {
     onPostQuestion(){
-      console.log(this.questionValue);
+      let start=0,end=0;
+      while (start<this.labelString.length){
+        end=this.labelString.indexOf("#",start);
+        labels.concat(this.labelString.slice(start,end));
+        start=end+1;
+      }
+      postRequest("/questions",
+          {
+            title:this.title,
+            content:this.questionValue,
+            labels:this.labels,
+            category:this.category,
+          },(e)=>{
+        console.log(e);
+        /**************TODO*****************/
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
     }
   },
 }

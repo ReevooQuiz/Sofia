@@ -1,8 +1,8 @@
 import axios from 'axios'
 import router from "@/router/index.ts";
 const server = axios.create({
-    baseURL: "http://localhost:4000/",
-    // baseURL: "http://private-74c97e-reevooapi.apiary-mock.com/",
+    //baseURL: "http://localhost:4000/",
+    baseURL: "http://private-74c97e-reevooapi.apiary-mock.com/",
     timeout: 5000,
 });
 // 设置拦截器
