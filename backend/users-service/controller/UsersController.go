@@ -42,6 +42,7 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
 		object, _ := json.Marshal(res)
@@ -70,6 +71,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
 		object, _ := json.Marshal(res)
@@ -99,6 +101,7 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
 		object, _ := json.Marshal(res)
@@ -123,12 +126,48 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		var res service.ResPublicInfoGet
+		err := u.usersService.Init()
+		defer u.usersService.Destruct()
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		err = r.ParseForm()
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		var uid int64
+		uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			object, _ := json.Marshal(res)
+			_, _ = w.Write(object)
+			return
+		}
+		res, err = u.usersService.PublicInfoGet(r.Header.Get("Authorization"), uid)
+		if err != nil {
+			log.Info(err)
+		}
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+	}
 	if r.Method == "PUT" {
 		var req service.ReqPublicInfoPut
 		var res service.ResPublicInfoPut
 		err := u.usersService.Init()
 		defer u.usersService.Destruct()
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 1
 			object, _ := json.Marshal(res)
@@ -137,6 +176,7 @@ func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		err = json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 1
 			object, _ := json.Marshal(res)
@@ -158,6 +198,7 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
 		object, _ := json.Marshal(res)
@@ -186,6 +227,7 @@ func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Reques
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
 		object, _ := json.Marshal(res)
@@ -213,6 +255,7 @@ func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 	err := u.usersService.Init()
 	defer u.usersService.Destruct()
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)

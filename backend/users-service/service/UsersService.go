@@ -10,6 +10,7 @@ type UsersService interface {
 	Login(req ReqLogin) (res ResLogin, err error)
 	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)
 	Passwd(token string, req ReqPasswd) (res ResPasswd, err error)
+	PublicInfoGet(token string, uid int64) (res ResPublicInfoGet, err error)
 	PublicInfoPut(token string, req ReqPublicInfoPut) (res ResPublicInfoPut, err error)
 	Register(req ReqRegister) (res ResRegister, err error)
 	VerificationCode(register bool, email string) (res ResVerificationCode, err error)

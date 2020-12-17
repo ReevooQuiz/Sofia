@@ -8,6 +8,7 @@ type UsersDao interface {
 	Init() (err error)
 	Destruct()
 	FindLabelByTitle(title string) (label entity.Labels, err error)
+	FindLabelsByUid(uid int64) (labels []entity.Labels, err error)
 	FindUserByEmail(email string) (user entity.Users, err error)
 	FindUserByName(name string) (user entity.Users, err error)
 	FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error)
@@ -19,6 +20,6 @@ type UsersDao interface {
 	InsertUserDetail(userDetail entity.UserDetails) (err error)
 	InsertUserLabel(userLabel entity.UserLabels) (err error)
 	RemoveUserLabelsByUid(uid int64) (err error)
-	UpdateUser(user entity.Users) (err error)
-	UpdateUserDetail(userDetail entity.UserDetails) (err error)
+	UpdateUserByUid(user entity.Users) (err error)
+	UpdateUserDetailByUid(userDetail entity.UserDetails) (err error)
 }

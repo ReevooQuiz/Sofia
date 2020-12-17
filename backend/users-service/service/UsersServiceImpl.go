@@ -72,6 +72,11 @@ type ResPasswd struct {
 	Result ResultPasswd `json:"result"`
 }
 
+type ResPublicInfoGet struct {
+	Code   int8                `json:"code"`
+	Result ResultPublicInfoGet `json:"result"`
+}
+
 type ResPublicInfoPut struct {
 	Code   int8                `json:"code"`
 	Result ResultPublicInfoPut `json:"result"`
@@ -113,6 +118,24 @@ type ResultOAuthGithub struct {
 
 type ResultPasswd struct {
 	Type int8 `json:"type"`
+}
+
+type ResultPublicInfoGet struct {
+	Name           string   `json:"name"`
+	Nickname       string   `json:"nickname"`
+	Profile        string   `json:"profile"`
+	Icon           string   `json:"icon"`
+	Level          int64    `json:"level"`
+	Gender         int8     `json:"gender"`
+	Email          string   `json:"email"`
+	AccountType    int8     `json:"account_type"`
+	Labels         []string `json:"labels"`
+	QuestionCount  int64    `json:"question_count"`
+	AnswerCount    int64    `json:"answer_count"`
+	FollowerCount  int64    `json:"follower_count"`
+	FollowingCount int64    `json:"following_count"`
+	LikeCount      int64    `json:"like_count"`
+	ApprovalCount  int64    `json:"approval_count"`
 }
 
 type ResultPublicInfoPut struct {
@@ -386,13 +409,60 @@ func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, e
 		return res, err
 	}
 	user.HashPassword = u.encryptPassword(req.New, user.Salt)
-	err = u.usersDao.UpdateUser(user)
+	err = u.usersDao.UpdateUserByUid(user)
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 1
 	} else {
 		res.Code = 0
 	}
+	return res, err
+}
+
+func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublicInfoGet, err error) {
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+		return res, err
+	}
+	var user entity.Users
+	user, err = u.usersDao.FindUserByUid(uid)
+	if err != nil {
+		res.Code = 1
+		return res, err
+	}
+	var userDetail entity.UserDetails
+	userDetail, err = u.usersDao.FindUserDetailByUid(uid)
+	if err != nil {
+		res.Code = 1
+		return res, err
+	}
+	var labels []entity.Labels
+	labels, err = u.usersDao.FindLabelsByUid(uid)
+	if err != nil {
+		res.Code = 1
+		return res, err
+	}
+	res.Code = 0
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
+	res.Result.Profile = user.Profile
+	res.Result.Icon = userDetail.Icon
+	res.Result.Level = user.Exp
+	res.Result.Gender = user.Gender
+	res.Result.Email = user.Email
+	res.Result.AccountType = user.AccountType
+	res.Result.Labels = []string{}
+	for _, label := range labels {
+		res.Result.Labels = append(res.Result.Labels, label.Title)
+	}
+	res.Result.QuestionCount = user.QuestionCount
+	res.Result.AnswerCount = user.AnswerCount
+	res.Result.FollowerCount = user.FollowerCount
+	res.Result.FollowingCount = user.FollowingCount
+	res.Result.LikeCount = user.LikeCount
+	res.Result.ApprovalCount = user.ApprovalCount
 	return res, err
 }
 
@@ -422,7 +492,7 @@ func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (re
 	user.Profile = req.Profile
 	user.Gender = req.Gender
 	user.Email = req.Email
-	err = u.usersDao.UpdateUser(user)
+	err = u.usersDao.UpdateUserByUid(user)
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 1
@@ -436,7 +506,7 @@ func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (re
 		return res, err
 	}
 	userDetail.Icon = req.Icon
-	err = u.usersDao.UpdateUserDetail(userDetail)
+	err = u.usersDao.UpdateUserDetailByUid(userDetail)
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 1
@@ -496,7 +566,7 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	user.HashPassword = u.encryptPassword(req.Password, user.Salt)
 	user.Gender = req.Gender
 	user.Role = entity.USER
-	err = u.usersDao.UpdateUser(user)
+	err = u.usersDao.UpdateUserByUid(user)
 	if err != nil {
 		res.Code = 1
 		res.Result.Type = 3
@@ -564,7 +634,7 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 			return res, err
 		}
 		user.PasswdCode = u.generateCode()
-		err = u.usersDao.UpdateUser(user)
+		err = u.usersDao.UpdateUserByUid(user)
 		if err != nil {
 			res.Code = 1
 			res.Result.Type = 1
@@ -609,7 +679,7 @@ func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err 
 		user.Role = entity.NOT_ACTIVE
 		user.PasswdCode = 0
 	}
-	err = u.usersDao.UpdateUser(user)
+	err = u.usersDao.UpdateUserByUid(user)
 	if err != nil {
 		res.Code = 1
 	} else {

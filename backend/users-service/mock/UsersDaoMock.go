@@ -60,6 +60,21 @@ func (mr *MockUsersDaoMockRecorder) FindLabelByTitle(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelByTitle", reflect.TypeOf((*MockUsersDao)(nil).FindLabelByTitle), arg0)
 }
 
+// FindLabelsByUid mocks base method
+func (m *MockUsersDao) FindLabelsByUid(arg0 int64) ([]entity.Labels, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLabelsByUid", arg0)
+	ret0, _ := ret[0].([]entity.Labels)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLabelsByUid indicates an expected call of FindLabelsByUid
+func (mr *MockUsersDaoMockRecorder) FindLabelsByUid(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelsByUid", reflect.TypeOf((*MockUsersDao)(nil).FindLabelsByUid), arg0)
+}
+
 // FindUserByEmail mocks base method
 func (m *MockUsersDao) FindUserByEmail(arg0 string) (entity.Users, error) {
 	m.ctrl.T.Helper()
@@ -236,30 +251,30 @@ func (mr *MockUsersDaoMockRecorder) RemoveUserLabelsByUid(arg0 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUserLabelsByUid", reflect.TypeOf((*MockUsersDao)(nil).RemoveUserLabelsByUid), arg0)
 }
 
-// UpdateUser mocks base method
-func (m *MockUsersDao) UpdateUser(arg0 entity.Users) error {
+// UpdateUserByUid mocks base method
+func (m *MockUsersDao) UpdateUserByUid(arg0 entity.Users) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", arg0)
+	ret := m.ctrl.Call(m, "UpdateUserByUid", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateUser indicates an expected call of UpdateUser
-func (mr *MockUsersDaoMockRecorder) UpdateUser(arg0 interface{}) *gomock.Call {
+// UpdateUserByUid indicates an expected call of UpdateUserByUid
+func (mr *MockUsersDaoMockRecorder) UpdateUserByUid(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUsersDao)(nil).UpdateUser), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserByUid", reflect.TypeOf((*MockUsersDao)(nil).UpdateUserByUid), arg0)
 }
 
-// UpdateUserDetail mocks base method
-func (m *MockUsersDao) UpdateUserDetail(arg0 entity.UserDetails) error {
+// UpdateUserDetailByUid mocks base method
+func (m *MockUsersDao) UpdateUserDetailByUid(arg0 entity.UserDetails) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserDetail", arg0)
+	ret := m.ctrl.Call(m, "UpdateUserDetailByUid", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateUserDetail indicates an expected call of UpdateUserDetail
-func (mr *MockUsersDaoMockRecorder) UpdateUserDetail(arg0 interface{}) *gomock.Call {
+// UpdateUserDetailByUid indicates an expected call of UpdateUserDetailByUid
+func (mr *MockUsersDaoMockRecorder) UpdateUserDetailByUid(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserDetail", reflect.TypeOf((*MockUsersDao)(nil).UpdateUserDetail), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserDetailByUid", reflect.TypeOf((*MockUsersDao)(nil).UpdateUserDetailByUid), arg0)
 }

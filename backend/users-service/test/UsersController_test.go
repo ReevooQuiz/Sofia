@@ -179,6 +179,53 @@ func TestControllerPasswd(t *testing.T) {
 	}
 }
 
+func TestControllerPublicInfoGet(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().PublicInfoGet(gomock.Any(), gomock.Any()).Return(service.ResPublicInfoGet{}, nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/publicInfo", u.PublicInfo)
+	type args struct {
+		token string
+		uid   int64
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResPublicInfoGet
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResPublicInfoGet{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := http.NewRequest("GET", "/publicInfo?uid="+strconv.FormatInt(tt.args.uid, 10), nil)
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResPublicInfoGet
+			_ = json.Unmarshal(responseBody, &res)
+			if res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerPublicInfoPut(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()

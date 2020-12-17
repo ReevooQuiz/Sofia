@@ -55,6 +55,30 @@ func (u *UsersDaoImpl) FindLabelByTitle(title string) (label entity.Labels, err 
 	return label, err
 }
 
+func (u *UsersDaoImpl) FindLabelsByUid(uid int64) (labels []entity.Labels, err error) {
+	var stmt *sql.Stmt
+	stmt, err = u.db.Prepare("select lid, title from user_labels natural join labels where uid = ?")
+	if err != nil {
+		return labels, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(uid)
+	if err != nil {
+		return labels, err
+	}
+	labels = []entity.Labels{}
+	for res.Next() {
+		var label entity.Labels
+		err = res.Scan(&label.Lid, &label.Title)
+		if err != nil {
+			return labels, err
+		}
+		labels = append(labels, label)
+	}
+	return labels, err
+}
+
 func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err error) {
 	var stmt *sql.Stmt
 	stmt, err = u.db.Prepare("select * from users where email = ?")
@@ -185,7 +209,7 @@ func (u *UsersDaoImpl) RemoveUserLabelsByUid(uid int64) (err error) {
 	return err
 }
 
-func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
+func (u *UsersDaoImpl) UpdateUserByUid(user entity.Users) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = u.db.Prepare("update users set oid = ?, name = ?, nickname = ?, salt = ?, hash_password = ?, email = ?, gender = ?, profile= ?, role = ?, account_type = ?, active_code = ?, passwd_code = ?, exp = ?, follower_count = ?, following_count = ?, question_count = ?, answer_count = ?, like_count = ?, approval_count = ?, notification_time = ? where uid = ?")
 	if err != nil {
@@ -196,6 +220,6 @@ func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
 	return err
 }
 
-func (u *UsersDaoImpl) UpdateUserDetail(userDetail entity.UserDetails) (err error) {
+func (u *UsersDaoImpl) UpdateUserDetailByUid(userDetail entity.UserDetails) (err error) {
 	return u.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
 }
