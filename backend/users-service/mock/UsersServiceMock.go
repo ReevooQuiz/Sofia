@@ -34,6 +34,21 @@ func (m *MockUsersService) EXPECT() *MockUsersServiceMockRecorder {
 	return m.recorder
 }
 
+// CheckToken mocks base method
+func (m *MockUsersService) CheckToken(arg0 string) (service.ResCheckToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckToken", arg0)
+	ret0, _ := ret[0].(service.ResCheckToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckToken indicates an expected call of CheckToken
+func (mr *MockUsersServiceMockRecorder) CheckToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckToken", reflect.TypeOf((*MockUsersService)(nil).CheckToken), arg0)
+}
+
 // Destruct mocks base method
 func (m *MockUsersService) Destruct() {
 	m.ctrl.T.Helper()

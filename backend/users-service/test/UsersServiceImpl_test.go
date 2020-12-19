@@ -30,6 +30,42 @@ func TestServiceInit(t *testing.T) {
 	}
 }
 
+func TestServiceCheckToken(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResCheckToken
+	}{
+		{"Normal", args{token: token}, service.ResCheckToken{Code: 0}},
+		{"WrongToken", args{}, service.ResCheckToken{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.CheckToken(tt.args.token); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceInfoList(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)

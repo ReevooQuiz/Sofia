@@ -20,6 +20,7 @@ func (u *UsersController) SetUsersService(usersService service.UsersService) {
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) (server *http.Server) {
 	u.usersService = usersService
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/infoList", u.InfoList)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
@@ -35,6 +36,33 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		}
 	}()
 	return server
+}
+
+func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
+	var res service.ResCheckToken
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.CheckToken(r.FormValue("token"))
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {

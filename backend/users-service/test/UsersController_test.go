@@ -40,6 +40,51 @@ func TestControllerInit(t *testing.T) {
 	}
 }
 
+func TestControllerCheckToken(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().CheckToken(gomock.Any()).Return(service.ResCheckToken{}, nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/checkToken", u.CheckToken)
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResCheckToken
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResCheckToken{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := http.NewRequest("GET", "/checkToken?token="+tt.args.token, nil)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResCheckToken
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerInfoList(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
