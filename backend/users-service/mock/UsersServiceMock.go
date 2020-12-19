@@ -46,6 +46,21 @@ func (mr *MockUsersServiceMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersService)(nil).Destruct))
 }
 
+// InfoList mocks base method
+func (m *MockUsersService) InfoList(arg0 string, arg1 service.ReqInfoList) (service.ResInfoList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InfoList", arg0, arg1)
+	ret0, _ := ret[0].(service.ResInfoList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InfoList indicates an expected call of InfoList
+func (mr *MockUsersServiceMockRecorder) InfoList(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InfoList", reflect.TypeOf((*MockUsersService)(nil).InfoList), arg0, arg1)
+}
+
 // Init mocks base method
 func (m *MockUsersService) Init(arg0 ...dao.UsersDao) error {
 	m.ctrl.T.Helper()

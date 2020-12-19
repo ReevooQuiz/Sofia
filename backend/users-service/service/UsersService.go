@@ -7,6 +7,7 @@ import (
 type UsersService interface {
 	Init(usersDAO ...dao.UsersDao) (err error)
 	Destruct()
+	InfoList(token string, req ReqInfoList) (res ResInfoList, err error)
 	Login(req ReqLogin) (res ResLogin, err error)
 	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)
 	Passwd(token string, req ReqPasswd) (res ResPasswd, err error)

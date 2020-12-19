@@ -20,6 +20,7 @@ func (u *UsersController) SetUsersService(usersService service.UsersService) {
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) (server *http.Server) {
 	u.usersService = usersService
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/infoList", u.InfoList)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
 	http.HandleFunc("/passwd", u.Passwd)
@@ -34,6 +35,34 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		}
 	}()
 	return server
+}
+
+func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqInfoList
+	var res service.ResInfoList
+	err := u.usersService.Init()
+	defer u.usersService.Destruct()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	err = json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.InfoList(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {

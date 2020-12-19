@@ -28,6 +28,10 @@ type UsersServiceImpl struct {
 	usersDao dao.UsersDao
 }
 
+type ReqInfoList struct {
+	Uids []string `json:"uids"`
+}
+
 type ReqLogin struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
@@ -55,6 +59,11 @@ type ReqRegister struct {
 	Email    string `json:"email"`
 	Icon     string `json:"icon"`
 	Gender   int8   `json:"gender"`
+}
+
+type ResInfoList struct {
+	Code   int8             `json:"code"`
+	Result []ResultInfoList `json:"result"`
 }
 
 type ResLogin struct {
@@ -94,6 +103,12 @@ type ResVerificationCode struct {
 
 type ResVerify struct {
 	Code int8 `json:"code"`
+}
+
+type ResultInfoList struct {
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Icon     string `json:"icon"`
 }
 
 type ResultLogin struct {
@@ -185,6 +200,38 @@ func (u *UsersServiceImpl) Init(usersDao ...dao.UsersDao) (err error) {
 
 func (u *UsersServiceImpl) Destruct() {
 	u.usersDao.Destruct()
+}
+
+func (u *UsersServiceImpl) InfoList(token string, req ReqInfoList) (res ResInfoList, err error) {
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+		return res, err
+	}
+	res.Result = []ResultInfoList{}
+	for _, uidString := range req.Uids {
+		var uid int64
+		uid, err = strconv.ParseInt(uidString, 10, 64)
+		if err != nil {
+			res.Code = 1
+			return res, err
+		}
+		var user entity.Users
+		user, err = u.usersDao.FindUserByUid(uid)
+		if err != nil {
+			res.Code = 1
+			return res, err
+		}
+		var userDetail entity.UserDetails
+		userDetail, err = u.usersDao.FindUserDetailByUid(uid)
+		if err != nil {
+			res.Code = 1
+			return res, err
+		}
+		res.Result = append(res.Result, ResultInfoList{user.Name, user.Nickname, userDetail.Icon})
+	}
+	return res, err
 }
 
 func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
