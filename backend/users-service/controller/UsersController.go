@@ -44,7 +44,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 	defer u.usersService.Destruct()
 	if err != nil {
 		log.Info(err)
-		res.Code = 1
+		res.Successful = false
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -52,7 +52,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		log.Info(err)
-		res.Code = 1
+		res.Successful = false
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return

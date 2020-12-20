@@ -62,8 +62,9 @@ type ReqRegister struct {
 }
 
 type ResCheckToken struct {
-	Code   int8             `json:"code"`
-	Result ResultCheckToken `json:"result"`
+	Successful bool  `json:"successful"`
+	Uid        int64 `json:"uid"`
+	Role       int8  `json:"role"`
 }
 
 type ResInfoList struct {
@@ -108,13 +109,6 @@ type ResVerificationCode struct {
 
 type ResVerify struct {
 	Code int8 `json:"code"`
-}
-
-type ResultCheckToken struct {
-	Successful bool   `json:"successful"`
-	Uid        string `json:"uid"`
-	Role       int8   `json:"role"`
-	Err        error  `json:"err"`
 }
 
 type ResultInfoList struct {
@@ -215,15 +209,8 @@ func (u *UsersServiceImpl) Destruct() {
 }
 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
-	var uid int64
-	res.Result.Successful, uid, res.Result.Role, res.Result.Err = util.ParseToken(token)
-	res.Result.Uid = strconv.FormatInt(uid, 10)
-	if res.Result.Err != nil || !res.Result.Successful {
-		res.Code = 2
-	} else {
-		res.Code = 0
-	}
-	return res, res.Result.Err
+	res.Successful, res.Uid, res.Role, err = util.ParseToken(token)
+	return res, err
 }
 
 func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error) {
