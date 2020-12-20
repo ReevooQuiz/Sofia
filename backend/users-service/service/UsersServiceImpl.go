@@ -52,6 +52,10 @@ type ReqPublicInfoPut struct {
 	Labels   []string `json:"labels"`
 }
 
+type ReqRefreshToken struct {
+	Refresh string `json:"refresh"`
+}
+
 type ReqRegister struct {
 	Name     string `json:"name"`
 	Nickname string `json:"nickname"`
@@ -95,6 +99,11 @@ type ResPublicInfoGet struct {
 type ResPublicInfoPut struct {
 	Code   int8                `json:"code"`
 	Result ResultPublicInfoPut `json:"result"`
+}
+
+type ResRefreshToken struct {
+	Code   int8               `json:"code"`
+	Result ResultRefreshToken `json:"result"`
 }
 
 type ResRegister struct {
@@ -161,6 +170,14 @@ type ResultPublicInfoGet struct {
 
 type ResultPublicInfoPut struct {
 	Type int8 `json:"type"`
+}
+
+type ResultRefreshToken struct {
+	Type         int8   `json:"type"`
+	Role         int8   `json:"role"`
+	Uid          string `json:"uid"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type ResultRegister struct {
@@ -584,6 +601,48 @@ func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (re
 		}
 	}
 	res.Code = 0
+	return res, err
+}
+
+func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToken, err error) {
+	var uid int64
+	var successful bool
+	successful, uid, _, err = util.ParseToken(req.Refresh)
+	if err != nil || !successful {
+		res.Code = 2
+		return res, err
+	}
+	var user entity.Users
+	user, err = u.usersDao.FindUserByUid(uid)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	if user.Role == entity.DISABLE {
+		res.Code = 1
+		res.Result.Type = 0
+		return res, err
+	}
+	var token string
+	token, err = util.SignToken(user.Uid, user.Role, false)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	var refreshToken string
+	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
+	if err != nil {
+		res.Code = 1
+		res.Result.Type = 1
+		return res, err
+	}
+	res.Code = 0
+	res.Result.Role = user.Role
+	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	res.Result.Token = token
+	res.Result.RefreshToken = refreshToken
 	return res, err
 }
 

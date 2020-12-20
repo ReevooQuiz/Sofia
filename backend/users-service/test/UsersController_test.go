@@ -365,6 +365,52 @@ func TestControllerPublicInfoPut(t *testing.T) {
 	}
 }
 
+func TestControllerRefreshToken(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+		mockUsersService.EXPECT().RefreshToken(gomock.Any()).Return(service.ResRefreshToken{}, nil),
+		mockUsersService.EXPECT().Destruct(),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/refreshToken", u.RefreshToken)
+	type args struct {
+		req service.ReqRefreshToken
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResRefreshToken
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResRefreshToken{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			requestBody, _ := json.Marshal(tt.args.req)
+			r, _ := http.NewRequest("POST", "/refreshToken", bytes.NewReader(requestBody))
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResRefreshToken
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerRegister(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()

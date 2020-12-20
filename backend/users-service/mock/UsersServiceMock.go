@@ -169,6 +169,21 @@ func (mr *MockUsersServiceMockRecorder) PublicInfoPut(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublicInfoPut", reflect.TypeOf((*MockUsersService)(nil).PublicInfoPut), arg0, arg1)
 }
 
+// RefreshToken mocks base method
+func (m *MockUsersService) RefreshToken(arg0 service.ReqRefreshToken) (service.ResRefreshToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshToken", arg0)
+	ret0, _ := ret[0].(service.ResRefreshToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshToken indicates an expected call of RefreshToken
+func (mr *MockUsersServiceMockRecorder) RefreshToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshToken", reflect.TypeOf((*MockUsersService)(nil).RefreshToken), arg0)
+}
+
 // Register mocks base method
 func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegister, error) {
 	m.ctrl.T.Helper()

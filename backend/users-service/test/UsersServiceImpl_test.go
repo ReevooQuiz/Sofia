@@ -366,6 +366,44 @@ func TestServicePublicInfoPut(t *testing.T) {
 	}
 }
 
+func TestServiceRefreshToken(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.DISABLE},
+	}
+	refreshToken, _ := util.SignToken(users[0].Uid, users[0].Role, true)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		req service.ReqRefreshToken
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResRefreshToken
+	}{
+		{"Disable", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 0}}},
+		{"UserNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.RefreshToken(tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceRegister(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
