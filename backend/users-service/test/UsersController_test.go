@@ -93,7 +93,7 @@ func TestControllerInfoList(t *testing.T) {
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
 		mockUsersService.EXPECT().Init().Return(nil),
-		mockUsersService.EXPECT().InfoList(gomock.Any(), gomock.Any()).Return(service.ResInfoList{}, nil),
+		mockUsersService.EXPECT().InfoList(gomock.Any()).Return(service.ResInfoList{}, nil),
 		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController

@@ -85,7 +85,7 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
-	res, err = u.usersService.InfoList(r.Header.Get("Authorization"), req)
+	res, err = u.usersService.InfoList(req)
 	if err != nil {
 		log.Info(err)
 	}

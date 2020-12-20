@@ -77,7 +77,6 @@ func TestServiceInfoList(t *testing.T) {
 	userDetails := []entity.UserDetails{
 		{Uid: 1, Icon: "test"},
 	}
-	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().FindUserByUid(users[0].Uid).Return(users[0], nil),
@@ -91,22 +90,20 @@ func TestServiceInfoList(t *testing.T) {
 	_ = u.Init(mockUsersDao)
 	defer u.Destruct()
 	type args struct {
-		token string
-		req   service.ReqInfoList
+		req service.ReqInfoList
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantRes service.ResInfoList
 	}{
-		{"Normal", args{token: token, req: service.ReqInfoList{Uids: []string{strconv.FormatInt(users[0].Uid, 10)}}}, service.ResInfoList{Code: 0}},
-		{"UserNotFound", args{token: token, req: service.ReqInfoList{Uids: []string{strconv.FormatInt(users[0].Uid, 10)}}}, service.ResInfoList{Code: 1}},
-		{"UserDetailNotFound", args{token: token, req: service.ReqInfoList{Uids: []string{strconv.FormatInt(users[0].Uid, 10)}}}, service.ResInfoList{Code: 1}},
-		{"WrongToken", args{}, service.ResInfoList{Code: 2}},
+		{"Normal", args{req: service.ReqInfoList{Uids: []int64{users[0].Uid}}}, service.ResInfoList{Code: 0}},
+		{"UserNotFound", args{req: service.ReqInfoList{Uids: []int64{users[0].Uid}}}, service.ResInfoList{Code: 1}},
+		{"UserDetailNotFound", args{req: service.ReqInfoList{Uids: []int64{users[0].Uid}}}, service.ResInfoList{Code: 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if res, _ := u.InfoList(tt.args.token, tt.args.req); res.Code != tt.wantRes.Code {
+			if res, _ := u.InfoList(tt.args.req); res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})

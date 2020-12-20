@@ -29,7 +29,7 @@ type UsersServiceImpl struct {
 }
 
 type ReqInfoList struct {
-	Uids []string `json:"uids"`
+	Uids []int64 `json:"uids"`
 }
 
 type ReqLogin struct {
@@ -226,21 +226,9 @@ func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err erro
 	return res, res.Result.Err
 }
 
-func (u *UsersServiceImpl) InfoList(token string, req ReqInfoList) (res ResInfoList, err error) {
-	var successful bool
-	successful, _, _, err = util.ParseToken(token)
-	if err != nil || !successful {
-		res.Code = 2
-		return res, err
-	}
+func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error) {
 	res.Result = []ResultInfoList{}
-	for _, uidString := range req.Uids {
-		var uid int64
-		uid, err = strconv.ParseInt(uidString, 10, 64)
-		if err != nil {
-			res.Code = 1
-			return res, err
-		}
+	for _, uid := range req.Uids {
 		var user entity.Users
 		user, err = u.usersDao.FindUserByUid(uid)
 		if err != nil {
