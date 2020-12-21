@@ -2,7 +2,6 @@ package entity
 
 import (
 	"gopkg.in/mgo.v2/bson"
-	"time"
 )
 
 type Answers struct {
@@ -14,5 +13,5 @@ type Answers struct {
 	CriticismCount int64         `bson:"criticism_count"`
 	LikeCount      int64         `bson:"like_count"`
 	ApprovalCount  int64         `bson:"approval_count"`
-	Time           time.Time     `bson:"time"`
+	Time           int64     `bson:"time"`
 }
