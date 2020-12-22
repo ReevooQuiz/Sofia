@@ -13,10 +13,8 @@ import (
 )
 
 const (
-	ADMIN = iota
-	USER
-	DISABLE
-	NOTACTIVE
+	ADMIN = 0
+	USER  = 1
 )
 
 const (
@@ -34,7 +32,7 @@ const (
 )
 
 type QaServiceImpl struct {
-	qaDao dao.QaDao
+	qaDao    dao.QaDao
 	usersRPC rpc.UsersRPC
 }
 
@@ -151,37 +149,39 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 	if err != nil {
 		return
 	}
-	for i, v := range res {
-		v.Owner.Uid = strconv.FormatInt(uids[i], 10)
-		v.Owner.Name = userInfos[i].Name
-		v.Owner.Icon = userInfos[i].Icon
-		v.Owner.Nickname = userInfos[i].Nickname
+	for i := range res {
+		res[i].Owner.Uid = strconv.FormatInt(uids[i], 10)
+		res[i].Owner.Name = userInfos[i].Name
+		res[i].Owner.Icon = userInfos[i].Icon
+		res[i].Owner.Nickname = userInfos[i].Nickname
 	}
 	return res, nil
 }
 
-func MatchKeywords(text string, words []string) bool {
-	for _, v := range words {
-		if strings.Index(text, v) != -1 {
+func MatchKeywords(text *string, words *[]string) bool {
+	str := strings.ToLower(*text)
+	for _, v := range *words {
+		if strings.Index(str, strings.ToLower(v)) != -1 {
 			return true
 		}
 	}
 	return false
 }
 
-func FindTextAndPicture(words []string, picture *string, headText *[]rune, node *html.Node, findPicture bool, findHead bool) (foundPicture bool, foundHead bool, hasKeywords bool) {
+func FindTextAndPicture(words *[]string, picture *string, headText *[]rune, node *html.Node, findPicture bool, findHead bool) (foundPicture bool, foundHead bool, hasKeywords bool) {
 	foundPicture = false
 	foundHead = false
 	hasKeywords = false
 	switch node.Type {
 	case html.TextNode:
-		if findHead {
-			*headText = append(*headText, []rune(node.Data+" ")...)
+		data := strings.ReplaceAll(node.Data, "\n", "")
+		if findHead && data != "" {
+			*headText = append(*headText, []rune(data+" ")...)
 			if len(*headText) >= HeadLengthMax {
 				foundHead = true
 			}
 		}
-		if MatchKeywords(node.Data, words) {
+		if MatchKeywords(&node.Data, words) {
 			return false, false, true
 		}
 	case html.ElementNode:
@@ -206,16 +206,16 @@ func FindTextAndPicture(words []string, picture *string, headText *[]rune, node 
 	return
 }
 
-func (q *QaServiceImpl) ParseContent(content string, words []string) (pictureUrl string, head string, hasKeywords bool) {
-	output := blackfriday.Run([]byte(content))
+func (q *QaServiceImpl) ParseContent(content *string, words *[]string) (pictureUrl string, head string, hasKeywords bool) {
+	output := blackfriday.Run([]byte(*content))
 	output = bluemonday.UGCPolicy().SanitizeBytes(output)
 	node, err := html.Parse(strings.NewReader(string(output)))
 	if err != nil {
-		text := []rune(content)
+		text := []rune(*content)
 		if len(text) > HeadLengthMax {
 			return "", string(text[:HeadLengthMax]), MatchKeywords(content, words)
 		}
-		return "", content, MatchKeywords(content, words)
+		return "", *content, MatchKeywords(content, words)
 	}
 	var headText []rune
 	if _, _, hasKeywords = FindTextAndPicture(words, &pictureUrl, &headText, node, true, true); hasKeywords {
@@ -263,11 +263,15 @@ func (q *QaServiceImpl) AddQuestion(token string, req ReqQuestionsPost) (int8, i
 			log.Warn(e)
 		}
 		log.Warn(err)
-		return Failed, map[string]int8{"type": ConstraintsViolated}
+		return Failed, map[string]int8{"type": UnknownError}
 	}
 	// serve
-	pictureUrl, head, hasKeyword := q.ParseContent(content, words)
+	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if hasKeyword {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	qid, err := q.qaDao.AddQuestion(ctx, uid, title, content, category, labels, pictureUrl, head)
@@ -349,8 +353,12 @@ func (q *QaServiceImpl) ModifyQuestion(token string, req ReqQuestionsPut) (int8,
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	// serve
-	pictureUrl, head, hasKeyword := q.ParseContent(content, words)
+	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if hasKeyword {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	err = q.qaDao.ModifyQuestion(ctx, qid, title, content, category, labels, pictureUrl, head)

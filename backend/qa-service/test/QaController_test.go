@@ -15,12 +15,6 @@ import (
 	"time"
 )
 
-const (
-	Succeeded = iota
-	Failed    = iota
-	Expired   = iota
-)
-
 func TestControllerInit(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -82,9 +76,42 @@ func TestControllerQuestions(t *testing.T) {
 		wantCode   int8
 		wantResult interface{}
 	}{
-		{"Normal", "0", "token", true, 0, "token", Succeeded, "mock result", Succeeded, "mock result"},
-		{"Invalid page", "234h45", "token", false, 0, "", 0, nil, Failed, nil},
-		{"Expired", "0", "token", true, 0, "token", Expired, nil, Expired, nil},
+		{
+			"Normal",
+			"0",
+			"token",
+			true,
+			0,
+			"token",
+			service.Succeeded,
+			"mock result",
+			service.Succeeded,
+			"mock result",
+		},
+		{
+			"Invalid page",
+			"234h45",
+			"token",
+			false,
+			0,
+			"",
+			0,
+			nil,
+			service.Failed,
+			nil,
+		},
+		{
+			"Expired",
+			"0",
+			"token",
+			true,
+			0,
+			"token",
+			service.Expired,
+			nil,
+			service.Expired,
+			nil,
+		},
 	}
 	for _, tt := range getTests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -133,9 +160,9 @@ func TestControllerQuestions(t *testing.T) {
 			},
 			true,
 			"token",
-			Succeeded,
+			service.Succeeded,
 			"mock result",
-			Succeeded,
+			service.Succeeded,
 			"mock result",
 		},
 		{
@@ -149,9 +176,9 @@ func TestControllerQuestions(t *testing.T) {
 			},
 			true,
 			"token",
-			Expired,
+			service.Expired,
 			nil,
-			Expired,
+			service.Expired,
 			nil,
 		},
 	}
@@ -204,9 +231,9 @@ func TestControllerQuestions(t *testing.T) {
 			},
 			true,
 			"token",
-			Succeeded,
+			service.Succeeded,
 			"mock result",
-			Succeeded,
+			service.Succeeded,
 			"mock result",
 		},
 		{
@@ -221,9 +248,9 @@ func TestControllerQuestions(t *testing.T) {
 			},
 			true,
 			"token",
-			Expired,
+			service.Expired,
 			nil,
-			Expired,
+			service.Expired,
 			nil,
 		},
 	}
