@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/users-service/dao"
 	"github.com/zhanghanchong/users-service/entity"
 	"github.com/zhanghanchong/users-service/util"
@@ -231,63 +232,86 @@ func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err erro
 }
 
 func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	res.Result = []ResultInfoList{}
 	for _, uid := range req.Uids {
 		var user entity.Users
-		user, err = u.usersDao.FindUserByUid(uid)
+		user, err = u.usersDao.FindUserByUid(ctx, uid)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		var userDetail entity.UserDetails
-		userDetail, err = u.usersDao.FindUserDetailByUid(uid)
+		userDetail, err = u.usersDao.FindUserDetailByUid(ctx, uid)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		res.Result = append(res.Result, ResultInfoList{user.Name, user.Nickname, userDetail.Icon})
 	}
-	return res, err
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var user entity.Users
-	user, err = u.usersDao.FindUserByName(req.Name)
+	user, err = u.usersDao.FindUserByName(ctx, req.Name)
 	if err != nil || u.encryptPassword(req.Password, user.Salt) != user.HashPassword {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if user.Role == entity.DISABLE {
 		res.Code = 1
 		res.Result.Type = 0
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if user.Role == entity.NOT_ACTIVE {
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userDetail entity.UserDetails
-	userDetail, err = u.usersDao.FindUserDetailByUid(user.Uid)
+	userDetail, err = u.usersDao.FindUserDetailByUid(ctx, user.Uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var token string
 	token, err = util.SignToken(user.Uid, user.Role, false)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var refreshToken string
 	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	res.Code = 0
 	res.Result.Role = user.Role
@@ -297,30 +321,40 @@ func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
 	res.Result.Nickname = user.Nickname
 	res.Result.Token = token
 	res.Result.RefreshToken = refreshToken
-	return res, err
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthGithub, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	if error == "access_denied" {
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var request *http.Request
 	request, err = http.NewRequest("POST", "https://github.com/login/oauth/access_token?client_id="+oAuthGithubId+"&client_secret="+oAuthGithubSecret+"&code="+code, nil)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	request.Header.Set("Accept", "application/json")
 	client := http.Client{}
 	var response *http.Response
 	response, err = client.Do(request)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var responseBodyJson []byte
 	responseBodyJson, err = ioutil.ReadAll(response.Body)
@@ -331,23 +365,26 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 	}
 	err = json.Unmarshal(responseBodyJson, &responseBodyToken)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	request, err = http.NewRequest("GET", "https://api.github.com/user", nil)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	request.Header.Set("Accept", "application/json")
 	request.Header.Set("Authorization", "token "+responseBodyToken.AccessToken)
 	response, err = client.Do(request)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	responseBodyJson, err = ioutil.ReadAll(response.Body)
 	var responseBodyInfo struct {
@@ -386,31 +423,34 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 	}
 	err = json.Unmarshal(responseBodyJson, &responseBodyInfo)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var user entity.Users
-	user, err = u.usersDao.FindUserByOidAndAccountType(strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
+	user, err = u.usersDao.FindUserByOidAndAccountType(ctx, strconv.FormatInt(responseBodyInfo.Id, 10), entity.GITHUB)
 	if err == nil {
 		if user.Role == entity.DISABLE {
 			res.Code = 1
 			res.Result.Type = 0
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		var token string
 		token, err = util.SignToken(user.Uid, user.Role, false)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 2
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		var refreshToken string
 		refreshToken, err = util.SignToken(user.Uid, user.Role, true)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 2
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		res.Code = 0
 		res.Result.First = false
@@ -418,94 +458,123 @@ func (u *UsersServiceImpl) OAuthGithub(code string, error string) (res ResOAuthG
 		res.Result.Uid = strconv.FormatInt(user.Uid, 10)
 		res.Result.Token = token
 		res.Result.RefreshToken = refreshToken
-		return res, err
+		return res, u.usersDao.Commit(&ctx)
 	}
 	user = entity.Users{Oid: strconv.FormatInt(responseBodyInfo.Id, 10), Profile: "", Role: entity.USER, ActiveCode: 0, PasswdCode: 0, AccountType: entity.GITHUB, Exp: 0, FollowerCount: 0, FollowingCount: 0, QuestionCount: 0, AnswerCount: 0, LikeCount: 0, ApprovalCount: 0, NotificationTime: time.Now().Unix()}
-	user.Uid, err = u.usersDao.InsertUser(user)
+	user.Uid, err = u.usersDao.InsertUser(ctx, user)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userDetail entity.UserDetails
 	userDetail.Uid = user.Uid
 	userDetail.Icon = ""
-	err = u.usersDao.InsertUserDetail(userDetail)
+	err = u.usersDao.InsertUserDetail(ctx, userDetail)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var favorite entity.Favorites
 	favorite.Uid = user.Uid
 	favorite.Title = "Default"
-	favorite.Fid, err = u.usersDao.InsertFavorite(favorite)
+	favorite.Fid, err = u.usersDao.InsertFavorite(ctx, favorite)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 2
-	} else {
-		res.Code = 0
-		res.Result.First = true
-		res.Result.Role = user.Role
-		res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	return res, err
+	res.Code = 0
+	res.Result.First = true
+	res.Result.Role = user.Role
+	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Passwd(token string, req ReqPasswd) (res ResPasswd, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var user entity.Users
 	var successful bool
 	successful, user.Uid, user.Role, err = util.ParseToken(token)
 	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	user, err = u.usersDao.FindUserByUid(user.Uid)
+	user, err = u.usersDao.FindUserByUid(ctx, user.Uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if u.encryptPassword(req.Old, user.Salt) != user.HashPassword {
 		res.Code = 1
 		res.Result.Type = 0
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	user.HashPassword = u.encryptPassword(req.New, user.Salt)
-	err = u.usersDao.UpdateUserByUid(user)
+	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-	} else {
-		res.Code = 0
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	return res, err
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublicInfoGet, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var successful bool
 	successful, _, _, err = util.ParseToken(token)
 	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var user entity.Users
-	user, err = u.usersDao.FindUserByUid(uid)
+	user, err = u.usersDao.FindUserByUid(ctx, uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userDetail entity.UserDetails
-	userDetail, err = u.usersDao.FindUserDetailByUid(uid)
+	userDetail, err = u.usersDao.FindUserDetailByUid(ctx, uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var labels []entity.Labels
-	labels, err = u.usersDao.FindLabelsByUid(uid)
+	labels, err = u.usersDao.FindLabelsByUid(ctx, uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	res.Code = 0
 	res.Result.Name = user.Name
@@ -526,144 +595,187 @@ func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublic
 	res.Result.FollowingCount = user.FollowingCount
 	res.Result.LikeCount = user.LikeCount
 	res.Result.ApprovalCount = user.ApprovalCount
-	return res, err
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (res ResPublicInfoPut, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var user entity.Users
 	var successful bool
 	successful, user.Uid, user.Role, err = util.ParseToken(token)
 	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	user, err = u.usersDao.FindUserByUid(user.Uid)
+	user, err = u.usersDao.FindUserByUid(ctx, user.Uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userByName entity.Users
-	userByName, err = u.usersDao.FindUserByName(req.Name)
+	userByName, err = u.usersDao.FindUserByName(ctx, req.Name)
 	if err == nil && user.Uid != userByName.Uid {
 		res.Code = 1
 		res.Result.Type = 0
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	user.Name = req.Name
 	user.Nickname = req.Nickname
 	user.Profile = req.Profile
 	user.Gender = req.Gender
 	user.Email = req.Email
-	err = u.usersDao.UpdateUserByUid(user)
+	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userDetail entity.UserDetails
-	userDetail, err = u.usersDao.FindUserDetailByUid(user.Uid)
+	userDetail, err = u.usersDao.FindUserDetailByUid(ctx, user.Uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	userDetail.Icon = req.Icon
-	err = u.usersDao.UpdateUserDetailByUid(userDetail)
+	err = u.usersDao.UpdateUserDetailByUid(ctx, userDetail)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	err = u.usersDao.RemoveUserLabelsByUid(user.Uid)
+	err = u.usersDao.RemoveUserLabelsByUid(ctx, user.Uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	for _, labelTitle := range req.Labels {
 		var label entity.Labels
-		label, err = u.usersDao.FindLabelByTitle(labelTitle)
+		label, err = u.usersDao.FindLabelByTitle(ctx, labelTitle)
 		if err != nil {
 			label = entity.Labels{Title: labelTitle}
-			label.Lid, err = u.usersDao.InsertLabel(label)
+			label.Lid, err = u.usersDao.InsertLabel(ctx, label)
 			if err != nil {
+				log.Info(err)
 				res.Code = 1
 				res.Result.Type = 1
-				return res, err
+				return res, u.usersDao.Rollback(&ctx)
 			}
 		}
-		err = u.usersDao.InsertUserLabel(entity.UserLabels{Uid: user.Uid, Lid: label.Lid})
+		err = u.usersDao.InsertUserLabel(ctx, entity.UserLabels{Uid: user.Uid, Lid: label.Lid})
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 	}
 	res.Code = 0
-	return res, err
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToken, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var uid int64
 	var successful bool
 	successful, uid, _, err = util.ParseToken(req.Refresh)
 	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var user entity.Users
-	user, err = u.usersDao.FindUserByUid(uid)
+	user, err = u.usersDao.FindUserByUid(ctx, uid)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if user.Role == entity.DISABLE {
 		res.Code = 1
 		res.Result.Type = 0
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var token string
 	token, err = util.SignToken(user.Uid, user.Role, false)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var refreshToken string
 	refreshToken, err = util.SignToken(user.Uid, user.Role, true)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	res.Code = 0
 	res.Result.Role = user.Role
 	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
 	res.Result.Token = token
 	res.Result.RefreshToken = refreshToken
-	return res, err
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error) {
-	_, err = u.usersDao.FindUserByName(req.Name)
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	_, err = u.usersDao.FindUserByName(ctx, req.Name)
 	if err == nil {
 		res.Code = 1
 		res.Result.Type = 0
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var user entity.Users
-	user, err = u.usersDao.FindUserByEmail(req.Email)
+	user, err = u.usersDao.FindUserByEmail(ctx, req.Email)
 	if err != nil || user.ActiveCode > 0 {
+		if err != nil {
+			log.Info(err)
+		}
 		res.Code = 1
 		res.Result.Type = 2
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if user.Role != entity.NOT_ACTIVE {
 		res.Code = 1
 		res.Result.Type = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	user.Name = req.Name
 	user.Nickname = req.Nickname
@@ -671,42 +783,53 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 	user.HashPassword = u.encryptPassword(req.Password, user.Salt)
 	user.Gender = req.Gender
 	user.Role = entity.USER
-	err = u.usersDao.UpdateUserByUid(user)
+	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var userDetail entity.UserDetails
 	userDetail.Uid = user.Uid
 	userDetail.Icon = req.Icon
-	err = u.usersDao.InsertUserDetail(userDetail)
+	err = u.usersDao.InsertUserDetail(ctx, userDetail)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	var favorite entity.Favorites
 	favorite.Uid = user.Uid
 	favorite.Title = "Default"
-	favorite.Fid, err = u.usersDao.InsertFavorite(favorite)
+	favorite.Fid, err = u.usersDao.InsertFavorite(ctx, favorite)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-	} else {
-		res.Code = 0
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	return res, err
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res ResVerificationCode, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var code int64
 	if register {
-		_, err = u.usersDao.FindUserByEmail(email)
+		_, err = u.usersDao.FindUserByEmail(ctx, email)
 		if err == nil {
 			res.Code = 1
 			res.Result.Type = 0
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		var user entity.Users
 		user.Email = email
@@ -723,27 +846,30 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 		user.LikeCount = 0
 		user.ApprovalCount = 0
 		user.NotificationTime = time.Now().Unix()
-		_, err = u.usersDao.InsertUser(user)
+		_, err = u.usersDao.InsertUser(ctx, user)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		code = user.ActiveCode
 	} else {
 		var user entity.Users
-		user, err = u.usersDao.FindUserByEmail(email)
+		user, err = u.usersDao.FindUserByEmail(ctx, email)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 0
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		user.PasswdCode = u.generateCode()
-		err = u.usersDao.UpdateUserByUid(user)
+		err = u.usersDao.UpdateUserByUid(ctx, user)
 		if err != nil {
+			log.Info(err)
 			res.Code = 1
 			res.Result.Type = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		code = user.PasswdCode
 	}
@@ -754,41 +880,51 @@ func (u *UsersServiceImpl) VerificationCode(register bool, email string) (res Re
 	message.SetBody("text/html", strconv.FormatInt(code, 10))
 	err = gomail.NewDialer("smtp.qq.com", 587, emailUsername, emailPassword).DialAndSend(message)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 1
-	} else {
-		res.Code = 0
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	return res, err
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err error) {
-	var user entity.Users
-	user, err = u.usersDao.FindUserByEmail(email)
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
-		return res, err
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	user, err = u.usersDao.FindUserByEmail(ctx, email)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
 	}
 	if user.ActiveCode > 0 {
 		if code != user.ActiveCode {
 			res.Code = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		user.ActiveCode = 0
 	}
 	if user.PasswdCode > 0 {
 		if code != user.PasswdCode {
 			res.Code = 1
-			return res, err
+			return res, u.usersDao.Rollback(&ctx)
 		}
 		user.Role = entity.NOT_ACTIVE
 		user.PasswdCode = 0
 	}
-	err = u.usersDao.UpdateUserByUid(user)
+	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {
+		log.Info(err)
 		res.Code = 1
-	} else {
-		res.Code = 0
+		return res, u.usersDao.Rollback(&ctx)
 	}
-	return res, err
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }

@@ -19,6 +19,11 @@ func (u *UsersController) SetUsersService(usersService service.UsersService) {
 
 func (u *UsersController) Init(group *sync.WaitGroup, usersService service.UsersService) (server *http.Server) {
 	u.usersService = usersService
+	err := u.usersService.Init()
+	if err != nil {
+		log.Info(err)
+		return server
+	}
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/infoList", u.InfoList)
@@ -39,18 +44,13 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	return server
 }
 
+func (u *UsersController) Destruct() {
+	u.usersService.Destruct()
+}
+
 func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 	var res service.ResCheckToken
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Successful = false
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Successful = false
@@ -69,16 +69,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqInfoList
 	var res service.ResInfoList
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -97,17 +88,7 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqLogin
 	var res service.ResLogin
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 3
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -126,17 +107,7 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var res service.ResOAuthGithub
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 2
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -156,17 +127,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqPasswd
 	var res service.ResPasswd
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -186,16 +147,7 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var res service.ResPublicInfoGet
-		err := u.usersService.Init()
-		defer u.usersService.Destruct()
-		if err != nil {
-			log.Info(err)
-			res.Code = 1
-			object, _ := json.Marshal(res)
-			_, _ = w.Write(object)
-			return
-		}
-		err = r.ParseForm()
+		err := r.ParseForm()
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
@@ -222,17 +174,7 @@ func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "PUT" {
 		var req service.ReqPublicInfoPut
 		var res service.ResPublicInfoPut
-		err := u.usersService.Init()
-		defer u.usersService.Destruct()
-		if err != nil {
-			log.Info(err)
-			res.Code = 1
-			res.Result.Type = 1
-			object, _ := json.Marshal(res)
-			_, _ = w.Write(object)
-			return
-		}
-		err = json.NewDecoder(r.Body).Decode(&req)
+		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			log.Info(err)
 			res.Code = 1
@@ -253,17 +195,7 @@ func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqRefreshToken
 	var res service.ResRefreshToken
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&req)
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -283,21 +215,11 @@ func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	var req service.ReqRegister
 	var res service.ResRegister
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
 		res.Result.Type = 3
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 2
 		object, _ := json.Marshal(res)
 		_, _ = w.Write(object)
 		return
@@ -312,17 +234,7 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 
 func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Request) {
 	var res service.ResVerificationCode
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		res.Result.Type = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -340,16 +252,7 @@ func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Reques
 
 func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 	var res service.ResVerify
-	err := u.usersService.Init()
-	defer u.usersService.Destruct()
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		log.Info(err)
 		res.Code = 1

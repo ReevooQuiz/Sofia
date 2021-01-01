@@ -20,6 +20,9 @@ func TestControllerInit(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Init().Return(nil),
+	)
 	tests := []struct {
 		name string
 	}{
@@ -47,9 +50,7 @@ func TestControllerCheckToken(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().CheckToken(gomock.Any()).Return(service.ResCheckToken{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -92,9 +93,7 @@ func TestControllerInfoList(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().InfoList(gomock.Any()).Return(service.ResInfoList{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -138,9 +137,7 @@ func TestControllerLogin(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().Login(gomock.Any()).Return(service.ResLogin{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -184,9 +181,7 @@ func TestControllerOAuthGithub(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().OAuthGithub(gomock.Any(), gomock.Any()).Return(service.ResOAuthGithub{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -229,9 +224,7 @@ func TestControllerPasswd(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().Passwd(gomock.Any(), gomock.Any()).Return(service.ResPasswd{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -277,9 +270,7 @@ func TestControllerPublicInfoGet(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().PublicInfoGet(gomock.Any(), gomock.Any()).Return(service.ResPublicInfoGet{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -324,9 +315,7 @@ func TestControllerPublicInfoPut(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().PublicInfoPut(gomock.Any(), gomock.Any()).Return(service.ResPublicInfoPut{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -372,9 +361,7 @@ func TestControllerRefreshToken(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().RefreshToken(gomock.Any()).Return(service.ResRefreshToken{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -418,9 +405,7 @@ func TestControllerRegister(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().Register(gomock.Any()).Return(service.ResRegister{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -464,9 +449,7 @@ func TestControllerVerificationCode(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().VerificationCode(gomock.Any(), gomock.Any()).Return(service.ResVerificationCode{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
@@ -516,9 +499,7 @@ func TestControllerVerify(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Init().Return(nil),
 		mockUsersService.EXPECT().Verify(gomock.Any(), gomock.Any()).Return(service.ResVerify{}, nil),
-		mockUsersService.EXPECT().Destruct(),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
