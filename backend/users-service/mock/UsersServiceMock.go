@@ -76,6 +76,21 @@ func (mr *MockUsersServiceMockRecorder) Follow(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Follow", reflect.TypeOf((*MockUsersService)(nil).Follow), arg0, arg1, arg2)
 }
 
+// Followed mocks base method
+func (m *MockUsersService) Followed(arg0 string, arg1 int64) (service.ResFollowed, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Followed", arg0, arg1)
+	ret0, _ := ret[0].(service.ResFollowed)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Followed indicates an expected call of Followed
+func (mr *MockUsersServiceMockRecorder) Followed(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Followed", reflect.TypeOf((*MockUsersService)(nil).Followed), arg0, arg1)
+}
+
 // Followers mocks base method
 func (m *MockUsersService) Followers(arg0 string, arg1 int64) (service.ResFollowers, error) {
 	m.ctrl.T.Helper()

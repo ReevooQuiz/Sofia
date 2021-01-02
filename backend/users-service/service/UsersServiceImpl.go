@@ -76,6 +76,11 @@ type ResFollow struct {
 	Code int8 `json:"code"`
 }
 
+type ResFollowed struct {
+	Code   int8             `json:"code"`
+	Result []ResultFollowed `json:"result"`
+}
+
 type ResFollowers struct {
 	Code   int8              `json:"code"`
 	Result []ResultFollowers `json:"result"`
@@ -128,6 +133,13 @@ type ResVerificationCode struct {
 
 type ResVerify struct {
 	Code int8 `json:"code"`
+}
+
+type ResultFollowed struct {
+	Icon     string `json:"icon"`
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Profile  string `json:"profile"`
 }
 
 type ResultFollowers struct {
@@ -321,6 +333,52 @@ func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res Res
 		log.Info(err)
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Followed(token string, uid int64) (res ResFollowed, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var follows []entity.Follows
+	follows, err = u.usersDao.FindFollowsByFollower(ctx, uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultFollowed{}
+	for _, follow := range follows {
+		var user entity.Users
+		user, err = u.usersDao.FindUserByUid(ctx, follow.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var userDetail entity.UserDetails
+		userDetail, err = u.usersDao.FindUserDetailByUid(ctx, follow.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		res.Result = append(res.Result, ResultFollowed{userDetail.Icon, user.Name, user.Nickname, user.Profile})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
