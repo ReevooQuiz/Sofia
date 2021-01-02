@@ -23,6 +23,11 @@ type UsersDaoImpl struct {
 	session *mgo.Session
 }
 
+type Pageable struct {
+	Number int64
+	Size   int64
+}
+
 type TransactionContext struct {
 	sqlTx   *sql.Tx
 	session *mgo.Session
@@ -142,6 +147,30 @@ func (u *UsersDaoImpl) FindLabelByTitle(ctx TransactionContext, title string) (l
 	return label, err
 }
 
+func (u *UsersDaoImpl) FindLabelsByQid(ctx TransactionContext, qid int64) (labels []entity.Labels, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select lid, title from question_labels natural join labels where qid = ?")
+	if err != nil {
+		return labels, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(qid)
+	if err != nil {
+		return labels, err
+	}
+	labels = []entity.Labels{}
+	for res.Next() {
+		var label entity.Labels
+		err = res.Scan(&label.Lid, &label.Title)
+		if err != nil {
+			return labels, err
+		}
+		labels = append(labels, label)
+	}
+	return labels, err
+}
+
 func (u *UsersDaoImpl) FindLabelsByUid(ctx TransactionContext, uid int64) (labels []entity.Labels, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select lid, title from user_labels natural join labels where uid = ?")
@@ -164,6 +193,41 @@ func (u *UsersDaoImpl) FindLabelsByUid(ctx TransactionContext, uid int64) (label
 		labels = append(labels, label)
 	}
 	return labels, err
+}
+
+func (u *UsersDaoImpl) FindQuestionDetailByQid(ctx TransactionContext, qid int64) (questionDetail entity.QuestionDetails, err error) {
+	var res []entity.QuestionDetails
+	err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"qid": qid}).All(&res)
+	if err != nil {
+		return questionDetail, err
+	}
+	if len(res) == 0 {
+		return questionDetail, errors.New("mongo: no rows in result set")
+	}
+	return res[0], err
+}
+
+func (u *UsersDaoImpl) FindQuestionsByRaiserOrderByTimeDescPageable(ctx TransactionContext, raiser int64, pageable Pageable) (questions []entity.Questions, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from questions where raiser = ? order by time desc limit ?, ?")
+	if err != nil {
+		return questions, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(raiser, (pageable.Number-1)*pageable.Size, pageable.Size)
+	if err != nil {
+		return questions, err
+	}
+	for res.Next() {
+		var question entity.Questions
+		err = res.Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned)
+		if err != nil {
+			return questions, err
+		}
+		questions = append(questions, question)
+	}
+	return questions, err
 }
 
 func (u *UsersDaoImpl) FindUserByEmail(ctx TransactionContext, email string) (user entity.Users, err error) {

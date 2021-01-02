@@ -31,11 +31,13 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/followers", u.Followers)
 	http.HandleFunc("/infoList", u.InfoList)
 	http.HandleFunc("/login", u.Login)
+	http.HandleFunc("/notifications", u.Notifications)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
 	http.HandleFunc("/passwd", u.Passwd)
 	http.HandleFunc("/publicInfo", u.PublicInfo)
 	http.HandleFunc("/refreshToken", u.RefreshToken)
 	http.HandleFunc("/register", u.Register)
+	http.HandleFunc("/userQuestions", u.UserQuestions)
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
 	go func() {
@@ -189,6 +191,35 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(object)
 }
 
+func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) {
+	var res service.ResNotifications
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page <= 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Notifications(r.Header.Get("Authorization"), page)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 	var res service.ResOAuthGithub
 	err := r.ParseForm()
@@ -309,6 +340,44 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Register(req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) {
+	var res service.ResUserQuestions
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var uid int64
+	uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page <= 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.UserQuestions(r.Header.Get("Authorization"), uid, page)
 	if err != nil {
 		log.Info(err)
 	}

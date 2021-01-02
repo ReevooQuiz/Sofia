@@ -135,6 +135,21 @@ func (mr *MockUsersDaoMockRecorder) FindLabelByTitle(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelByTitle", reflect.TypeOf((*MockUsersDao)(nil).FindLabelByTitle), arg0, arg1)
 }
 
+// FindLabelsByQid mocks base method
+func (m *MockUsersDao) FindLabelsByQid(arg0 dao.TransactionContext, arg1 int64) ([]entity.Labels, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLabelsByQid", arg0, arg1)
+	ret0, _ := ret[0].([]entity.Labels)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLabelsByQid indicates an expected call of FindLabelsByQid
+func (mr *MockUsersDaoMockRecorder) FindLabelsByQid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelsByQid", reflect.TypeOf((*MockUsersDao)(nil).FindLabelsByQid), arg0, arg1)
+}
+
 // FindLabelsByUid mocks base method
 func (m *MockUsersDao) FindLabelsByUid(arg0 dao.TransactionContext, arg1 int64) ([]entity.Labels, error) {
 	m.ctrl.T.Helper()
@@ -148,6 +163,36 @@ func (m *MockUsersDao) FindLabelsByUid(arg0 dao.TransactionContext, arg1 int64) 
 func (mr *MockUsersDaoMockRecorder) FindLabelsByUid(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelsByUid", reflect.TypeOf((*MockUsersDao)(nil).FindLabelsByUid), arg0, arg1)
+}
+
+// FindQuestionDetailByQid mocks base method
+func (m *MockUsersDao) FindQuestionDetailByQid(arg0 dao.TransactionContext, arg1 int64) (entity.QuestionDetails, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionDetailByQid", arg0, arg1)
+	ret0, _ := ret[0].(entity.QuestionDetails)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindQuestionDetailByQid indicates an expected call of FindQuestionDetailByQid
+func (mr *MockUsersDaoMockRecorder) FindQuestionDetailByQid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionDetailByQid", reflect.TypeOf((*MockUsersDao)(nil).FindQuestionDetailByQid), arg0, arg1)
+}
+
+// FindQuestionsByRaiserOrderByTimeDescPageable mocks base method
+func (m *MockUsersDao) FindQuestionsByRaiserOrderByTimeDescPageable(arg0 dao.TransactionContext, arg1 int64, arg2 dao.Pageable) ([]entity.Questions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionsByRaiserOrderByTimeDescPageable", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]entity.Questions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindQuestionsByRaiserOrderByTimeDescPageable indicates an expected call of FindQuestionsByRaiserOrderByTimeDescPageable
+func (mr *MockUsersDaoMockRecorder) FindQuestionsByRaiserOrderByTimeDescPageable(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionsByRaiserOrderByTimeDescPageable", reflect.TypeOf((*MockUsersDao)(nil).FindQuestionsByRaiserOrderByTimeDescPageable), arg0, arg1, arg2)
 }
 
 // FindUserByEmail mocks base method

@@ -96,6 +96,11 @@ type ResLogin struct {
 	Result ResultLogin `json:"result"`
 }
 
+type ResNotifications struct {
+	Code   int8                  `json:"code"`
+	Result []ResultNotifications `json:"result"`
+}
+
 type ResOAuthGithub struct {
 	Code   int8              `json:"code"`
 	Result ResultOAuthGithub `json:"result"`
@@ -124,6 +129,11 @@ type ResRefreshToken struct {
 type ResRegister struct {
 	Code   int8           `json:"code"`
 	Result ResultRegister `json:"result"`
+}
+
+type ResUserQuestions struct {
+	Code   int8                  `json:"code"`
+	Result []ResultUserQuestions `json:"result"`
 }
 
 type ResVerificationCode struct {
@@ -164,6 +174,20 @@ type ResultLogin struct {
 	Nickname     string `json:"nickname"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type ResultNotifications struct {
+	Type              int8      `json:"type"`
+	Time              time.Time `json:"time"`
+	Qid               string    `json:"qid"`
+	QuestionTitle     string    `json:"question_title"`
+	Aid               string    `json:"aid"`
+	AnswerHead        string    `json:"answer_head"`
+	NewAnswerCount    int64     `json:"new_answer_count"`
+	NewLikeCount      int64     `json:"new_like_count"`
+	NewCommentCount   int64     `json:"new_comment_count"`
+	NewCriticismCount int64     `json:"new_criticism_count"`
+	NewFollowerCount  int64     `json:"new_follower_count"`
 }
 
 type ResultOAuthGithub struct {
@@ -211,6 +235,19 @@ type ResultRefreshToken struct {
 
 type ResultRegister struct {
 	Type int8 `json:"type"`
+}
+
+type ResultUserQuestions struct {
+	Qid           string    `json:"qid"`
+	Title         string    `json:"title"`
+	Time          time.Time `json:"time"`
+	AnswerCount   int64     `json:"answer_count"`
+	ViewCount     int64     `json:"view_count"`
+	FavoriteCount int64     `json:"favorite_count"`
+	Category      string    `json:"category"`
+	Labels        []string  `json:"labels"`
+	Head          string    `json:"head"`
+	PictureUrls   []string  `json:"picture_urls"`
 }
 
 type ResultVerificationCode struct {
@@ -521,6 +558,28 @@ func (u *UsersServiceImpl) Login(req ReqLogin) (res ResLogin, err error) {
 	res.Result.Nickname = user.Nickname
 	res.Result.Token = token
 	res.Result.RefreshToken = refreshToken
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Notifications(token string, page int64) (res ResNotifications, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
 }
 
@@ -1009,6 +1068,56 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 		res.Code = 1
 		res.Result.Type = 3
 		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) UserQuestions(token string, uid int64, page int64) (res ResUserQuestions, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var questions []entity.Questions
+	questions, err = u.usersDao.FindQuestionsByRaiserOrderByTimeDescPageable(ctx, uid, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultUserQuestions{}
+	for _, question := range questions {
+		var questionDetail entity.QuestionDetails
+		questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, question.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var labels []entity.Labels
+		labels, err = u.usersDao.FindLabelsByQid(ctx, question.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var labelTitles []string
+		for _, label := range labels {
+			labelTitles = append(labelTitles, label.Title)
+		}
+		res.Result = append(res.Result, ResultUserQuestions{strconv.FormatInt(question.Qid, 10), questionDetail.Title, time.Unix(question.Time, 0), question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Category, labelTitles, questionDetail.Content, nil})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)

@@ -154,6 +154,21 @@ func (mr *MockUsersServiceMockRecorder) Login(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUsersService)(nil).Login), arg0)
 }
 
+// Notifications mocks base method
+func (m *MockUsersService) Notifications(arg0 string, arg1 int64) (service.ResNotifications, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Notifications", arg0, arg1)
+	ret0, _ := ret[0].(service.ResNotifications)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Notifications indicates an expected call of Notifications
+func (mr *MockUsersServiceMockRecorder) Notifications(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Notifications", reflect.TypeOf((*MockUsersService)(nil).Notifications), arg0, arg1)
+}
+
 // OAuthGithub mocks base method
 func (m *MockUsersService) OAuthGithub(arg0, arg1 string) (service.ResOAuthGithub, error) {
 	m.ctrl.T.Helper()
@@ -242,6 +257,21 @@ func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegist
 func (mr *MockUsersServiceMockRecorder) Register(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUsersService)(nil).Register), arg0)
+}
+
+// UserQuestions mocks base method
+func (m *MockUsersService) UserQuestions(arg0 string, arg1, arg2 int64) (service.ResUserQuestions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserQuestions", arg0, arg1, arg2)
+	ret0, _ := ret[0].(service.ResUserQuestions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserQuestions indicates an expected call of UserQuestions
+func (mr *MockUsersServiceMockRecorder) UserQuestions(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserQuestions", reflect.TypeOf((*MockUsersService)(nil).UserQuestions), arg0, arg1, arg2)
 }
 
 // VerificationCode mocks base method

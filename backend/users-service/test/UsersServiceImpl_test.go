@@ -371,6 +371,47 @@ func TestServiceLogin(t *testing.T) {
 	}
 }
 
+func TestServiceNotifications(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResNotifications
+	}{
+		{"Normal", args{token: token, page: 1}, service.ResNotifications{Code: 0}},
+		{"WrongToken", args{page: 1}, service.ResNotifications{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Notifications(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceOAuthGithub(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
@@ -722,6 +763,65 @@ func TestServiceRegister(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if res, _ := u.Register(tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestServiceUserQuestions(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	questions := []entity.Questions{
+		{Qid: 1},
+	}
+	questionDetails := []entity.QuestionDetails{
+		{Qid: 1},
+	}
+	labels := []entity.Labels{
+		{Lid: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(questionDetails[0], nil),
+		mockUsersDao.EXPECT().FindLabelsByQid(gomock.Any(), questions[0].Qid).Return(labels, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(entity.QuestionDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		uid   int64
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResUserQuestions
+	}{
+		{"Normal", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 0}},
+		{"QuestionDetailNotFound", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 1}},
+		{"WrongToken", args{uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.UserQuestions(tt.args.token, tt.args.uid, tt.args.page); res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})
