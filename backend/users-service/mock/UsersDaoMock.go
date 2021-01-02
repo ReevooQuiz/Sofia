@@ -90,6 +90,21 @@ func (mr *MockUsersDaoMockRecorder) FindFollowByUidAndFollower(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFollowByUidAndFollower", reflect.TypeOf((*MockUsersDao)(nil).FindFollowByUidAndFollower), arg0, arg1, arg2)
 }
 
+// FindFollowsByUid mocks base method
+func (m *MockUsersDao) FindFollowsByUid(arg0 dao.TransactionContext, arg1 int64) ([]entity.Follows, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindFollowsByUid", arg0, arg1)
+	ret0, _ := ret[0].([]entity.Follows)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindFollowsByUid indicates an expected call of FindFollowsByUid
+func (mr *MockUsersDaoMockRecorder) FindFollowsByUid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFollowsByUid", reflect.TypeOf((*MockUsersDao)(nil).FindFollowsByUid), arg0, arg1)
+}
+
 // FindLabelByTitle mocks base method
 func (m *MockUsersDao) FindLabelByTitle(arg0 dao.TransactionContext, arg1 string) (entity.Labels, error) {
 	m.ctrl.T.Helper()

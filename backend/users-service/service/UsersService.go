@@ -9,6 +9,7 @@ type UsersService interface {
 	Destruct()
 	CheckToken(token string) (res ResCheckToken, err error)
 	Follow(token string, uid int64, follow bool) (res ResFollow, err error)
+	Followers(token string, uid int64) (res ResFollowers, err error)
 	InfoList(req ReqInfoList) (res ResInfoList, err error)
 	Login(req ReqLogin) (res ResLogin, err error)
 	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)
