@@ -83,6 +83,30 @@ func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid in
 	return follow, err
 }
 
+func (u *UsersDaoImpl) FindFollowsByUid(ctx TransactionContext, uid int64) (follows []entity.Follows, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ?")
+	if err != nil {
+		return follows, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(uid)
+	if err != nil {
+		return follows, err
+	}
+	follows = []entity.Follows{}
+	for res.Next() {
+		var follow entity.Follows
+		err = res.Scan(&follow.Uid, &follow.Follower)
+		if err != nil {
+			return follows, err
+		}
+		follows = append(follows, follow)
+	}
+	return follows, err
+}
+
 func (u *UsersDaoImpl) FindLabelByTitle(ctx TransactionContext, title string) (label entity.Labels, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from labels where title = ?")

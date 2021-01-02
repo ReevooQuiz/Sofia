@@ -11,6 +11,7 @@ type UsersDao interface {
 	Commit(ctx *TransactionContext) (err error)
 	Rollback(ctx *TransactionContext) (err error)
 	FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error)
+	FindFollowsByUid(ctx TransactionContext, uid int64) (follows []entity.Follows, err error)
 	FindLabelByTitle(ctx TransactionContext, title string) (label entity.Labels, err error)
 	FindLabelsByUid(ctx TransactionContext, uid int64) (labels []entity.Labels, err error)
 	FindUserByEmail(ctx TransactionContext, email string) (user entity.Users, err error)
