@@ -285,6 +285,7 @@ func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res Res
 		var follow entity.Follows
 		follow.Uid = uid
 		follow.Follower = user.Uid
+		follow.Time = time.Now().Unix()
 		err = u.usersDao.InsertFollow(ctx, follow)
 	} else {
 		_, err = u.usersDao.FindFollowByUidAndFollower(ctx, uid, user.Uid)

@@ -79,7 +79,7 @@ func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid in
 		return follow, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(uid, follower).Scan(&follow.Uid, &follow.Follower)
+	err = stmt.QueryRow(uid, follower).Scan(&follow.Uid, &follow.Follower, &follow.Time)
 	return follow, err
 }
 
@@ -98,7 +98,7 @@ func (u *UsersDaoImpl) FindFollowsByFollower(ctx TransactionContext, follower in
 	follows = []entity.Follows{}
 	for res.Next() {
 		var follow entity.Follows
-		err = res.Scan(&follow.Uid, &follow.Follower)
+		err = res.Scan(&follow.Uid, &follow.Follower, &follow.Time)
 		if err != nil {
 			return follows, err
 		}
@@ -122,7 +122,7 @@ func (u *UsersDaoImpl) FindFollowsByUid(ctx TransactionContext, uid int64) (foll
 	follows = []entity.Follows{}
 	for res.Next() {
 		var follow entity.Follows
-		err = res.Scan(&follow.Uid, &follow.Follower)
+		err = res.Scan(&follow.Uid, &follow.Follower, &follow.Time)
 		if err != nil {
 			return follows, err
 		}
@@ -240,12 +240,12 @@ func (u *UsersDaoImpl) InsertFavorite(ctx TransactionContext, favorite entity.Fa
 
 func (u *UsersDaoImpl) InsertFollow(ctx TransactionContext, follow entity.Follows) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = ctx.sqlTx.Prepare("insert into follows values(?, ?)")
+	stmt, err = ctx.sqlTx.Prepare("insert into follows values(?, ?, ?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(follow.Uid, follow.Follower)
+	_, err = stmt.Exec(follow.Uid, follow.Follower, follow.Time)
 	return err
 }
 
