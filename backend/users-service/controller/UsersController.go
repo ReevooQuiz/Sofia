@@ -26,6 +26,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	}
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/checkToken", u.CheckToken)
+	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/infoList", u.InfoList)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
@@ -59,6 +60,33 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.CheckToken(r.FormValue("token"))
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
+	var res service.ResFollow
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var uid int64
+	uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Follow(r.Header.Get("Authorization"), uid, r.FormValue("follow") == "true")
 	if err != nil {
 		log.Info(err)
 	}

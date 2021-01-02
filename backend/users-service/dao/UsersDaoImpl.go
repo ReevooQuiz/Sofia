@@ -72,6 +72,17 @@ func (u *UsersDaoImpl) Rollback(t *TransactionContext) (err error) {
 	return t.sqlTx.Rollback()
 }
 
+func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ? and follower = ?")
+	if err != nil {
+		return follow, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(uid, follower).Scan(&follow.Uid, &follow.Follower)
+	return follow, err
+}
+
 func (u *UsersDaoImpl) FindLabelByTitle(ctx TransactionContext, title string) (label entity.Labels, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from labels where title = ?")
@@ -179,6 +190,17 @@ func (u *UsersDaoImpl) InsertFavorite(ctx TransactionContext, favorite entity.Fa
 	return fid, err
 }
 
+func (u *UsersDaoImpl) InsertFollow(ctx TransactionContext, follow entity.Follows) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into follows values(?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(follow.Uid, follow.Follower)
+	return err
+}
+
 func (u *UsersDaoImpl) InsertLabel(ctx TransactionContext, label entity.Labels) (lid int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into labels(title) values(?)")
@@ -223,6 +245,17 @@ func (u *UsersDaoImpl) InsertUserLabel(ctx TransactionContext, userLabel entity.
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(userLabel.Uid, userLabel.Lid)
+	return err
+}
+
+func (u *UsersDaoImpl) RemoveFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from follows where uid = ? and follower = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(uid, follower)
 	return err
 }
 

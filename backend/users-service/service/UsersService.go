@@ -8,6 +8,7 @@ type UsersService interface {
 	Init(usersDAO ...dao.UsersDao) (err error)
 	Destruct()
 	CheckToken(token string) (res ResCheckToken, err error)
+	Follow(token string, uid int64, follow bool) (res ResFollow, err error)
 	InfoList(req ReqInfoList) (res ResInfoList, err error)
 	Login(req ReqLogin) (res ResLogin, err error)
 	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)

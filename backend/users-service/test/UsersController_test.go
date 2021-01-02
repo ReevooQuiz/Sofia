@@ -86,6 +86,58 @@ func TestControllerCheckToken(t *testing.T) {
 	}
 }
 
+func TestControllerFollow(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Follow(gomock.Any(), gomock.Any(), gomock.Any()).Return(service.ResFollow{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/follow", u.Follow)
+	type args struct {
+		token  string
+		uid    int64
+		follow bool
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResFollow
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResFollow{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var follow string
+			if tt.args.follow {
+				follow = "true"
+			} else {
+				follow = "false"
+			}
+			r, _ := http.NewRequest("PUT", "/follow?uid="+strconv.FormatInt(tt.args.uid, 10)+"&follow="+follow, bytes.NewReader([]byte{}))
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResFollow
+			_ = json.Unmarshal(responseBody, &res)
+			if res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerInfoList(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()

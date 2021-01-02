@@ -75,6 +75,21 @@ func (mr *MockUsersDaoMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersDao)(nil).Destruct))
 }
 
+// FindFollowByUidAndFollower mocks base method
+func (m *MockUsersDao) FindFollowByUidAndFollower(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.Follows, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindFollowByUidAndFollower", arg0, arg1, arg2)
+	ret0, _ := ret[0].(entity.Follows)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindFollowByUidAndFollower indicates an expected call of FindFollowByUidAndFollower
+func (mr *MockUsersDaoMockRecorder) FindFollowByUidAndFollower(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFollowByUidAndFollower", reflect.TypeOf((*MockUsersDao)(nil).FindFollowByUidAndFollower), arg0, arg1, arg2)
+}
+
 // FindLabelByTitle mocks base method
 func (m *MockUsersDao) FindLabelByTitle(arg0 dao.TransactionContext, arg1 string) (entity.Labels, error) {
 	m.ctrl.T.Helper()
@@ -209,6 +224,20 @@ func (mr *MockUsersDaoMockRecorder) InsertFavorite(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFavorite", reflect.TypeOf((*MockUsersDao)(nil).InsertFavorite), arg0, arg1)
 }
 
+// InsertFollow mocks base method
+func (m *MockUsersDao) InsertFollow(arg0 dao.TransactionContext, arg1 entity.Follows) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertFollow", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertFollow indicates an expected call of InsertFollow
+func (mr *MockUsersDaoMockRecorder) InsertFollow(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertFollow", reflect.TypeOf((*MockUsersDao)(nil).InsertFollow), arg0, arg1)
+}
+
 // InsertLabel mocks base method
 func (m *MockUsersDao) InsertLabel(arg0 dao.TransactionContext, arg1 entity.Labels) (int64, error) {
 	m.ctrl.T.Helper()
@@ -265,6 +294,20 @@ func (m *MockUsersDao) InsertUserLabel(arg0 dao.TransactionContext, arg1 entity.
 func (mr *MockUsersDaoMockRecorder) InsertUserLabel(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUserLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertUserLabel), arg0, arg1)
+}
+
+// RemoveFollowByUidAndFollower mocks base method
+func (m *MockUsersDao) RemoveFollowByUidAndFollower(arg0 dao.TransactionContext, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveFollowByUidAndFollower", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveFollowByUidAndFollower indicates an expected call of RemoveFollowByUidAndFollower
+func (mr *MockUsersDaoMockRecorder) RemoveFollowByUidAndFollower(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFollowByUidAndFollower", reflect.TypeOf((*MockUsersDao)(nil).RemoveFollowByUidAndFollower), arg0, arg1, arg2)
 }
 
 // RemoveUserLabelsByUid mocks base method

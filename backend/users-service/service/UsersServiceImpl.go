@@ -72,6 +72,10 @@ type ResCheckToken struct {
 	Role       int8  `json:"role"`
 }
 
+type ResFollow struct {
+	Code int8 `json:"code"`
+}
+
 type ResInfoList struct {
 	Code   int8             `json:"code"`
 	Result []ResultInfoList `json:"result"`
@@ -229,6 +233,85 @@ func (u *UsersServiceImpl) Destruct() {
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
 	res.Successful, res.Uid, res.Role, err = util.ParseToken(token)
 	return res, err
+}
+
+func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res ResFollow, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if uid == user.Uid {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if follow {
+		var follow entity.Follows
+		follow.Uid = uid
+		follow.Follower = user.Uid
+		err = u.usersDao.InsertFollow(ctx, follow)
+	} else {
+		_, err = u.usersDao.FindFollowByUidAndFollower(ctx, uid, user.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		err = u.usersDao.RemoveFollowByUidAndFollower(ctx, uid, user.Uid)
+	}
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	user, err = u.usersDao.FindUserByUid(ctx, user.Uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if follow {
+		user.FollowingCount++
+	} else {
+		user.FollowingCount--
+	}
+	err = u.usersDao.UpdateUserByUid(ctx, user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	user, err = u.usersDao.FindUserByUid(ctx, uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if follow {
+		user.FollowerCount++
+	} else {
+		user.FollowerCount--
+	}
+	err = u.usersDao.UpdateUserByUid(ctx, user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error) {

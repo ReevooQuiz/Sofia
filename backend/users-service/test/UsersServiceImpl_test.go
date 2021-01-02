@@ -61,6 +61,91 @@ func TestServiceCheckToken(t *testing.T) {
 	}
 }
 
+func TestServiceFollow(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Name: "test", Role: entity.USER, FollowerCount: 0, FollowingCount: 0},
+		{Uid: 1, Name: "test", Role: entity.USER, FollowerCount: 0, FollowingCount: 1},
+		{Uid: 2, FollowerCount: 0, FollowingCount: 0},
+		{Uid: 2, FollowerCount: 1, FollowingCount: 0},
+	}
+	follows := []entity.Follows{
+		{Uid: 2, Follower: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), follows[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[1]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[2].Uid).Return(users[2], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[3]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), follows[0].Uid, follows[0].Follower).Return(follows[0], nil),
+		mockUsersDao.EXPECT().RemoveFollowByUidAndFollower(gomock.Any(), follows[0].Uid, follows[0].Follower).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(users[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[3].Uid).Return(users[3], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[2]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), follows[0]).Return(errors.New("error 1062: Duplicate entry '2-1' for key 'PRIMARY'")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), follows[0].Uid, follows[0].Follower).Return(entity.Follows{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), follows[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), follows[0]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[1]).Return(nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[2].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token  string
+		uid    int64
+		follow bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResFollow
+	}{
+		{"FollowNormal", args{token: token, uid: users[2].Uid, follow: true}, service.ResFollow{Code: 0}},
+		{"UnfollowNormal", args{token: token, uid: users[2].Uid, follow: false}, service.ResFollow{Code: 0}},
+		{"FollowMyself", args{token: token, uid: users[0].Uid, follow: true}, service.ResFollow{Code: 1}},
+		{"FollowFound", args{token: token, uid: users[2].Uid, follow: true}, service.ResFollow{Code: 1}},
+		{"FollowNotFound", args{token: token, uid: users[2].Uid, follow: false}, service.ResFollow{Code: 1}},
+		{"FollowerNotFound", args{token: token, uid: users[2].Uid, follow: true}, service.ResFollow{Code: 1}},
+		{"UidNotFound", args{token: token, uid: users[2].Uid, follow: true}, service.ResFollow{Code: 1}},
+		{"WrongToken", args{uid: users[2].Uid, follow: true}, service.ResFollow{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Follow(tt.args.token, tt.args.uid, tt.args.follow); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceInfoList(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
