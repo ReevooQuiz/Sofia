@@ -37,6 +37,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/publicInfo", u.PublicInfo)
 	http.HandleFunc("/refreshToken", u.RefreshToken)
 	http.HandleFunc("/register", u.Register)
+	http.HandleFunc("/userAnswers", u.UserAnswers)
 	http.HandleFunc("/userQuestions", u.UserQuestions)
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
@@ -340,6 +341,44 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Register(req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
+	var res service.ResUserAnswers
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var uid int64
+	uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.UserAnswers(r.Header.Get("Authorization"), uid, page)
 	if err != nil {
 		log.Info(err)
 	}

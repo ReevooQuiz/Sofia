@@ -259,6 +259,21 @@ func (mr *MockUsersServiceMockRecorder) Register(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUsersService)(nil).Register), arg0)
 }
 
+// UserAnswers mocks base method
+func (m *MockUsersService) UserAnswers(arg0 string, arg1, arg2 int64) (service.ResUserAnswers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserAnswers", arg0, arg1, arg2)
+	ret0, _ := ret[0].(service.ResUserAnswers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserAnswers indicates an expected call of UserAnswers
+func (mr *MockUsersServiceMockRecorder) UserAnswers(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserAnswers", reflect.TypeOf((*MockUsersService)(nil).UserAnswers), arg0, arg1, arg2)
+}
+
 // UserQuestions mocks base method
 func (m *MockUsersService) UserQuestions(arg0 string, arg1, arg2 int64) (service.ResUserQuestions, error) {
 	m.ctrl.T.Helper()

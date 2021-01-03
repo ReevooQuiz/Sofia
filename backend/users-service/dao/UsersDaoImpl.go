@@ -106,6 +106,29 @@ func (u *UsersDaoImpl) FindAnswerDetailByAid(ctx TransactionContext, aid int64) 
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) FindAnswersByAnswererOrderByTimeDescPageable(ctx TransactionContext, answerer int64, pageable Pageable) (answers []entity.Answers, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from answers where answerer = ? order by time desc limit ?, ?")
+	if err != nil {
+		return answers, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(answerer, pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return answers, err
+	}
+	for res.Next() {
+		var answer entity.Answers
+		err = res.Scan(&answer.Aid, &answer.Answerer, &answer.Qid, &answer.CommentCount, &answer.CriticismCount, &answer.LikeCount, &answer.ApprovalCount, &answer.Time)
+		if err != nil {
+			return answers, err
+		}
+		answers = append(answers, answer)
+	}
+	return answers, err
+}
+
 func (u *UsersDaoImpl) FindApproveAnswerByUidAndAid(ctx TransactionContext, uid int64, aid int64) (approveAnswer entity.ApproveAnswers, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from approve_answers where uid = ? and aid = ?")
@@ -287,6 +310,17 @@ func (u *UsersDaoImpl) FindNotificationsByUidPageable(ctx TransactionContext, ui
 		notifications = append(notifications, notification)
 	}
 	return notifications, err
+}
+
+func (u *UsersDaoImpl) FindQuestionByQid(ctx TransactionContext, qid int64) (question entity.Questions, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from questions where qid = ?")
+	if err != nil {
+		return question, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(qid).Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned)
+	return question, err
 }
 
 func (u *UsersDaoImpl) FindQuestionDetailByQid(ctx TransactionContext, qid int64) (questionDetail entity.QuestionDetails, err error) {

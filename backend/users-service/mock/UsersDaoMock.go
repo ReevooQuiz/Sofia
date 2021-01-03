@@ -105,6 +105,21 @@ func (mr *MockUsersDaoMockRecorder) FindAnswerDetailByAid(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswerDetailByAid", reflect.TypeOf((*MockUsersDao)(nil).FindAnswerDetailByAid), arg0, arg1)
 }
 
+// FindAnswersByAnswererOrderByTimeDescPageable mocks base method
+func (m *MockUsersDao) FindAnswersByAnswererOrderByTimeDescPageable(arg0 dao.TransactionContext, arg1 int64, arg2 dao.Pageable) ([]entity.Answers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAnswersByAnswererOrderByTimeDescPageable", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]entity.Answers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAnswersByAnswererOrderByTimeDescPageable indicates an expected call of FindAnswersByAnswererOrderByTimeDescPageable
+func (mr *MockUsersDaoMockRecorder) FindAnswersByAnswererOrderByTimeDescPageable(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswersByAnswererOrderByTimeDescPageable", reflect.TypeOf((*MockUsersDao)(nil).FindAnswersByAnswererOrderByTimeDescPageable), arg0, arg1, arg2)
+}
+
 // FindApproveAnswerByUidAndAid mocks base method
 func (m *MockUsersDao) FindApproveAnswerByUidAndAid(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.ApproveAnswers, error) {
 	m.ctrl.T.Helper()
@@ -268,6 +283,21 @@ func (m *MockUsersDao) FindNotificationsByUidPageable(arg0 dao.TransactionContex
 func (mr *MockUsersDaoMockRecorder) FindNotificationsByUidPageable(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNotificationsByUidPageable", reflect.TypeOf((*MockUsersDao)(nil).FindNotificationsByUidPageable), arg0, arg1, arg2)
+}
+
+// FindQuestionByQid mocks base method
+func (m *MockUsersDao) FindQuestionByQid(arg0 dao.TransactionContext, arg1 int64) (entity.Questions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionByQid", arg0, arg1)
+	ret0, _ := ret[0].(entity.Questions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindQuestionByQid indicates an expected call of FindQuestionByQid
+func (mr *MockUsersDaoMockRecorder) FindQuestionByQid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionByQid", reflect.TypeOf((*MockUsersDao)(nil).FindQuestionByQid), arg0, arg1)
 }
 
 // FindQuestionDetailByQid mocks base method

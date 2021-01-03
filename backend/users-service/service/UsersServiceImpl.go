@@ -131,6 +131,11 @@ type ResRegister struct {
 	Result ResultRegister `json:"result"`
 }
 
+type ResUserAnswers struct {
+	Code   int8                `json:"code"`
+	Result []ResultUserAnswers `json:"result"`
+}
+
 type ResUserQuestions struct {
 	Code   int8                  `json:"code"`
 	Result []ResultUserQuestions `json:"result"`
@@ -236,6 +241,33 @@ type ResultRefreshToken struct {
 
 type ResultRegister struct {
 	Type int8 `json:"type"`
+}
+
+type ResultUserAnswers struct {
+	Question ResultUserAnswersQuestion `json:"question"`
+	Answer   ResultUserAnswersAnswer   `json:"answer"`
+}
+
+type ResultUserAnswersAnswer struct {
+	Aid            string    `json:"aid"`
+	LikeCount      int64     `json:"like_count"`
+	CriticismCount int64     `json:"criticism_count"`
+	ApprovalCount  int64     `json:"approval_count"`
+	CommentCount   int64     `json:"comment_count"`
+	Head           string    `json:"head"`
+	Time           time.Time `json:"time"`
+	PictureUrls    []string  `json:"picture_urls"`
+	Liked          bool      `json:"liked"`
+	Approved       bool      `json:"approved"`
+	Approvable     bool      `json:"approvable"`
+}
+
+type ResultUserAnswersQuestion struct {
+	Qid      string   `json:"qid"`
+	Title    string   `json:"title"`
+	Category string   `json:"category"`
+	Labels   []string `json:"labels"`
+	Head     string   `json:"head"`
 }
 
 type ResultUserQuestions struct {
@@ -1415,6 +1447,97 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 		res.Code = 1
 		res.Result.Type = 3
 		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) UserAnswers(token string, uid int64, page int64) (res ResUserAnswers, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	user, err = u.usersDao.FindUserByUid(ctx, user.Uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var answers []entity.Answers
+	answers, err = u.usersDao.FindAnswersByAnswererOrderByTimeDescPageable(ctx, uid, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultUserAnswers{}
+	for _, answer := range answers {
+		var answerDetail entity.AnswerDetails
+		answerDetail, err = u.usersDao.FindAnswerDetailByAid(ctx, answer.Aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		_, err = u.usersDao.FindLikeAnswerByUidAndAid(ctx, user.Uid, answer.Aid)
+		liked := err == nil
+		_, err = u.usersDao.FindApproveAnswerByUidAndAid(ctx, user.Uid, answer.Aid)
+		approved := err == nil
+		var question entity.Questions
+		question, err = u.usersDao.FindQuestionByQid(ctx, answer.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var questionDetail entity.QuestionDetails
+		questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var userLabels []entity.Labels
+		userLabels, err = u.usersDao.FindLabelsByUid(ctx, user.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var questionLabels []entity.Labels
+		questionLabels, err = u.usersDao.FindLabelsByQid(ctx, answer.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var questionLabelTitles []string
+		approvable := true
+		for _, questionLabel := range questionLabels {
+			questionLabelTitles = append(questionLabelTitles, questionLabel.Title)
+			flag := false
+			for _, userLabel := range userLabels {
+				if questionLabel.Lid == userLabel.Lid {
+					flag = true
+					break
+				}
+			}
+			approvable = approvable && flag
+		}
+		res.Result = append(res.Result, ResultUserAnswers{ResultUserAnswersQuestion{strconv.FormatInt(answer.Qid, 10), questionDetail.Title, question.Category, questionLabelTitles, fmt.Sprintf("%.20s", questionDetail.Content)}, ResultUserAnswersAnswer{strconv.FormatInt(answer.Aid, 10), answer.LikeCount, answer.CriticismCount, answer.ApprovalCount, answer.CommentCount, fmt.Sprintf("%.20s", answerDetail.Content), time.Unix(answer.Time, 0), []string{answerDetail.PictureUrl}, liked, approved, approvable}})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)

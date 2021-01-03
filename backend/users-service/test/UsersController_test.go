@@ -344,6 +344,7 @@ func TestControllerNotifications(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("GET", "/notifications?page="+strconv.FormatInt(tt.args.page, 10), nil)
+			r.Header.Set("Authorization", tt.args.token)
 			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -629,6 +630,53 @@ func TestControllerRegister(t *testing.T) {
 	}
 }
 
+func TestControllerUserAnswers(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().UserAnswers(gomock.Any(), gomock.Any(), gomock.Any()).Return(service.ResUserAnswers{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/userAnswers", u.UserAnswers)
+	type args struct {
+		token string
+		uid   int64
+		page  int64
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResUserAnswers
+	}{
+		{"Normal", args{page: 0}, http.StatusOK, service.ResUserAnswers{}},
+		{"WrongPage", args{page: -1}, http.StatusOK, service.ResUserAnswers{Code: 1}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := http.NewRequest("GET", "/userAnswers?uid="+strconv.FormatInt(tt.args.uid, 10)+"&page="+strconv.FormatInt(tt.args.page, 10), nil)
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResUserAnswers
+			_ = json.Unmarshal(responseBody, &res)
+			if res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerUserQuestions(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
@@ -658,6 +706,7 @@ func TestControllerUserQuestions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, _ := http.NewRequest("GET", "/userQuestions?uid="+strconv.FormatInt(tt.args.uid, 10)+"&page="+strconv.FormatInt(tt.args.page, 10), nil)
+			r.Header.Set("Authorization", tt.args.token)
 			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -666,7 +715,7 @@ func TestControllerUserQuestions(t *testing.T) {
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
-			var res service.ResRegister
+			var res service.ResUserQuestions
 			_ = json.Unmarshal(responseBody, &res)
 			if res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)

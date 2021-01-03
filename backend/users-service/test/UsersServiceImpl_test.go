@@ -888,6 +888,102 @@ func TestServiceRegister(t *testing.T) {
 	}
 }
 
+func TestServiceUserAnswers(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+		{Uid: 2},
+	}
+	answers := []entity.Answers{
+		{Aid: 1},
+	}
+	answerDetails := []entity.AnswerDetails{
+		{Aid: 1},
+	}
+	questions := []entity.Questions{
+		{Qid: 1},
+	}
+	questionDetails := []entity.QuestionDetails{
+		{Qid: 1},
+	}
+	labels := []entity.Labels{
+		{Lid: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(questionDetails[0], nil),
+		mockUsersDao.EXPECT().FindLabelsByUid(gomock.Any(), users[0].Uid).Return(labels, nil),
+		mockUsersDao.EXPECT().FindLabelsByQid(gomock.Any(), answers[0].Qid).Return(labels, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(entity.AnswerDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(entity.Questions{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		uid   int64
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResUserAnswers
+	}{
+		{"Normal", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 0}},
+		{"UserNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"AnswerDetailNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"QuestionNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"QuestionDetailNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"WrongToken", args{uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.UserAnswers(tt.args.token, tt.args.uid, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceUserQuestions(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
