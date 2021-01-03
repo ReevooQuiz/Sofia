@@ -75,6 +75,81 @@ func (mr *MockUsersDaoMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersDao)(nil).Destruct))
 }
 
+// FindAnswerByAid mocks base method
+func (m *MockUsersDao) FindAnswerByAid(arg0 dao.TransactionContext, arg1 int64) (entity.Answers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAnswerByAid", arg0, arg1)
+	ret0, _ := ret[0].(entity.Answers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAnswerByAid indicates an expected call of FindAnswerByAid
+func (mr *MockUsersDaoMockRecorder) FindAnswerByAid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswerByAid", reflect.TypeOf((*MockUsersDao)(nil).FindAnswerByAid), arg0, arg1)
+}
+
+// FindAnswerDetailByAid mocks base method
+func (m *MockUsersDao) FindAnswerDetailByAid(arg0 dao.TransactionContext, arg1 int64) (entity.AnswerDetails, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAnswerDetailByAid", arg0, arg1)
+	ret0, _ := ret[0].(entity.AnswerDetails)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAnswerDetailByAid indicates an expected call of FindAnswerDetailByAid
+func (mr *MockUsersDaoMockRecorder) FindAnswerDetailByAid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswerDetailByAid", reflect.TypeOf((*MockUsersDao)(nil).FindAnswerDetailByAid), arg0, arg1)
+}
+
+// FindApproveAnswerByUidAndAid mocks base method
+func (m *MockUsersDao) FindApproveAnswerByUidAndAid(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.ApproveAnswers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindApproveAnswerByUidAndAid", arg0, arg1, arg2)
+	ret0, _ := ret[0].(entity.ApproveAnswers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindApproveAnswerByUidAndAid indicates an expected call of FindApproveAnswerByUidAndAid
+func (mr *MockUsersDaoMockRecorder) FindApproveAnswerByUidAndAid(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindApproveAnswerByUidAndAid", reflect.TypeOf((*MockUsersDao)(nil).FindApproveAnswerByUidAndAid), arg0, arg1, arg2)
+}
+
+// FindCommentByCmid mocks base method
+func (m *MockUsersDao) FindCommentByCmid(arg0 dao.TransactionContext, arg1 int64) (entity.Comments, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindCommentByCmid", arg0, arg1)
+	ret0, _ := ret[0].(entity.Comments)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindCommentByCmid indicates an expected call of FindCommentByCmid
+func (mr *MockUsersDaoMockRecorder) FindCommentByCmid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCommentByCmid", reflect.TypeOf((*MockUsersDao)(nil).FindCommentByCmid), arg0, arg1)
+}
+
+// FindCriticismByCtid mocks base method
+func (m *MockUsersDao) FindCriticismByCtid(arg0 dao.TransactionContext, arg1 int64) (entity.Criticisms, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindCriticismByCtid", arg0, arg1)
+	ret0, _ := ret[0].(entity.Criticisms)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindCriticismByCtid indicates an expected call of FindCriticismByCtid
+func (mr *MockUsersDaoMockRecorder) FindCriticismByCtid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCriticismByCtid", reflect.TypeOf((*MockUsersDao)(nil).FindCriticismByCtid), arg0, arg1)
+}
+
 // FindFollowByUidAndFollower mocks base method
 func (m *MockUsersDao) FindFollowByUidAndFollower(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.Follows, error) {
 	m.ctrl.T.Helper()
@@ -163,6 +238,36 @@ func (m *MockUsersDao) FindLabelsByUid(arg0 dao.TransactionContext, arg1 int64) 
 func (mr *MockUsersDaoMockRecorder) FindLabelsByUid(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLabelsByUid", reflect.TypeOf((*MockUsersDao)(nil).FindLabelsByUid), arg0, arg1)
+}
+
+// FindLikeAnswerByUidAndAid mocks base method
+func (m *MockUsersDao) FindLikeAnswerByUidAndAid(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.LikeAnswers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLikeAnswerByUidAndAid", arg0, arg1, arg2)
+	ret0, _ := ret[0].(entity.LikeAnswers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindLikeAnswerByUidAndAid indicates an expected call of FindLikeAnswerByUidAndAid
+func (mr *MockUsersDaoMockRecorder) FindLikeAnswerByUidAndAid(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLikeAnswerByUidAndAid", reflect.TypeOf((*MockUsersDao)(nil).FindLikeAnswerByUidAndAid), arg0, arg1, arg2)
+}
+
+// FindNotificationsByUidPageable mocks base method
+func (m *MockUsersDao) FindNotificationsByUidPageable(arg0 dao.TransactionContext, arg1 int64, arg2 dao.Pageable) ([]dao.Notifications, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindNotificationsByUidPageable", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]dao.Notifications)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindNotificationsByUidPageable indicates an expected call of FindNotificationsByUidPageable
+func (mr *MockUsersDaoMockRecorder) FindNotificationsByUidPageable(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindNotificationsByUidPageable", reflect.TypeOf((*MockUsersDao)(nil).FindNotificationsByUidPageable), arg0, arg1, arg2)
 }
 
 // FindQuestionDetailByQid mocks base method

@@ -185,6 +185,7 @@ type ResultNotifications struct {
 	AnswerHead        string    `json:"answer_head"`
 	NewAnswerCount    int64     `json:"new_answer_count"`
 	NewLikeCount      int64     `json:"new_like_count"`
+	NewApprovalCount  int64     `json:"new_approval_count"`
 	NewCommentCount   int64     `json:"new_comment_count"`
 	NewCriticismCount int64     `json:"new_criticism_count"`
 	NewFollowerCount  int64     `json:"new_follower_count"`
@@ -578,6 +579,352 @@ func (u *UsersServiceImpl) Notifications(token string, page int64) (res ResNotif
 		}
 		res.Code = 2
 		return res, u.usersDao.Rollback(&ctx)
+	}
+	user, err = u.usersDao.FindUserByUid(ctx, user.Uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var notifications []dao.Notifications
+	notifications, err = u.usersDao.FindNotificationsByUidPageable(ctx, user.Uid, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultNotifications{}
+	for _, notification := range notifications {
+		switch notification.Type {
+		case 0:
+			var answer entity.Answers
+			answer, err = u.usersDao.FindAnswerByAid(ctx, notification.Id0)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if answer.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 0 {
+					var qid int64
+					qid, err = strconv.ParseInt(result.Qid, 10, 64)
+					if err != nil {
+						log.Info(err)
+						res.Code = 1
+						return res, u.usersDao.Rollback(&ctx)
+					}
+					if qid == answer.Qid {
+						res.Result[i].NewAnswerCount++
+						flag = false
+						break
+					}
+				}
+			}
+			if flag {
+				var questionDetail entity.QuestionDetails
+				questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Result = append(res.Result, ResultNotifications{Type: 0, Time: time.Unix(answer.Time, 0), Qid: strconv.FormatInt(answer.Qid, 10), QuestionTitle: questionDetail.Title, NewAnswerCount: 1})
+			}
+		case 1:
+			var likeAnswer entity.LikeAnswers
+			likeAnswer, err = u.usersDao.FindLikeAnswerByUidAndAid(ctx, notification.Id0, notification.Id1)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if likeAnswer.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 1 {
+					var aid int64
+					aid, err = strconv.ParseInt(result.Aid, 10, 64)
+					if err != nil {
+						log.Info(err)
+						res.Code = 1
+						return res, u.usersDao.Rollback(&ctx)
+					}
+					if aid == likeAnswer.Aid {
+						res.Result[i].NewLikeCount++
+						flag = false
+						break
+					}
+				}
+			}
+			if flag {
+				var answer entity.Answers
+				answer, err = u.usersDao.FindAnswerByAid(ctx, likeAnswer.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var questionDetail entity.QuestionDetails
+				questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var answerDetail entity.AnswerDetails
+				answerDetail, err = u.usersDao.FindAnswerDetailByAid(ctx, likeAnswer.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Result = append(res.Result, ResultNotifications{Type: 1, Time: time.Unix(likeAnswer.Time, 0), Qid: strconv.FormatInt(answer.Qid, 10), QuestionTitle: questionDetail.Title, Aid: strconv.FormatInt(likeAnswer.Aid, 10), AnswerHead: fmt.Sprintf("%.20s", answerDetail.Content), NewLikeCount: 1})
+			}
+		case 2:
+			var approveAnswer entity.ApproveAnswers
+			approveAnswer, err = u.usersDao.FindApproveAnswerByUidAndAid(ctx, notification.Id0, notification.Id1)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if approveAnswer.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 2 {
+					var aid int64
+					aid, err = strconv.ParseInt(result.Aid, 10, 64)
+					if err != nil {
+						log.Info(err)
+						res.Code = 1
+						return res, u.usersDao.Rollback(&ctx)
+					}
+					if aid == approveAnswer.Aid {
+						res.Result[i].NewApprovalCount++
+						flag = false
+						break
+					}
+				}
+			}
+			if flag {
+				var answer entity.Answers
+				answer, err = u.usersDao.FindAnswerByAid(ctx, approveAnswer.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var questionDetail entity.QuestionDetails
+				questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var answerDetail entity.AnswerDetails
+				answerDetail, err = u.usersDao.FindAnswerDetailByAid(ctx, approveAnswer.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Result = append(res.Result, ResultNotifications{Type: 2, Time: time.Unix(approveAnswer.Time, 0), Qid: strconv.FormatInt(answer.Qid, 10), QuestionTitle: questionDetail.Title, Aid: strconv.FormatInt(approveAnswer.Aid, 10), AnswerHead: fmt.Sprintf("%.20s", answerDetail.Content), NewApprovalCount: 1})
+			}
+		case 3:
+			var comment entity.Comments
+			comment, err = u.usersDao.FindCommentByCmid(ctx, notification.Id0)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if comment.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 3 {
+					var aid int64
+					aid, err = strconv.ParseInt(result.Aid, 10, 64)
+					if err != nil {
+						log.Info(err)
+						res.Code = 1
+						return res, u.usersDao.Rollback(&ctx)
+					}
+					if aid == comment.Aid {
+						res.Result[i].NewCommentCount++
+						flag = false
+						break
+					}
+				}
+			}
+			if flag {
+				var answer entity.Answers
+				answer, err = u.usersDao.FindAnswerByAid(ctx, comment.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var questionDetail entity.QuestionDetails
+				questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var answerDetail entity.AnswerDetails
+				answerDetail, err = u.usersDao.FindAnswerDetailByAid(ctx, comment.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Result = append(res.Result, ResultNotifications{Type: 3, Time: time.Unix(comment.Time, 0), Qid: strconv.FormatInt(answer.Qid, 10), QuestionTitle: questionDetail.Title, Aid: strconv.FormatInt(comment.Aid, 10), AnswerHead: fmt.Sprintf("%.20s", answerDetail.Content), NewCommentCount: 1})
+			}
+		case 4:
+			var criticism entity.Criticisms
+			criticism, err = u.usersDao.FindCriticismByCtid(ctx, notification.Id0)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if criticism.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 4 {
+					var aid int64
+					aid, err = strconv.ParseInt(result.Aid, 10, 64)
+					if err != nil {
+						log.Info(err)
+						res.Code = 1
+						return res, u.usersDao.Rollback(&ctx)
+					}
+					if aid == criticism.Aid {
+						res.Result[i].NewCriticismCount++
+						flag = false
+						break
+					}
+				}
+			}
+			if flag {
+				var answer entity.Answers
+				answer, err = u.usersDao.FindAnswerByAid(ctx, criticism.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var questionDetail entity.QuestionDetails
+				questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, answer.Qid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				var answerDetail entity.AnswerDetails
+				answerDetail, err = u.usersDao.FindAnswerDetailByAid(ctx, criticism.Aid)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Result = append(res.Result, ResultNotifications{Type: 4, Time: time.Unix(criticism.Time, 0), Qid: strconv.FormatInt(answer.Qid, 10), QuestionTitle: questionDetail.Title, Aid: strconv.FormatInt(criticism.Aid, 10), AnswerHead: fmt.Sprintf("%.20s", answerDetail.Content), NewCriticismCount: 1})
+			}
+		case 5:
+			var follow entity.Follows
+			follow, err = u.usersDao.FindFollowByUidAndFollower(ctx, user.Uid, notification.Id0)
+			if err != nil {
+				log.Info(err)
+				res.Code = 1
+				return res, u.usersDao.Rollback(&ctx)
+			}
+			if follow.Time < user.NotificationTime {
+				user.NotificationTime = time.Now().Unix()
+				err = u.usersDao.UpdateUserByUid(ctx, user)
+				if err != nil {
+					log.Info(err)
+					res.Code = 1
+					return res, u.usersDao.Rollback(&ctx)
+				}
+				res.Code = 0
+				return res, u.usersDao.Commit(&ctx)
+			}
+			flag := true
+			for i, result := range res.Result {
+				if result.Type == 5 {
+					res.Result[i].NewFollowerCount++
+					flag = false
+					break
+				}
+			}
+			if flag {
+				res.Result = append(res.Result, ResultNotifications{Type: 5, Time: time.Unix(follow.Time, 0), NewFollowerCount: 1})
+			}
+		default:
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	}
+	if len(notifications) < 10 {
+		user.NotificationTime = time.Now().Unix()
+		err = u.usersDao.UpdateUserByUid(ctx, user)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
