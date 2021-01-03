@@ -1117,7 +1117,7 @@ func (u *UsersServiceImpl) UserQuestions(token string, uid int64, page int64) (r
 		for _, label := range labels {
 			labelTitles = append(labelTitles, label.Title)
 		}
-		res.Result = append(res.Result, ResultUserQuestions{strconv.FormatInt(question.Qid, 10), questionDetail.Title, time.Unix(question.Time, 0), question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Category, labelTitles, questionDetail.Content, nil})
+		res.Result = append(res.Result, ResultUserQuestions{strconv.FormatInt(question.Qid, 10), questionDetail.Title, time.Unix(question.Time, 0), question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Category, labelTitles, fmt.Sprintf("%.20s", questionDetail.Content), []string{questionDetail.PictureUrl}})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
