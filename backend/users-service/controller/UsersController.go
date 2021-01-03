@@ -203,7 +203,7 @@ func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) 
 	}
 	var page int64
 	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
-	if err != nil || page <= 0 {
+	if err != nil || page < 0 {
 		if err != nil {
 			log.Info(err)
 		}
@@ -368,7 +368,7 @@ func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) 
 	}
 	var page int64
 	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
-	if err != nil || page <= 0 {
+	if err != nil || page < 0 {
 		if err != nil {
 			log.Info(err)
 		}

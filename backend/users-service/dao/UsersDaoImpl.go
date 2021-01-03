@@ -215,7 +215,7 @@ func (u *UsersDaoImpl) FindQuestionsByRaiserOrderByTimeDescPageable(ctx Transact
 	}
 	defer stmt.Close()
 	var res *sql.Rows
-	res, err = stmt.Query(raiser, (pageable.Number-1)*pageable.Size, pageable.Size)
+	res, err = stmt.Query(raiser, pageable.Number*pageable.Size, pageable.Size)
 	if err != nil {
 		return questions, err
 	}

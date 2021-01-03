@@ -338,8 +338,8 @@ func TestControllerNotifications(t *testing.T) {
 		wantStatus int
 		wantRes    service.ResNotifications
 	}{
-		{"Normal", args{page: 1}, http.StatusOK, service.ResNotifications{}},
-		{"WrongPage", args{page: 0}, http.StatusOK, service.ResNotifications{Code: 1}},
+		{"Normal", args{page: 0}, http.StatusOK, service.ResNotifications{}},
+		{"WrongPage", args{page: -1}, http.StatusOK, service.ResNotifications{Code: 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -652,8 +652,8 @@ func TestControllerUserQuestions(t *testing.T) {
 		wantStatus int
 		wantRes    service.ResUserQuestions
 	}{
-		{"Normal", args{page: 1}, http.StatusOK, service.ResUserQuestions{}},
-		{"WrongPage", args{page: 0}, http.StatusOK, service.ResUserQuestions{Code: 1}},
+		{"Normal", args{page: 0}, http.StatusOK, service.ResUserQuestions{}},
+		{"WrongPage", args{page: -1}, http.StatusOK, service.ResUserQuestions{Code: 1}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

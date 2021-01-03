@@ -400,7 +400,7 @@ func TestServiceNotifications(t *testing.T) {
 		args    args
 		wantRes service.ResNotifications
 	}{
-		{"Normal", args{token: token, page: 1}, service.ResNotifications{Code: 0}},
+		{"Normal", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
 		{"WrongToken", args{page: 1}, service.ResNotifications{Code: 2}},
 	}
 	for _, tt := range tests {
@@ -790,12 +790,12 @@ func TestServiceUserQuestions(t *testing.T) {
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
-		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 0, Size: 10}).Return(questions, nil),
 		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(questionDetails[0], nil),
 		mockUsersDao.EXPECT().FindLabelsByQid(gomock.Any(), questions[0].Qid).Return(labels, nil),
 		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
-		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 0, Size: 10}).Return(questions, nil),
 		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(entity.QuestionDetails{}, errors.New("mongo: no rows in result set")),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
@@ -815,9 +815,9 @@ func TestServiceUserQuestions(t *testing.T) {
 		args    args
 		wantRes service.ResUserQuestions
 	}{
-		{"Normal", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 0}},
-		{"QuestionDetailNotFound", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 1}},
-		{"WrongToken", args{uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 2}},
+		{"Normal", args{token: token, uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 0}},
+		{"QuestionDetailNotFound", args{token: token, uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 1}},
+		{"WrongToken", args{uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 2}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
