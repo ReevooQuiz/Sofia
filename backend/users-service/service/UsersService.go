@@ -25,4 +25,5 @@ type UsersService interface {
 	UserQuestions(token string, uid int64, page int64) (res ResUserQuestions, err error)
 	VerificationCode(register bool, email string) (res ResVerificationCode, err error)
 	Verify(email string, code int64) (res ResVerify, err error)
+	WordBan(token string, req ReqWordBan) (res ResWordBan, err error)
 }

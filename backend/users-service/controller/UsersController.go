@@ -42,6 +42,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/userQuestions", u.UserQuestions)
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
+	http.HandleFunc("/wordBan", u.WordBan)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -482,6 +483,25 @@ func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Verify(r.FormValue("email"), code)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqWordBan
+	var res service.ResWordBan
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.WordBan(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}

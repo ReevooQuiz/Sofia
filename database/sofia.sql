@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 03/01/2021 00:52:18
+ Date: 04/01/2021 02:46:00
 */
 
 SET NAMES utf8mb4;
@@ -50,6 +50,15 @@ CREATE TABLE `approve_answers`  (
   CONSTRAINT `approve_answers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `approve_answers_ibfk_2` FOREIGN KEY (`aid`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for ban_words
+-- ----------------------------
+DROP TABLE IF EXISTS `ban_words`;
+CREATE TABLE `ban_words`  (
+  `word` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`word`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for comments

@@ -414,6 +414,17 @@ func (u *UsersDaoImpl) FindUserDetailByUid(ctx TransactionContext, uid int64) (u
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) InsertBanWord(ctx TransactionContext, banWord entity.BanWords) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into ban_words values(?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(banWord.Word)
+	return err
+}
+
 func (u *UsersDaoImpl) InsertFavorite(ctx TransactionContext, favorite entity.Favorites) (fid int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into favorites(uid, title) values(?, ?)")
@@ -485,6 +496,17 @@ func (u *UsersDaoImpl) InsertUserLabel(ctx TransactionContext, userLabel entity.
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(userLabel.Uid, userLabel.Lid)
+	return err
+}
+
+func (u *UsersDaoImpl) RemoveBanWordByWord(ctx TransactionContext, word string) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from ban_words where word = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(word)
 	return err
 }
 

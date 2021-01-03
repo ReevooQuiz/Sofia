@@ -419,6 +419,20 @@ func (mr *MockUsersDaoMockRecorder) Init() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersDao)(nil).Init))
 }
 
+// InsertBanWord mocks base method
+func (m *MockUsersDao) InsertBanWord(arg0 dao.TransactionContext, arg1 entity.BanWords) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertBanWord", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertBanWord indicates an expected call of InsertBanWord
+func (mr *MockUsersDaoMockRecorder) InsertBanWord(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertBanWord", reflect.TypeOf((*MockUsersDao)(nil).InsertBanWord), arg0, arg1)
+}
+
 // InsertFavorite mocks base method
 func (m *MockUsersDao) InsertFavorite(arg0 dao.TransactionContext, arg1 entity.Favorites) (int64, error) {
 	m.ctrl.T.Helper()
@@ -504,6 +518,20 @@ func (m *MockUsersDao) InsertUserLabel(arg0 dao.TransactionContext, arg1 entity.
 func (mr *MockUsersDaoMockRecorder) InsertUserLabel(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUserLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertUserLabel), arg0, arg1)
+}
+
+// RemoveBanWordByWord mocks base method
+func (m *MockUsersDao) RemoveBanWordByWord(arg0 dao.TransactionContext, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveBanWordByWord", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveBanWordByWord indicates an expected call of RemoveBanWordByWord
+func (mr *MockUsersDaoMockRecorder) RemoveBanWordByWord(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveBanWordByWord", reflect.TypeOf((*MockUsersDao)(nil).RemoveBanWordByWord), arg0, arg1)
 }
 
 // RemoveFollowByUidAndFollower mocks base method

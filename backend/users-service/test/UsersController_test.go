@@ -70,7 +70,7 @@ func TestControllerBan(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			requestBody, _ := json.Marshal(tt.args.req)
-			r, _ := http.NewRequest("POST", "/ban", bytes.NewReader(requestBody))
+			r, _ := http.NewRequest("PUT", "/ban", bytes.NewReader(requestBody))
 			r.Header.Set("Authorization", tt.args.token)
 			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -856,6 +856,52 @@ func TestControllerVerify(t *testing.T) {
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
 			var res service.ResVerify
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestControllerWordBan(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().WordBan(gomock.Any(), gomock.Any()).Return(service.ResWordBan{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/wordBan", u.WordBan)
+	type args struct {
+		token string
+		req   service.ReqWordBan
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResWordBan
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResWordBan{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			requestBody, _ := json.Marshal(tt.args.req)
+			r, _ := http.NewRequest("PUT", "/wordBan", bytes.NewReader(requestBody))
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResWordBan
 			_ = json.Unmarshal(responseBody, &res)
 			if res != tt.wantRes {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)

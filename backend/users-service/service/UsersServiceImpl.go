@@ -71,6 +71,11 @@ type ReqRegister struct {
 	Gender   int8   `json:"gender"`
 }
 
+type ReqWordBan struct {
+	Word string `json:"word"`
+	Ban  bool   `json:"ban"`
+}
+
 type ResBan struct {
 	Code int8 `json:"code"`
 }
@@ -156,6 +161,10 @@ type ResVerificationCode struct {
 }
 
 type ResVerify struct {
+	Code int8 `json:"code"`
+}
+
+type ResWordBan struct {
 	Code int8 `json:"code"`
 }
 
@@ -1758,6 +1767,42 @@ func (u *UsersServiceImpl) Verify(email string, code int64) (res ResVerify, err 
 		user.PasswdCode = 0
 	}
 	err = u.usersDao.UpdateUserByUid(ctx, user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) WordBan(token string, req ReqWordBan) (res ResWordBan, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Ban {
+		err = u.usersDao.InsertBanWord(ctx, entity.BanWords{Word: req.Word})
+	} else {
+		err = u.usersDao.RemoveBanWordByWord(ctx, req.Word)
+	}
 	if err != nil {
 		log.Info(err)
 		res.Code = 1

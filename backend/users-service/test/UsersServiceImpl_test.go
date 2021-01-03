@@ -1211,3 +1211,57 @@ func TestServiceVerify(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceWordBan(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.USER},
+	}
+	banWords := []entity.BanWords{
+		{Word: "test"},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertBanWord(gomock.Any(), banWords[0]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().RemoveBanWordByWord(gomock.Any(), banWords[0].Word).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqWordBan
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResWordBan
+	}{
+		{"BanNormal", args{token: token0, req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 0}},
+		{"LiftNormal", args{token: token0, req: service.ReqWordBan{Word: banWords[0].Word, Ban: false}}, service.ResWordBan{Code: 0}},
+		{"NotAdmin", args{token: token1, req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 1}},
+		{"WrongToken", args{req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.WordBan(tt.args.token, tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
