@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
@@ -19,6 +20,16 @@ var (
 
 type UsersDaoImpl struct {
 	db      *sql.DB
+	session *mgo.Session
+}
+
+type Pageable struct {
+	Number int64
+	Size   int64
+}
+
+type TransactionContext struct {
+	sqlTx   *sql.Tx
 	session *mgo.Session
 }
 
@@ -41,12 +52,93 @@ func (u *UsersDaoImpl) Init() (err error) {
 
 func (u *UsersDaoImpl) Destruct() {
 	_ = u.db.Close()
-	u.session.Close()
 }
 
-func (u *UsersDaoImpl) FindLabelByTitle(title string) (label entity.Labels, err error) {
+func (u *UsersDaoImpl) Begin(read bool) (ctx TransactionContext, err error) {
+	var tx *sql.Tx
+	if read {
+		tx, err = u.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	} else {
+		tx, err = u.db.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelSerializable})
+	}
+	if err != nil {
+		return ctx, err
+	}
+	return TransactionContext{tx, u.session.New()}, nil
+}
+
+func (u *UsersDaoImpl) Commit(t *TransactionContext) (err error) {
+	t.session.Close()
+	return t.sqlTx.Commit()
+}
+
+func (u *UsersDaoImpl) Rollback(t *TransactionContext) (err error) {
+	t.session.Close()
+	return t.sqlTx.Rollback()
+}
+
+func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("select * from labels where title = ?")
+	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ? and follower = ?")
+	if err != nil {
+		return follow, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(uid, follower).Scan(&follow.Uid, &follow.Follower, &follow.Time)
+	return follow, err
+}
+
+func (u *UsersDaoImpl) FindFollowsByFollower(ctx TransactionContext, follower int64) (follows []entity.Follows, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from follows where follower = ?")
+	if err != nil {
+		return follows, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(follower)
+	if err != nil {
+		return follows, err
+	}
+	follows = []entity.Follows{}
+	for res.Next() {
+		var follow entity.Follows
+		err = res.Scan(&follow.Uid, &follow.Follower, &follow.Time)
+		if err != nil {
+			return follows, err
+		}
+		follows = append(follows, follow)
+	}
+	return follows, err
+}
+
+func (u *UsersDaoImpl) FindFollowsByUid(ctx TransactionContext, uid int64) (follows []entity.Follows, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ?")
+	if err != nil {
+		return follows, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(uid)
+	if err != nil {
+		return follows, err
+	}
+	follows = []entity.Follows{}
+	for res.Next() {
+		var follow entity.Follows
+		err = res.Scan(&follow.Uid, &follow.Follower, &follow.Time)
+		if err != nil {
+			return follows, err
+		}
+		follows = append(follows, follow)
+	}
+	return follows, err
+}
+
+func (u *UsersDaoImpl) FindLabelByTitle(ctx TransactionContext, title string) (label entity.Labels, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from labels where title = ?")
 	if err != nil {
 		return label, err
 	}
@@ -55,9 +147,92 @@ func (u *UsersDaoImpl) FindLabelByTitle(title string) (label entity.Labels, err 
 	return label, err
 }
 
-func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err error) {
+func (u *UsersDaoImpl) FindLabelsByQid(ctx TransactionContext, qid int64) (labels []entity.Labels, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("select * from users where email = ?")
+	stmt, err = ctx.sqlTx.Prepare("select lid, title from question_labels natural join labels where qid = ?")
+	if err != nil {
+		return labels, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(qid)
+	if err != nil {
+		return labels, err
+	}
+	labels = []entity.Labels{}
+	for res.Next() {
+		var label entity.Labels
+		err = res.Scan(&label.Lid, &label.Title)
+		if err != nil {
+			return labels, err
+		}
+		labels = append(labels, label)
+	}
+	return labels, err
+}
+
+func (u *UsersDaoImpl) FindLabelsByUid(ctx TransactionContext, uid int64) (labels []entity.Labels, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select lid, title from user_labels natural join labels where uid = ?")
+	if err != nil {
+		return labels, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(uid)
+	if err != nil {
+		return labels, err
+	}
+	labels = []entity.Labels{}
+	for res.Next() {
+		var label entity.Labels
+		err = res.Scan(&label.Lid, &label.Title)
+		if err != nil {
+			return labels, err
+		}
+		labels = append(labels, label)
+	}
+	return labels, err
+}
+
+func (u *UsersDaoImpl) FindQuestionDetailByQid(ctx TransactionContext, qid int64) (questionDetail entity.QuestionDetails, err error) {
+	var res []entity.QuestionDetails
+	err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"qid": qid}).All(&res)
+	if err != nil {
+		return questionDetail, err
+	}
+	if len(res) == 0 {
+		return questionDetail, errors.New("mongo: no rows in result set")
+	}
+	return res[0], err
+}
+
+func (u *UsersDaoImpl) FindQuestionsByRaiserOrderByTimeDescPageable(ctx TransactionContext, raiser int64, pageable Pageable) (questions []entity.Questions, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from questions where raiser = ? order by time desc limit ?, ?")
+	if err != nil {
+		return questions, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(raiser, (pageable.Number-1)*pageable.Size, pageable.Size)
+	if err != nil {
+		return questions, err
+	}
+	for res.Next() {
+		var question entity.Questions
+		err = res.Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned)
+		if err != nil {
+			return questions, err
+		}
+		questions = append(questions, question)
+	}
+	return questions, err
+}
+
+func (u *UsersDaoImpl) FindUserByEmail(ctx TransactionContext, email string) (user entity.Users, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from users where email = ?")
 	if err != nil {
 		return user, err
 	}
@@ -66,9 +241,9 @@ func (u *UsersDaoImpl) FindUserByEmail(email string) (user entity.Users, err err
 	return user, err
 }
 
-func (u *UsersDaoImpl) FindUserByName(name string) (user entity.Users, err error) {
+func (u *UsersDaoImpl) FindUserByName(ctx TransactionContext, name string) (user entity.Users, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("select * from users where name = ?")
+	stmt, err = ctx.sqlTx.Prepare("select * from users where name = ?")
 	if err != nil {
 		return user, err
 	}
@@ -77,9 +252,9 @@ func (u *UsersDaoImpl) FindUserByName(name string) (user entity.Users, err error
 	return user, err
 }
 
-func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8) (user entity.Users, err error) {
+func (u *UsersDaoImpl) FindUserByOidAndAccountType(ctx TransactionContext, oid string, accountType int8) (user entity.Users, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("select * from users where oid = ? and account_type = ?")
+	stmt, err = ctx.sqlTx.Prepare("select * from users where oid = ? and account_type = ?")
 	if err != nil {
 		return user, err
 	}
@@ -88,9 +263,9 @@ func (u *UsersDaoImpl) FindUserByOidAndAccountType(oid string, accountType int8)
 	return user, err
 }
 
-func (u *UsersDaoImpl) FindUserByUid(uid int64) (user entity.Users, err error) {
+func (u *UsersDaoImpl) FindUserByUid(ctx TransactionContext, uid int64) (user entity.Users, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("select * from users where uid = ?")
+	stmt, err = ctx.sqlTx.Prepare("select * from users where uid = ?")
 	if err != nil {
 		return user, err
 	}
@@ -99,9 +274,9 @@ func (u *UsersDaoImpl) FindUserByUid(uid int64) (user entity.Users, err error) {
 	return user, err
 }
 
-func (u *UsersDaoImpl) FindUserDetailByUid(uid int64) (userDetail entity.UserDetails, err error) {
+func (u *UsersDaoImpl) FindUserDetailByUid(ctx TransactionContext, uid int64) (userDetail entity.UserDetails, err error) {
 	var res []entity.UserDetails
-	err = u.session.DB("sofia").C("user_details").Find(bson.M{"uid": uid}).All(&res)
+	err = ctx.session.DB("sofia").C("user_details").Find(bson.M{"uid": uid}).All(&res)
 	if err != nil {
 		return userDetail, err
 	}
@@ -111,9 +286,9 @@ func (u *UsersDaoImpl) FindUserDetailByUid(uid int64) (userDetail entity.UserDet
 	return res[0], err
 }
 
-func (u *UsersDaoImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err error) {
+func (u *UsersDaoImpl) InsertFavorite(ctx TransactionContext, favorite entity.Favorites) (fid int64, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into favorites(uid, title) values(?, ?)")
+	stmt, err = ctx.sqlTx.Prepare("insert into favorites(uid, title) values(?, ?)")
 	if err != nil {
 		return fid, err
 	}
@@ -127,9 +302,20 @@ func (u *UsersDaoImpl) InsertFavorite(favorite entity.Favorites) (fid int64, err
 	return fid, err
 }
 
-func (u *UsersDaoImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
+func (u *UsersDaoImpl) InsertFollow(ctx TransactionContext, follow entity.Follows) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into labels(title) values(?)")
+	stmt, err = ctx.sqlTx.Prepare("insert into follows values(?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(follow.Uid, follow.Follower, follow.Time)
+	return err
+}
+
+func (u *UsersDaoImpl) InsertLabel(ctx TransactionContext, label entity.Labels) (lid int64, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into labels(title) values(?)")
 	if err != nil {
 		return lid, err
 	}
@@ -143,9 +329,9 @@ func (u *UsersDaoImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
 	return lid, err
 }
 
-func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid int64, err error) {
+func (u *UsersDaoImpl) InsertUser(ctx TransactionContext, user entity.Users) (uid int64, err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, question_count, answer_count, like_count, approval_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	stmt, err = ctx.sqlTx.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, question_count, answer_count, like_count, approval_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return uid, err
 	}
@@ -159,13 +345,13 @@ func (u *UsersDaoImpl) InsertUser(user entity.Users) (uid int64, err error) {
 	return uid, err
 }
 
-func (u *UsersDaoImpl) InsertUserDetail(userDetail entity.UserDetails) (err error) {
-	return u.session.DB("sofia").C("user_details").Insert(userDetail)
+func (u *UsersDaoImpl) InsertUserDetail(ctx TransactionContext, userDetail entity.UserDetails) (err error) {
+	return ctx.session.DB("sofia").C("user_details").Insert(userDetail)
 }
 
-func (u *UsersDaoImpl) InsertUserLabel(userLabel entity.UserLabels) (err error) {
+func (u *UsersDaoImpl) InsertUserLabel(ctx TransactionContext, userLabel entity.UserLabels) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("insert into user_labels values(?, ?)")
+	stmt, err = ctx.sqlTx.Prepare("insert into user_labels values(?, ?)")
 	if err != nil {
 		return err
 	}
@@ -174,9 +360,20 @@ func (u *UsersDaoImpl) InsertUserLabel(userLabel entity.UserLabels) (err error) 
 	return err
 }
 
-func (u *UsersDaoImpl) RemoveUserLabelsByUid(uid int64) (err error) {
+func (u *UsersDaoImpl) RemoveFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("delete from user_labels where uid = ?")
+	stmt, err = ctx.sqlTx.Prepare("delete from follows where uid = ? and follower = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(uid, follower)
+	return err
+}
+
+func (u *UsersDaoImpl) RemoveUserLabelsByUid(ctx TransactionContext, uid int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from user_labels where uid = ?")
 	if err != nil {
 		return err
 	}
@@ -185,9 +382,9 @@ func (u *UsersDaoImpl) RemoveUserLabelsByUid(uid int64) (err error) {
 	return err
 }
 
-func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
+func (u *UsersDaoImpl) UpdateUserByUid(ctx TransactionContext, user entity.Users) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = u.db.Prepare("update users set oid = ?, name = ?, nickname = ?, salt = ?, hash_password = ?, email = ?, gender = ?, profile= ?, role = ?, account_type = ?, active_code = ?, passwd_code = ?, exp = ?, follower_count = ?, following_count = ?, question_count = ?, answer_count = ?, like_count = ?, approval_count = ?, notification_time = ? where uid = ?")
+	stmt, err = ctx.sqlTx.Prepare("update users set oid = ?, name = ?, nickname = ?, salt = ?, hash_password = ?, email = ?, gender = ?, profile= ?, role = ?, account_type = ?, active_code = ?, passwd_code = ?, exp = ?, follower_count = ?, following_count = ?, question_count = ?, answer_count = ?, like_count = ?, approval_count = ?, notification_time = ? where uid = ?")
 	if err != nil {
 		return err
 	}
@@ -196,6 +393,6 @@ func (u *UsersDaoImpl) UpdateUser(user entity.Users) (err error) {
 	return err
 }
 
-func (u *UsersDaoImpl) UpdateUserDetail(userDetail entity.UserDetails) (err error) {
-	return u.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
+func (u *UsersDaoImpl) UpdateUserDetailByUid(ctx TransactionContext, userDetail entity.UserDetails) (err error) {
+	return ctx.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
 }

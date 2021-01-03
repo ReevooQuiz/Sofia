@@ -11,7 +11,7 @@
  Target Server Version : 50725
  File Encoding         : 65001
 
- Date: 17/12/2020 01:39:38
+ Date: 03/01/2021 00:52:18
 */
 
 SET NAMES utf8mb4;
@@ -44,6 +44,7 @@ DROP TABLE IF EXISTS `approve_answers`;
 CREATE TABLE `approve_answers`  (
   `uid` bigint(20) NOT NULL,
   `aid` bigint(20) NOT NULL,
+  `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE,
   INDEX `aid`(`aid`) USING BTREE,
   CONSTRAINT `approve_answers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
@@ -109,16 +110,17 @@ CREATE TABLE `favorites`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for followers
+-- Table structure for follows
 -- ----------------------------
-DROP TABLE IF EXISTS `followers`;
-CREATE TABLE `followers`  (
+DROP TABLE IF EXISTS `follows`;
+CREATE TABLE `follows`  (
   `uid` bigint(20) NOT NULL,
   `follower` bigint(20) NOT NULL,
+  `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `follower`) USING BTREE,
   INDEX `follower`(`follower`) USING BTREE,
-  CONSTRAINT `followers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `followers_ibfk_2` FOREIGN KEY (`follower`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  CONSTRAINT `follows_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `follows_ibfk_2` FOREIGN KEY (`follower`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -150,6 +152,7 @@ DROP TABLE IF EXISTS `like_answers`;
 CREATE TABLE `like_answers`  (
   `uid` bigint(20) NOT NULL,
   `aid` bigint(20) NOT NULL,
+  `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE,
   INDEX `aid`(`aid`) USING BTREE,
   CONSTRAINT `like_answers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,

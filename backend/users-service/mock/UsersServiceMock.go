@@ -34,6 +34,21 @@ func (m *MockUsersService) EXPECT() *MockUsersServiceMockRecorder {
 	return m.recorder
 }
 
+// CheckToken mocks base method
+func (m *MockUsersService) CheckToken(arg0 string) (service.ResCheckToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckToken", arg0)
+	ret0, _ := ret[0].(service.ResCheckToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckToken indicates an expected call of CheckToken
+func (mr *MockUsersServiceMockRecorder) CheckToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckToken", reflect.TypeOf((*MockUsersService)(nil).CheckToken), arg0)
+}
+
 // Destruct mocks base method
 func (m *MockUsersService) Destruct() {
 	m.ctrl.T.Helper()
@@ -44,6 +59,66 @@ func (m *MockUsersService) Destruct() {
 func (mr *MockUsersServiceMockRecorder) Destruct() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockUsersService)(nil).Destruct))
+}
+
+// Follow mocks base method
+func (m *MockUsersService) Follow(arg0 string, arg1 int64, arg2 bool) (service.ResFollow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Follow", arg0, arg1, arg2)
+	ret0, _ := ret[0].(service.ResFollow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Follow indicates an expected call of Follow
+func (mr *MockUsersServiceMockRecorder) Follow(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Follow", reflect.TypeOf((*MockUsersService)(nil).Follow), arg0, arg1, arg2)
+}
+
+// Followed mocks base method
+func (m *MockUsersService) Followed(arg0 string, arg1 int64) (service.ResFollowed, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Followed", arg0, arg1)
+	ret0, _ := ret[0].(service.ResFollowed)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Followed indicates an expected call of Followed
+func (mr *MockUsersServiceMockRecorder) Followed(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Followed", reflect.TypeOf((*MockUsersService)(nil).Followed), arg0, arg1)
+}
+
+// Followers mocks base method
+func (m *MockUsersService) Followers(arg0 string, arg1 int64) (service.ResFollowers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Followers", arg0, arg1)
+	ret0, _ := ret[0].(service.ResFollowers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Followers indicates an expected call of Followers
+func (mr *MockUsersServiceMockRecorder) Followers(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Followers", reflect.TypeOf((*MockUsersService)(nil).Followers), arg0, arg1)
+}
+
+// InfoList mocks base method
+func (m *MockUsersService) InfoList(arg0 service.ReqInfoList) (service.ResInfoList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InfoList", arg0)
+	ret0, _ := ret[0].(service.ResInfoList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InfoList indicates an expected call of InfoList
+func (mr *MockUsersServiceMockRecorder) InfoList(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InfoList", reflect.TypeOf((*MockUsersService)(nil).InfoList), arg0)
 }
 
 // Init mocks base method
@@ -79,6 +154,21 @@ func (mr *MockUsersServiceMockRecorder) Login(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockUsersService)(nil).Login), arg0)
 }
 
+// Notifications mocks base method
+func (m *MockUsersService) Notifications(arg0 string, arg1 int64) (service.ResNotifications, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Notifications", arg0, arg1)
+	ret0, _ := ret[0].(service.ResNotifications)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Notifications indicates an expected call of Notifications
+func (mr *MockUsersServiceMockRecorder) Notifications(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Notifications", reflect.TypeOf((*MockUsersService)(nil).Notifications), arg0, arg1)
+}
+
 // OAuthGithub mocks base method
 func (m *MockUsersService) OAuthGithub(arg0, arg1 string) (service.ResOAuthGithub, error) {
 	m.ctrl.T.Helper()
@@ -109,6 +199,21 @@ func (mr *MockUsersServiceMockRecorder) Passwd(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Passwd", reflect.TypeOf((*MockUsersService)(nil).Passwd), arg0, arg1)
 }
 
+// PublicInfoGet mocks base method
+func (m *MockUsersService) PublicInfoGet(arg0 string, arg1 int64) (service.ResPublicInfoGet, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PublicInfoGet", arg0, arg1)
+	ret0, _ := ret[0].(service.ResPublicInfoGet)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PublicInfoGet indicates an expected call of PublicInfoGet
+func (mr *MockUsersServiceMockRecorder) PublicInfoGet(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublicInfoGet", reflect.TypeOf((*MockUsersService)(nil).PublicInfoGet), arg0, arg1)
+}
+
 // PublicInfoPut mocks base method
 func (m *MockUsersService) PublicInfoPut(arg0 string, arg1 service.ReqPublicInfoPut) (service.ResPublicInfoPut, error) {
 	m.ctrl.T.Helper()
@@ -124,6 +229,21 @@ func (mr *MockUsersServiceMockRecorder) PublicInfoPut(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublicInfoPut", reflect.TypeOf((*MockUsersService)(nil).PublicInfoPut), arg0, arg1)
 }
 
+// RefreshToken mocks base method
+func (m *MockUsersService) RefreshToken(arg0 service.ReqRefreshToken) (service.ResRefreshToken, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RefreshToken", arg0)
+	ret0, _ := ret[0].(service.ResRefreshToken)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RefreshToken indicates an expected call of RefreshToken
+func (mr *MockUsersServiceMockRecorder) RefreshToken(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshToken", reflect.TypeOf((*MockUsersService)(nil).RefreshToken), arg0)
+}
+
 // Register mocks base method
 func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegister, error) {
 	m.ctrl.T.Helper()
@@ -137,6 +257,21 @@ func (m *MockUsersService) Register(arg0 service.ReqRegister) (service.ResRegist
 func (mr *MockUsersServiceMockRecorder) Register(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockUsersService)(nil).Register), arg0)
+}
+
+// UserQuestions mocks base method
+func (m *MockUsersService) UserQuestions(arg0 string, arg1, arg2 int64) (service.ResUserQuestions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserQuestions", arg0, arg1, arg2)
+	ret0, _ := ret[0].(service.ResUserQuestions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserQuestions indicates an expected call of UserQuestions
+func (mr *MockUsersServiceMockRecorder) UserQuestions(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserQuestions", reflect.TypeOf((*MockUsersService)(nil).UserQuestions), arg0, arg1, arg2)
 }
 
 // VerificationCode mocks base method
