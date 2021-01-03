@@ -25,6 +25,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		return server
 	}
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/ban", u.Ban)
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
@@ -52,6 +53,25 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 
 func (u *UsersController) Destruct() {
 	u.usersService.Destruct()
+}
+
+func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqBan
+	var res service.ResBan
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Ban(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {

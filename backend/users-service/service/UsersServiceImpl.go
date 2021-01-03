@@ -29,6 +29,11 @@ type UsersServiceImpl struct {
 	usersDao dao.UsersDao
 }
 
+type ReqBan struct {
+	Uid string `json:"uid"`
+	Ban bool   `json:"ban"`
+}
+
 type ReqInfoList struct {
 	Uids []int64 `json:"uids"`
 }
@@ -64,6 +69,10 @@ type ReqRegister struct {
 	Email    string `json:"email"`
 	Icon     string `json:"icon"`
 	Gender   int8   `json:"gender"`
+}
+
+type ResBan struct {
+	Code int8 `json:"code"`
 }
 
 type ResCheckToken struct {
@@ -322,6 +331,56 @@ func (u *UsersServiceImpl) Init(usersDao ...dao.UsersDao) (err error) {
 
 func (u *UsersServiceImpl) Destruct() {
 	u.usersDao.Destruct()
+}
+
+func (u *UsersServiceImpl) Ban(token string, req ReqBan) (res ResBan, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var uid int64
+	uid, err = strconv.ParseInt(req.Uid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	user, err = u.usersDao.FindUserByUid(ctx, uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Ban {
+		user.Role = entity.DISABLE
+	} else {
+		user.Role = entity.USER
+	}
+	err = u.usersDao.UpdateUserByUid(ctx, user)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {

@@ -30,6 +30,64 @@ func TestServiceInit(t *testing.T) {
 	}
 }
 
+func TestServiceBan(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.USER},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(users[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[2]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[2].Uid).Return(users[2], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[1]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqBan
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResBan
+	}{
+		{"BanNormal", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 0}},
+		{"LiftNormal", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[2].Uid, 10), Ban: false}}, service.ResBan{Code: 0}},
+		{"NotAdmin", args{token: token1, req: service.ReqBan{Uid: strconv.FormatInt(users[0].Uid, 10), Ban: true}}, service.ResBan{Code: 1}},
+		{"UserNotFound", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 1}},
+		{"WrongToken", args{req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Ban(tt.args.token, tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceCheckToken(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)

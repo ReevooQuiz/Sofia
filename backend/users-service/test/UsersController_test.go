@@ -43,6 +43,52 @@ func TestControllerInit(t *testing.T) {
 	}
 }
 
+func TestControllerBan(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Ban(gomock.Any(), gomock.Any()).Return(service.ResBan{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/ban", u.Ban)
+	type args struct {
+		token string
+		req   service.ReqBan
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResBan
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResBan{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			requestBody, _ := json.Marshal(tt.args.req)
+			r, _ := http.NewRequest("POST", "/ban", bytes.NewReader(requestBody))
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResBan
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerCheckToken(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
@@ -131,7 +177,7 @@ func TestControllerFollow(t *testing.T) {
 			_, _ = w.Body.Read(responseBody)
 			var res service.ResFollow
 			_ = json.Unmarshal(responseBody, &res)
-			if res.Code != tt.wantRes.Code {
+			if res != tt.wantRes {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})
@@ -174,7 +220,7 @@ func TestControllerFollowed(t *testing.T) {
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
-			var res service.ResFollow
+			var res service.ResFollowed
 			_ = json.Unmarshal(responseBody, &res)
 			if res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
@@ -219,7 +265,7 @@ func TestControllerFollowers(t *testing.T) {
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
-			var res service.ResFollow
+			var res service.ResFollowers
 			_ = json.Unmarshal(responseBody, &res)
 			if res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
@@ -353,7 +399,7 @@ func TestControllerNotifications(t *testing.T) {
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
-			var res service.ResLogin
+			var res service.ResNotifications
 			_ = json.Unmarshal(responseBody, &res)
 			if res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)

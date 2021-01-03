@@ -34,6 +34,21 @@ func (m *MockUsersService) EXPECT() *MockUsersServiceMockRecorder {
 	return m.recorder
 }
 
+// Ban mocks base method
+func (m *MockUsersService) Ban(arg0 string, arg1 service.ReqBan) (service.ResBan, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Ban", arg0, arg1)
+	ret0, _ := ret[0].(service.ResBan)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Ban indicates an expected call of Ban
+func (mr *MockUsersServiceMockRecorder) Ban(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ban", reflect.TypeOf((*MockUsersService)(nil).Ban), arg0, arg1)
+}
+
 // CheckToken mocks base method
 func (m *MockUsersService) CheckToken(arg0 string) (service.ResCheckToken, error) {
 	m.ctrl.T.Helper()
