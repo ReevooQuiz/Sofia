@@ -30,6 +30,64 @@ func TestServiceInit(t *testing.T) {
 	}
 }
 
+func TestServiceBan(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.USER},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(users[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[2]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[2].Uid).Return(users[2], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), users[1]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqBan
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResBan
+	}{
+		{"BanNormal", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 0}},
+		{"LiftNormal", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[2].Uid, 10), Ban: false}}, service.ResBan{Code: 0}},
+		{"NotAdmin", args{token: token1, req: service.ReqBan{Uid: strconv.FormatInt(users[0].Uid, 10), Ban: true}}, service.ResBan{Code: 1}},
+		{"UserNotFound", args{token: token0, req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 1}},
+		{"WrongToken", args{req: service.ReqBan{Uid: strconv.FormatInt(users[1].Uid, 10), Ban: true}}, service.ResBan{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Ban(tt.args.token, tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceCheckToken(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
@@ -377,13 +435,123 @@ func TestServiceNotifications(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
 	users := []entity.Users{
-		{Uid: 1, Role: entity.USER},
+		{Uid: 1, Role: entity.USER, NotificationTime: 1e9},
+	}
+	notifications := [][]dao.Notifications{
+		{{Type: 0}, {Type: 0}, {Type: 1}, {Type: 1}, {Type: 2}, {Type: 2}, {Type: 3}, {Type: 3}, {Type: 4}, {Type: 4}, {Type: 5}, {Type: 5}},
+		{{Type: 0}},
+		{{Type: 1}},
+		{{Type: 2}},
+		{{Type: 3}},
+		{{Type: 4}},
+		{{Type: 5}},
+		{},
+		{{Type: 6}},
+	}
+	answers := []entity.Answers{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
+	}
+	likeAnswers := []entity.LikeAnswers{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
+	}
+	approveAnswers := []entity.ApproveAnswers{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
+	}
+	comments := []entity.Comments{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
+	}
+	criticisms := []entity.Criticisms{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
+	}
+	follows := []entity.Follows{
+		{Time: 1e9 + 1},
+		{Time: 1e9 - 1},
 	}
 	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[0], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), notifications[0][0].Id0).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), notifications[0][1].Id0).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), notifications[0][2].Id0, notifications[0][2].Id1).Return(likeAnswers[0], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), likeAnswers[0].Aid).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), likeAnswers[0].Aid).Return(entity.AnswerDetails{}, nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), notifications[0][3].Id0, notifications[0][3].Id1).Return(likeAnswers[0], nil),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), notifications[0][4].Id0, notifications[0][4].Id1).Return(approveAnswers[0], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), approveAnswers[0].Aid).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), approveAnswers[0].Aid).Return(entity.AnswerDetails{}, nil),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), notifications[0][5].Id0, notifications[0][5].Id1).Return(approveAnswers[0], nil),
+		mockUsersDao.EXPECT().FindCommentByCmid(gomock.Any(), notifications[0][6].Id0).Return(comments[0], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), comments[0].Aid).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), comments[0].Aid).Return(entity.AnswerDetails{}, nil),
+		mockUsersDao.EXPECT().FindCommentByCmid(gomock.Any(), notifications[0][7].Id0).Return(comments[0], nil),
+		mockUsersDao.EXPECT().FindCriticismByCtid(gomock.Any(), notifications[0][8].Id0).Return(criticisms[0], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), criticisms[0].Aid).Return(answers[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), criticisms[0].Aid).Return(entity.AnswerDetails{}, nil),
+		mockUsersDao.EXPECT().FindCriticismByCtid(gomock.Any(), notifications[0][9].Id0).Return(criticisms[0], nil),
+		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), users[0].Uid, notifications[0][10].Id0).Return(follows[0], nil),
+		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), users[0].Uid, notifications[0][11].Id0).Return(follows[0], nil),
 		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[1], nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), notifications[1][0].Id0).Return(answers[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[2], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), notifications[2][0].Id0, notifications[2][0].Id1).Return(likeAnswers[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[3], nil),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), notifications[3][0].Id0, notifications[3][0].Id1).Return(approveAnswers[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[4], nil),
+		mockUsersDao.EXPECT().FindCommentByCmid(gomock.Any(), notifications[4][0].Id0).Return(comments[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[5], nil),
+		mockUsersDao.EXPECT().FindCriticismByCtid(gomock.Any(), notifications[5][0].Id0).Return(criticisms[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[6], nil),
+		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), users[0].Uid, notifications[6][0].Id0).Return(follows[1], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[7], nil),
+		mockUsersDao.EXPECT().UpdateUserByUid(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindNotificationsByUidPageable(gomock.Any(), users[0].Uid, dao.Pageable{Size: 10}).Return(notifications[8], nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Destruct(),
@@ -400,8 +568,17 @@ func TestServiceNotifications(t *testing.T) {
 		args    args
 		wantRes service.ResNotifications
 	}{
-		{"Normal", args{token: token, page: 1}, service.ResNotifications{Code: 0}},
-		{"WrongToken", args{page: 1}, service.ResNotifications{Code: 2}},
+		{"Normal", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn0", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn1", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn2", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn3", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn4", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalFinishIn5", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"NormalAndLenLessThan10", args{token: token, page: 0}, service.ResNotifications{Code: 0}},
+		{"UserNotFound", args{token: token, page: 0}, service.ResNotifications{Code: 1}},
+		{"WrongType", args{token: token, page: 0}, service.ResNotifications{Code: 1}},
+		{"WrongToken", args{page: 0}, service.ResNotifications{Code: 2}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -769,6 +946,102 @@ func TestServiceRegister(t *testing.T) {
 	}
 }
 
+func TestServiceUserAnswers(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+		{Uid: 2},
+	}
+	answers := []entity.Answers{
+		{Aid: 1},
+	}
+	answerDetails := []entity.AnswerDetails{
+		{Aid: 1},
+	}
+	questions := []entity.Questions{
+		{Qid: 1},
+	}
+	questionDetails := []entity.QuestionDetails{
+		{Qid: 1},
+	}
+	labels := []entity.Labels{
+		{Lid: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(questionDetails[0], nil),
+		mockUsersDao.EXPECT().FindLabelsByUid(gomock.Any(), users[0].Uid).Return(labels, nil),
+		mockUsersDao.EXPECT().FindLabelsByQid(gomock.Any(), answers[0].Qid).Return(labels, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(entity.AnswerDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(entity.Questions{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindAnswersByAnswererOrderByTimeDescPageable(gomock.Any(), users[1].Uid, dao.Pageable{Size: 10}).Return(answers, nil),
+		mockUsersDao.EXPECT().FindAnswerDetailByAid(gomock.Any(), answers[0].Aid).Return(answerDetails[0], nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindApproveAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[0].Aid).Return(entity.ApproveAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), answers[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), answers[0].Qid).Return(entity.QuestionDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		uid   int64
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResUserAnswers
+	}{
+		{"Normal", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 0}},
+		{"UserNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"AnswerDetailNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"QuestionNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"QuestionDetailNotFound", args{token: token, uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 1}},
+		{"WrongToken", args{uid: users[1].Uid, page: 0}, service.ResUserAnswers{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.UserAnswers(tt.args.token, tt.args.uid, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceUserQuestions(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
@@ -790,12 +1063,12 @@ func TestServiceUserQuestions(t *testing.T) {
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
-		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 0, Size: 10}).Return(questions, nil),
 		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(questionDetails[0], nil),
 		mockUsersDao.EXPECT().FindLabelsByQid(gomock.Any(), questions[0].Qid).Return(labels, nil),
 		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
-		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 1, Size: 10}).Return(questions, nil),
+		mockUsersDao.EXPECT().FindQuestionsByRaiserOrderByTimeDescPageable(gomock.Any(), users[0].Uid, dao.Pageable{Number: 0, Size: 10}).Return(questions, nil),
 		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), questions[0].Qid).Return(entity.QuestionDetails{}, errors.New("mongo: no rows in result set")),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
@@ -815,9 +1088,9 @@ func TestServiceUserQuestions(t *testing.T) {
 		args    args
 		wantRes service.ResUserQuestions
 	}{
-		{"Normal", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 0}},
-		{"QuestionDetailNotFound", args{token: token, uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 1}},
-		{"WrongToken", args{uid: users[0].Uid, page: 1}, service.ResUserQuestions{Code: 2}},
+		{"Normal", args{token: token, uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 0}},
+		{"QuestionDetailNotFound", args{token: token, uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 1}},
+		{"WrongToken", args{uid: users[0].Uid, page: 0}, service.ResUserQuestions{Code: 2}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -933,6 +1206,60 @@ func TestServiceVerify(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if res, _ := u.Verify(tt.args.email, tt.args.code); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestServiceWordBan(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.USER},
+	}
+	banWords := []entity.BanWords{
+		{Word: "test"},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertBanWord(gomock.Any(), banWords[0]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().RemoveBanWordByWord(gomock.Any(), banWords[0].Word).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqWordBan
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResWordBan
+	}{
+		{"BanNormal", args{token: token0, req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 0}},
+		{"LiftNormal", args{token: token0, req: service.ReqWordBan{Word: banWords[0].Word, Ban: false}}, service.ResWordBan{Code: 0}},
+		{"NotAdmin", args{token: token1, req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 1}},
+		{"WrongToken", args{req: service.ReqWordBan{Word: banWords[0].Word, Ban: true}}, service.ResWordBan{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.WordBan(tt.args.token, tt.args.req); res != tt.wantRes {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})

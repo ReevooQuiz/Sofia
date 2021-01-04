@@ -25,6 +25,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		return server
 	}
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/ban", u.Ban)
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
@@ -37,9 +38,11 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/publicInfo", u.PublicInfo)
 	http.HandleFunc("/refreshToken", u.RefreshToken)
 	http.HandleFunc("/register", u.Register)
+	http.HandleFunc("/userAnswers", u.UserAnswers)
 	http.HandleFunc("/userQuestions", u.UserQuestions)
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
+	http.HandleFunc("/wordBan", u.WordBan)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -51,6 +54,25 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 
 func (u *UsersController) Destruct() {
 	u.usersService.Destruct()
+}
+
+func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqBan
+	var res service.ResBan
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Ban(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +225,7 @@ func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) 
 	}
 	var page int64
 	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
-	if err != nil || page <= 0 {
+	if err != nil || page < 0 {
 		if err != nil {
 			log.Info(err)
 		}
@@ -347,6 +369,44 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(object)
 }
 
+func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
+	var res service.ResUserAnswers
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var uid int64
+	uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.UserAnswers(r.Header.Get("Authorization"), uid, page)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
 func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) {
 	var res service.ResUserQuestions
 	err := r.ParseForm()
@@ -368,7 +428,7 @@ func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) 
 	}
 	var page int64
 	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
-	if err != nil || page <= 0 {
+	if err != nil || page < 0 {
 		if err != nil {
 			log.Info(err)
 		}
@@ -423,6 +483,25 @@ func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Verify(r.FormValue("email"), code)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqWordBan
+	var res service.ResWordBan
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.WordBan(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}
