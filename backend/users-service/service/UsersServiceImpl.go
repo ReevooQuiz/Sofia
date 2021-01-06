@@ -283,6 +283,9 @@ type ResultRefreshToken struct {
 	Type         int8   `json:"type"`
 	Role         int8   `json:"role"`
 	Uid          string `json:"uid"`
+	Icon         string `json:"icon"`
+	Name         string `json:"name"`
+	Nickname     string `json:"nickname"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -1586,6 +1589,14 @@ func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToke
 		res.Result.Type = 0
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var userDetail entity.UserDetails
+	userDetail, err = u.usersDao.FindUserDetailByUid(ctx, uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var token string
 	token, err = util.SignToken(user.Uid, user.Role, false)
 	if err != nil {
@@ -1605,6 +1616,9 @@ func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToke
 	res.Code = 0
 	res.Result.Role = user.Role
 	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	res.Result.Icon = userDetail.Icon
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
 	res.Result.Token = token
 	res.Result.RefreshToken = refreshToken
 	return res, u.usersDao.Commit(&ctx)
