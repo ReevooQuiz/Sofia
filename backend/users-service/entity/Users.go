@@ -1,20 +1,20 @@
 package entity
 
 const (
-	MALE = iota
+	MALE int8 = iota
 	FEMALE
 	OTHER
 )
 
 const (
-	ADMIN = iota
+	ADMIN int8 = iota
 	USER
 	DISABLE
 	NOT_ACTIVE
 )
 
 const (
-	SOFIA = iota
+	SOFIA int8 = iota
 	QQ
 	WECHAT
 	GITHUB

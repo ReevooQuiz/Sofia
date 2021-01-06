@@ -26,6 +26,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	}
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/ban", u.Ban)
+	http.HandleFunc("/banned", u.Banned)
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
@@ -68,6 +69,35 @@ func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Ban(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
+	var res service.ResBanned
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Banned(r.Header.Get("Authorization"), page)
 	if err != nil {
 		log.Info(err)
 	}

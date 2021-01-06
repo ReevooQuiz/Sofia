@@ -405,6 +405,21 @@ func (mr *MockUsersDaoMockRecorder) FindUserDetailByUid(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserDetailByUid", reflect.TypeOf((*MockUsersDao)(nil).FindUserDetailByUid), arg0, arg1)
 }
 
+// FindUsersByRolePageable mocks base method
+func (m *MockUsersDao) FindUsersByRolePageable(arg0 dao.TransactionContext, arg1 int8, arg2 dao.Pageable) ([]entity.Users, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindUsersByRolePageable", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]entity.Users)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindUsersByRolePageable indicates an expected call of FindUsersByRolePageable
+func (mr *MockUsersDaoMockRecorder) FindUsersByRolePageable(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUsersByRolePageable", reflect.TypeOf((*MockUsersDao)(nil).FindUsersByRolePageable), arg0, arg1, arg2)
+}
+
 // Init mocks base method
 func (m *MockUsersDao) Init() error {
 	m.ctrl.T.Helper()

@@ -80,6 +80,11 @@ type ResBan struct {
 	Code int8 `json:"code"`
 }
 
+type ResBanned struct {
+	Code   int8           `json:"code"`
+	Result []ResultBanned `json:"result"`
+}
+
 type ResCheckToken struct {
 	Successful bool  `json:"successful"`
 	Uid        int64 `json:"uid"`
@@ -166,6 +171,13 @@ type ResVerify struct {
 
 type ResWordBan struct {
 	Code int8 `json:"code"`
+}
+
+type ResultBanned struct {
+	Uid      string `json:"uid"`
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Icon     string `json:"icon"`
 }
 
 type ResultFollowed struct {
@@ -387,6 +399,50 @@ func (u *UsersServiceImpl) Ban(token string, req ReqBan) (res ResBan, err error)
 		log.Info(err)
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Banned(token string, page int64) (res ResBanned, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var users []entity.Users
+	users, err = u.usersDao.FindUsersByRolePageable(ctx, entity.DISABLE, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultBanned{}
+	for _, user = range users {
+		var userDetail entity.UserDetails
+		userDetail, err = u.usersDao.FindUserDetailByUid(ctx, user.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		res.Result = append(res.Result, ResultBanned{strconv.FormatInt(user.Uid, 10), user.Name, user.Nickname, userDetail.Icon})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
