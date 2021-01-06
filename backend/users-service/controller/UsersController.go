@@ -27,6 +27,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/ban", u.Ban)
 	http.HandleFunc("/banned", u.Banned)
+	http.HandleFunc("/checkSession", u.CheckSession)
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
@@ -99,6 +100,15 @@ func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Banned(r.Header.Get("Authorization"), page)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
+	res, err := u.usersService.CheckSession(r.Header.Get("Authorization"))
 	if err != nil {
 		log.Info(err)
 	}

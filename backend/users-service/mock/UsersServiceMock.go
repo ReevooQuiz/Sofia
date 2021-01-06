@@ -64,6 +64,21 @@ func (mr *MockUsersServiceMockRecorder) Banned(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Banned", reflect.TypeOf((*MockUsersService)(nil).Banned), arg0, arg1)
 }
 
+// CheckSession mocks base method
+func (m *MockUsersService) CheckSession(arg0 string) (service.ResCheckSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckSession", arg0)
+	ret0, _ := ret[0].(service.ResCheckSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckSession indicates an expected call of CheckSession
+func (mr *MockUsersServiceMockRecorder) CheckSession(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckSession", reflect.TypeOf((*MockUsersService)(nil).CheckSession), arg0)
+}
+
 // CheckToken mocks base method
 func (m *MockUsersService) CheckToken(arg0 string) (service.ResCheckToken, error) {
 	m.ctrl.T.Helper()
