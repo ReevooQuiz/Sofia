@@ -16,6 +16,8 @@ import (
 
 const (
 	PageSize = 5
+	answerFields = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
+	questionFields = "qid,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 )
 
 var (
@@ -31,6 +33,12 @@ type QaDaoImpl struct {
 type TransactionContext struct {
 	sqlTx *sql.Tx
 	session *mgo.Session
+}
+
+type AnswerActionInfo struct {
+	Liked      bool
+	Approved   bool
+	Approvable bool
 }
 
 func (q *QaDaoImpl) Commit(t *TransactionContext) (err error) {
@@ -188,7 +196,7 @@ func (q *QaDaoImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (er
 	return err
 }*/
 
-func (q *QaDaoImpl) FindDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails) {
+func (q *QaDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails) {
 	var findErr error
 	var current entity.QuestionDetails
 	for _, v := range questions {
@@ -203,29 +211,19 @@ func (q *QaDaoImpl) FindDetails(ctx TransactionContext, questions []entity.Quest
 	return
 }
 
-/*func (q *QaDaoImpl) FindLabelsByQid(qid int64) (labels []string, err error) {
-	var rows *sql.Rows
-	rows, err = q.db.Query("select title from labels natural join(select lid from question_labels where qid=?)as L", qid)
-	if err != nil {
-		return
-	}
-	var current string
-	for rows.Next() {
-		err = rows.Scan(current)
-		if err != nil {
-			return
+func (q *QaDaoImpl) FindAnswerDetails(ctx TransactionContext, answers []entity.Answers) (answerDetails []entity.AnswerDetails) {
+	var findErr error
+	var current entity.AnswerDetails
+	for _, v := range answers {
+		findErr = ctx.session.DB("sofia").C("answer_details").FindId(v.Aid).One(current)
+		if findErr != nil {
+			log.Info(findErr)
+			answerDetails = append(answerDetails, current)
+		} else {
+			answerDetails = append(answerDetails, entity.AnswerDetails{})
 		}
-		labels = append(labels, current)
 	}
-	return labels, nil
-}*/
-
-func (q *QaDaoImpl) QuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails, err error) {
-	result := make([]entity.QuestionDetails, len(questions))
-	for i, v := range questions {
-		err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"_id": v.Qid}).One(result[i])
-	}
-	return result, nil
+	return
 }
 
 func (q *QaDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Questions, err error) {
@@ -239,6 +237,27 @@ func (q *QaDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Questions, e
 			&it.AnswerCount,
 			&it.ViewCount,
 			&it.FavoriteCount,
+			&it.Time)
+		if err != nil {
+			return
+		}
+		result = append(result, it)
+	}
+	return result, nil
+}
+
+func (q *QaDaoImpl) ParseAnswers(rows *sql.Rows) (result []entity.Answers, err error) {
+	var it entity.Answers
+	for rows.Next() {
+		err = rows.Scan(
+			&it.Aid,
+			&it.Answerer,
+			&it.Qid,
+			&it.ViewCount,
+			&it.CommentCount,
+			&it.CriticismCount,
+			&it.LikeCount,
+			&it.ApprovalCount,
 			&it.Time)
 		if err != nil {
 			return
@@ -268,6 +287,30 @@ func (q *QaDaoImpl) AssignLabels(ctx TransactionContext, questions []entity.Ques
 	return nil
 }
 
+func (q *QaDaoImpl) IncQuestionCount(ctx TransactionContext, uid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update users set question_count=question_count+1 where uid=?", uid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncQuestionCount: uid = ", uid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) IncUserAnswerCount(ctx TransactionContext, uid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update users set answer_count=answer_count+1 where uid=?", uid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncAnswerCount: uid = ", uid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
 func (q *QaDaoImpl) CheckQuestionOwner(ctx TransactionContext, qid int64, uid int64) (result bool, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query("select exists(select*from questions where qid=? and raiser=?)", qid, uid)
@@ -283,6 +326,84 @@ func (q *QaDaoImpl) CheckQuestionOwner(ctx TransactionContext, qid int64, uid in
 		return false, errors.New("sql error - no rows returned from a `select exists(...)`")
 	}
 	return
+}
+
+func (q *QaDaoImpl) CheckAnswerOwner(ctx TransactionContext, aid int64, uid int64) (result bool, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query("select exists(select*from answers where aid=? and answerer=?)", aid, uid)
+	if err != nil {
+		return
+	}
+	if rows.Next() {
+		err = rows.Scan(&result)
+		if err != nil {
+			return
+		}
+	} else {
+		return false, errors.New("sql error - no rows returned from a `select exists(...)`")
+	}
+	return
+}
+
+func (q *QaDaoImpl) GetAnswerActionInfos(ctx TransactionContext, uid int64, qids []int64, aids []int64) (infos []AnswerActionInfo, err error) {
+	infos = make([]AnswerActionInfo, len(aids))
+	var userLabels map[int64]bool = make(map[int64]bool)
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query("select * from user_labels where uid=?", uid)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var id int64
+		err = rows.Scan(&id)
+		if err != nil {
+			return
+		}
+		userLabels[id] = true
+	}
+	for i, v := range aids {
+		rows, err = ctx.sqlTx.Query(`select
+			exists(select*from like_answers where uid=? and aid=?)as liked,
+			exists(select*from approve_answers where uid=? and aid=?)as approved`,
+			uid, v,
+			uid, v)
+		if err != nil {
+			return
+		}
+		if rows.Next() {
+			err = rows.Scan(&infos[i].Liked, &infos[i].Approved)
+			if err != nil {
+				e := rows.Close()
+				if e != nil {
+					log.Warn(e)
+				}
+				return
+			}
+		}
+		e := rows.Close()
+		if e != nil {
+			log.Warn(e)
+		}
+		rows, err = ctx.sqlTx.Query("select lid from question_labels where qid=?", qids[i])
+		if err != nil {
+			return
+		}
+		infos[i].Approvable = true
+		for rows.Next() {
+			var id int64
+			err = rows.Scan(&id)
+			_, ok := userLabels[id]
+			if !ok {
+				infos[i].Approvable = false
+				break
+			}
+		}
+		e = rows.Close()
+		if e != nil {
+			log.Warn(e)
+		}
+	}
+	return infos, nil
 }
 
 func (q *QaDaoImpl) MakeLabels(ctx TransactionContext, titles []string) (labels []int64, err error) {
@@ -408,10 +529,39 @@ func (q *QaDaoImpl) ModifyQuestion(ctx TransactionContext, qid int64, title stri
 		bson.D{{"$set", bson.D{{"content", content}, {"pictureUrl", pictureUrl}, {"head", head}}}})
 }
 
+func (q *QaDaoImpl) AddAnswer(ctx TransactionContext, uid int64, qid int64, content string, pictureUrl string, head string) (aid int64, err error) {
+	// insert into answers
+	var res sql.Result
+	res, err = ctx.sqlTx.Exec(
+		"insert into answers(answerer,qid,comment_count,criticism_count,like_count,approval_count,view_count,time,scanned)values(?,?,0,0,0,0,0,?,0)",
+		uid, qid, time.Now().Unix())
+	if err != nil {
+		return
+	}
+	aid, err = res.LastInsertId()
+	// insert into answer_details
+	var answerDetail entity.AnswerDetails
+	answerDetail.Aid = aid
+	answerDetail.Content = content
+	answerDetail.PictureUrl = pictureUrl
+	answerDetail.Head = head
+	err = ctx.session.DB("sofia").C("answer_details").Insert(answerDetail)
+	if err != nil {
+		return
+	}
+	return aid, nil
+}
+
+func (q *QaDaoImpl) ModifyAnswer(ctx TransactionContext, aid int64, content string, pictureUrl string, head string) (err error) {
+	return ctx.session.DB("sofia").C("answer_details").UpdateId(
+		aid,
+		bson.D{{"$set", bson.D{{"content", content}, {"pictureUrl", pictureUrl}, {"head", head}}}})
+}
+
 func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select * from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q order by time desc limit ?,?",
+		"select " + questionFields + " from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q order by time desc limit ?,?",
 		uid, page*PageSize, PageSize)
 	if err != nil {
 		return
@@ -423,4 +573,81 @@ func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (que
 	}
 	err = q.AssignLabels(ctx, questions)
 	return questions, err
+}
+
+func (q *QaDaoImpl) FindQuestionById(ctx TransactionContext, qid int64) (question []entity.Questions, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query("select " + questionFields + " from questions where qid=?", qid)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	question, err = q.ParseQuestions(rows)
+	if err != nil {
+		return
+	}
+	err = q.AssignLabels(ctx, question)
+	return question, err
+}
+
+func (q *QaDaoImpl) FindAnswerById(ctx TransactionContext, aid int64) (answer []entity.Answers, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query("select " + questionFields + " from answers where aid=?", aid)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	answer, err = q.ParseAnswers(rows)
+	if err != nil {
+		return
+	}
+	return answer, err
+}
+
+func (q *QaDaoImpl) SaveQuestionSkeleton(ctx TransactionContext, question entity.Questions) (err error) {
+	res, err := ctx.sqlTx.Exec(
+		"update questions set title=?,category=?,accepted_answer=?,answer_count=?,view_count=?,favorite_count=?,scanned=?",
+		question.Title, question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Scanned)
+	if err != nil {
+		return
+	}
+	var affected int64
+	affected, err = res.RowsAffected()
+	if err == nil && affected != 1 {
+		log.Warn("SaveQuestionSkeleton: qid = ", question.Qid, ", but affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) SaveAnswerSkeleton(ctx TransactionContext, answer entity.Answers) (err error) {
+	res, err := ctx.sqlTx.Exec(
+		"update answers set view_count=?,comment_count_count=?,criticism_count=?like_count=?,approval_count=?,scanned=?",
+		answer.ViewCount, answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Scanned)
+	if err != nil {
+		return
+	}
+	var affected int64
+	affected, err = res.RowsAffected()
+	if err == nil && affected != 1 {
+		log.Warn("SaveAnswerSkeleton: aid = ", answer.Aid, ", but affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) FindQuestionAnswers(ctx TransactionContext, qid int64, page int64, sort int8) (answers []entity.Answers, err error) {
+	var rows *sql.Rows
+	query := "select " + answerFields + " from answers where qid=? order by "
+	if sort == 1 {
+		query += "like_count desc"
+	} else {
+		query += "time desc"
+	}
+	query += " limit ?,?"
+	rows, err = ctx.sqlTx.Query(query, qid, page * PageSize, PageSize)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	answers, err = q.ParseAnswers(rows)
+	return answers, err
 }

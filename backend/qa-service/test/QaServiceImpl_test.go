@@ -3,6 +3,7 @@ package test
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/SKFE396/qa-service/dao"
 	"github.com/SKFE396/qa-service/entity"
 	"github.com/SKFE396/qa-service/mock"
@@ -293,6 +294,7 @@ func TestAddQuestion(t *testing.T) {
 		mockAddQuestion  bool
 		mockQid          int64
 		mockAddErr       error
+		mockIncQuestionCount bool
 		req              service.ReqQuestionsPost
 		expectedCode     int8
 		expectedResult   interface{}
@@ -310,6 +312,7 @@ func TestAddQuestion(t *testing.T) {
 			mockBannedResult: BannedWords,
 			mockBannedErr:    nil,
 			mockAddQuestion:  true,
+			mockIncQuestionCount: true,
 			mockAddErr:       nil,
 			mockQid:          456,
 			req: service.ReqQuestionsPost{
@@ -503,6 +506,9 @@ func TestAddQuestion(t *testing.T) {
 			if tt.mockAddQuestion {
 				mockQaDao.EXPECT().AddQuestion(gomock.Any(), tt.mockUid, tt.req.Title, tt.req.Content, tt.req.Category, tt.req.Labels, gomock.Any(), gomock.Any()).Return(tt.mockQid, tt.mockAddErr)
 			}
+			if tt.mockIncQuestionCount {
+				mockQaDao.EXPECT().IncQuestionCount(gomock.Any(), tt.mockUid)
+			}
 			if tt.rollback {
 				mockQaDao.EXPECT().Rollback(gomock.Any())
 			}
@@ -530,7 +536,7 @@ func TestModifyQuestion(t *testing.T) {
 	mockQaDao.EXPECT().Init().AnyTimes()
 	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
 	var (
-		longContent = string(make([]byte, service.QuestionContentLengthMax + 1))
+		longContent = string(make([]byte, service.QuestionContentLengthMax+1))
 		BannedWords = []string{"magic"}
 	)
 	var q service.QaServiceImpl
@@ -585,270 +591,270 @@ func TestModifyQuestion(t *testing.T) {
 			commit:         true,
 		},
 		{
-			name: "Invalid Qid",
-			token:"token",
-			mockParseToken: false,
+			name:                   "Invalid Qid",
+			token:                  "token",
+			mockParseToken:         false,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "234ihu",
-				Title: "title",
-				Content: "content",
+				Qid:      "234ihu",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"main"},
+				Labels:   []string{"main"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": UnknownError},
-			rollback: false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name: "Failed Token",
-			token:"token",
-			qid: 234,
-			mockParseToken: true,
-			parseTokenSuc: false,
-			parseTokenUid: 0,
-			parseTokenRole: service.USER,
+			name:                   "Failed Token",
+			token:                  "token",
+			qid:                    234,
+			mockParseToken:         true,
+			parseTokenSuc:          false,
+			parseTokenUid:          0,
+			parseTokenRole:         service.USER,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "234",
-				Title: "title",
-				Content: "content",
+				Qid:      "234",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"main"},
+				Labels:   []string{"main"},
 			},
-			expectedCode: service.Expired,
+			expectedCode:   service.Expired,
 			expectedResult: nil,
-			rollback: false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name: "Long Title",
-			token:"token",
-			qid:456,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 4,
-			parseTokenRole: service.ADMIN,
+			name:                   "Long Title",
+			token:                  "token",
+			qid:                    456,
+			mockParseToken:         true,
+			parseTokenSuc:          true,
+			parseTokenUid:          4,
+			parseTokenRole:         service.ADMIN,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "123456789012345678901234567890123",
-				Content: "content",
+				Qid:      "456",
+				Title:    "123456789012345678901234567890123",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"main"},
+				Labels:   []string{"main"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": ConstraintsViolated},
-			rollback:false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name: "Long Content",
-			token:"token",
-			qid:456,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 4,
-			parseTokenRole: service.ADMIN,
+			name:                   "Long Content",
+			token:                  "token",
+			qid:                    456,
+			mockParseToken:         true,
+			parseTokenSuc:          true,
+			parseTokenUid:          4,
+			parseTokenRole:         service.ADMIN,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: longContent,
+				Qid:      "456",
+				Title:    "title",
+				Content:  longContent,
 				Category: "life",
-				Labels: []string{"main"},
+				Labels:   []string{"main"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": ConstraintsViolated},
-			rollback:false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name: "Excessive Labels",
-			token:"token",
-			qid:456,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 4,
-			parseTokenRole: service.ADMIN,
+			name:                   "Excessive Labels",
+			token:                  "token",
+			qid:                    456,
+			mockParseToken:         true,
+			parseTokenSuc:          true,
+			parseTokenUid:          4,
+			parseTokenRole:         service.ADMIN,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "content",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"1", "2", "3", "4", "5", "6"},
+				Labels:   []string{"1", "2", "3", "4", "5", "6"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": ConstraintsViolated},
-			rollback:false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name:"Long Label",
-			token:"token",
-			qid:456,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 4,
-			parseTokenRole: service.ADMIN,
+			name:                   "Long Label",
+			token:                  "token",
+			qid:                    456,
+			mockParseToken:         true,
+			parseTokenSuc:          true,
+			parseTokenUid:          4,
+			parseTokenRole:         service.ADMIN,
 			mockCheckQuestionOwner: false,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			mockGetBannedWords:     false,
+			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "content",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"123456789012345678901234567890123"},
+				Labels:   []string{"123456789012345678901234567890123"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": ConstraintsViolated},
-			rollback:false,
-			commit: false,
+			rollback:       false,
+			commit:         false,
 		},
 		{
-			name:           "Failed CheckOwner",
-			token:          "token",
-			qid:            456,
-			mockParseToken: true,
-			parseTokenSuc:  true,
-			parseTokenUid: 5,
-			parseTokenRole: service.USER,
-			mockCheckQuestionOwner: true,
+			name:                    "Failed CheckOwner",
+			token:                   "token",
+			qid:                     456,
+			mockParseToken:          true,
+			parseTokenSuc:           true,
+			parseTokenUid:           5,
+			parseTokenRole:          service.USER,
+			mockCheckQuestionOwner:  true,
 			checkQuestionOwnerOwner: true,
-			checkQuestionOwnerErr: errors.New("check owner error"),
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			checkQuestionOwnerErr:   errors.New("check owner error"),
+			mockGetBannedWords:      false,
+			mockModifyQuestion:      false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "content",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"math"},
+				Labels:   []string{"math"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": UnknownError},
-			rollback: true,
-			commit: false,
+			rollback:       true,
+			commit:         false,
 		},
 		{
-			name:"Not Owner",
-			token: "token",
-			qid:            456,
-			mockParseToken: true,
-			parseTokenSuc:  true,
-			parseTokenUid: 5,
-			parseTokenRole: service.USER,
-			mockCheckQuestionOwner: true,
+			name:                    "Not Owner",
+			token:                   "token",
+			qid:                     456,
+			mockParseToken:          true,
+			parseTokenSuc:           true,
+			parseTokenUid:           5,
+			parseTokenRole:          service.USER,
+			mockCheckQuestionOwner:  true,
 			checkQuestionOwnerOwner: false,
-			checkQuestionOwnerErr: nil,
-			mockGetBannedWords: false,
-			mockModifyQuestion: false,
+			checkQuestionOwnerErr:   nil,
+			mockGetBannedWords:      false,
+			mockModifyQuestion:      false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "content",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"math"},
+				Labels:   []string{"math"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": UnknownError},
-			rollback: true,
-			commit: false,
+			rollback:       true,
+			commit:         false,
 		},
 		{
-			name: "Failed to Get Banned Words",
-			token: "token",
-			qid:            456,
-			mockParseToken: true,
-			parseTokenSuc:  true,
-			parseTokenUid: 5,
-			parseTokenRole: service.USER,
-			mockCheckQuestionOwner: true,
+			name:                    "Failed to Get Banned Words",
+			token:                   "token",
+			qid:                     456,
+			mockParseToken:          true,
+			parseTokenSuc:           true,
+			parseTokenUid:           5,
+			parseTokenRole:          service.USER,
+			mockCheckQuestionOwner:  true,
 			checkQuestionOwnerOwner: true,
-			checkQuestionOwnerErr: nil,
-			mockGetBannedWords: true,
-			getBannedWordsWords: nil,
-			getBannedWordsErr: errors.New("error"),
-			mockModifyQuestion: false,
+			checkQuestionOwnerErr:   nil,
+			mockGetBannedWords:      true,
+			getBannedWordsWords:     nil,
+			getBannedWordsErr:       errors.New("error"),
+			mockModifyQuestion:      false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "content",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "content",
 				Category: "life",
-				Labels: []string{"math"},
+				Labels:   []string{"math"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": UnknownError},
-			rollback: true,
-			commit: false,
+			rollback:       true,
+			commit:         false,
 		},
 		{
-			name: "Has Keywords",
-			token: "token",
-			qid:            456,
-			mockParseToken: true,
-			parseTokenSuc:  true,
-			parseTokenUid: 5,
-			parseTokenRole: service.USER,
-			mockCheckQuestionOwner: true,
+			name:                    "Has Keywords",
+			token:                   "token",
+			qid:                     456,
+			mockParseToken:          true,
+			parseTokenSuc:           true,
+			parseTokenUid:           5,
+			parseTokenRole:          service.USER,
+			mockCheckQuestionOwner:  true,
 			checkQuestionOwnerOwner: true,
-			checkQuestionOwnerErr: nil,
-			mockGetBannedWords: true,
-			getBannedWordsWords: BannedWords,
-			getBannedWordsErr: nil,
-			mockModifyQuestion: false,
+			checkQuestionOwnerErr:   nil,
+			mockGetBannedWords:      true,
+			getBannedWordsWords:     BannedWords,
+			getBannedWordsErr:       nil,
+			mockModifyQuestion:      false,
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "It's not magic, it's just your fear.",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "It's not magic, it's just your fear.",
 				Category: "life",
-				Labels: []string{"magic"},
+				Labels:   []string{"magic"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": HasKeyword},
-			rollback: true,
-			commit: false,
+			rollback:       true,
+			commit:         false,
 		},
 		{
-			name: "Failed to Modify",
-			token: "token",
-			qid:            456,
-			mockParseToken: true,
-			parseTokenSuc:  true,
-			parseTokenUid: 5,
-			parseTokenRole: service.USER,
-			mockCheckQuestionOwner: true,
+			name:                    "Failed to Modify",
+			token:                   "token",
+			qid:                     456,
+			mockParseToken:          true,
+			parseTokenSuc:           true,
+			parseTokenUid:           5,
+			parseTokenRole:          service.USER,
+			mockCheckQuestionOwner:  true,
 			checkQuestionOwnerOwner: true,
-			checkQuestionOwnerErr: nil,
-			mockGetBannedWords: true,
-			getBannedWordsWords: BannedWords,
-			getBannedWordsErr: nil,
-			mockModifyQuestion: true,
-			modifyQuestionErr: errors.New("error"),
+			checkQuestionOwnerErr:   nil,
+			mockGetBannedWords:      true,
+			getBannedWordsWords:     BannedWords,
+			getBannedWordsErr:       nil,
+			mockModifyQuestion:      true,
+			modifyQuestionErr:       errors.New("error"),
 			req: service.ReqQuestionsPut{
-				Qid: "456",
-				Title: "title",
-				Content: "What to eat",
+				Qid:      "456",
+				Title:    "title",
+				Content:  "What to eat",
 				Category: "life",
-				Labels: []string{"food"},
+				Labels:   []string{"food"},
 			},
-			expectedCode: service.Failed,
+			expectedCode:   service.Failed,
 			expectedResult: map[string]int8{"type": UnknownError},
-			rollback: true,
-			commit: false,
+			rollback:       true,
+			commit:         false,
 		},
 	}
 	for _, tt := range tests {
@@ -890,7 +896,7 @@ func TestMainPage(t *testing.T) {
 	mockQaDao.EXPECT().Rollback(gomock.Any()).AnyTimes()
 	a := assert.New(t)
 	var (
-		MainPageResult = []entity.Questions {
+		MainPageResult = []entity.Questions{
 			{
 				17,
 				5,
@@ -905,7 +911,7 @@ func TestMainPage(t *testing.T) {
 				false,
 			},
 		}
-		DetailsResult = []entity.QuestionDetails {
+		DetailsResult = []entity.QuestionDetails{
 			{
 				17,
 				"What to eat?\n![](picture URL)",
@@ -913,7 +919,7 @@ func TestMainPage(t *testing.T) {
 				"What to eat",
 			},
 		}
-		UserInfosResult = []rpc.UserInfo {
+		UserInfosResult = []rpc.UserInfo{
 			{
 				"sk",
 				"SK",
@@ -924,44 +930,44 @@ func TestMainPage(t *testing.T) {
 	var q service.QaServiceImpl
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	tests := []struct {
-		name string
-		token string
-		page int64
-		mockParseToken bool
-		parseTokenSuc bool
-		parseTokenUid int64
-		parseTokenRole int8
-		mockMainPage bool
-		mainPageResult []entity.Questions
-		mainPageErr error
-		mockFindDetails bool
-		findDetailsResult []entity.QuestionDetails
-		mockGetUserInfos bool
-		getUserInfosUids []int64
+		name               string
+		token              string
+		page               int64
+		mockParseToken     bool
+		parseTokenSuc      bool
+		parseTokenUid      int64
+		parseTokenRole     int8
+		mockMainPage       bool
+		mainPageResult     []entity.Questions
+		mainPageErr        error
+		mockFindDetails    bool
+		findDetailsResult  []entity.QuestionDetails
+		mockGetUserInfos   bool
+		getUserInfosUids   []int64
 		getUserInfosResult []rpc.UserInfo
-		getUserInfosErr error
-		expectedCode int8
-		expectedResult interface{}
-	} {
+		getUserInfosErr    error
+		expectedCode       int8
+		expectedResult     interface{}
+	}{
 		{
 			name:               "Normal",
 			token:              "token",
-			page: 1,
+			page:               1,
 			mockParseToken:     true,
 			parseTokenSuc:      true,
 			parseTokenUid:      5,
 			parseTokenRole:     service.USER,
 			mockMainPage:       true,
 			mainPageResult:     MainPageResult,
-			mainPageErr: nil,
+			mainPageErr:        nil,
 			mockFindDetails:    true,
 			findDetailsResult:  DetailsResult,
 			mockGetUserInfos:   true,
-			getUserInfosUids: []int64{MainPageResult[0].Raiser},
+			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: UserInfosResult,
-			getUserInfosErr: nil,
+			getUserInfosErr:    nil,
 			expectedCode:       service.Succeeded,
-			expectedResult: []service.QuestionListItem {
+			expectedResult: []service.QuestionListItem{
 				{
 					Qid: strconv.FormatInt(MainPageResult[0].Qid, 10),
 					Owner: service.Owner{
@@ -971,7 +977,7 @@ func TestMainPage(t *testing.T) {
 						Icon:     UserInfosResult[0].Icon,
 					},
 					Title:         MainPageResult[0].Title,
-					Time:          MainPageResult[0].Time,
+					Time:          fmt.Sprint(time.Unix(MainPageResult[0].Time, 0)),
 					AnswerCount:   MainPageResult[0].AnswerCount,
 					ViewCount:     MainPageResult[0].ViewCount,
 					FavoriteCount: MainPageResult[0].FavoriteCount,
@@ -983,68 +989,68 @@ func TestMainPage(t *testing.T) {
 			},
 		},
 		{
-			name: "Failed Token",
-			token:"token",
-			page:1,
-			mockParseToken: true,
-			parseTokenSuc: false,
-			parseTokenUid: 0,
-			parseTokenRole: service.USER,
-			mockMainPage: false,
-			mockFindDetails: false,
+			name:             "Failed Token",
+			token:            "token",
+			page:             1,
+			mockParseToken:   true,
+			parseTokenSuc:    false,
+			parseTokenUid:    0,
+			parseTokenRole:   service.USER,
+			mockMainPage:     false,
+			mockFindDetails:  false,
 			mockGetUserInfos: false,
-			expectedCode: service.Expired,
-			expectedResult: nil,
+			expectedCode:     service.Expired,
+			expectedResult:   nil,
 		},
 		{
-			name: "Negative Page",
-			token:"token",
-			page: -1,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 1,
-			parseTokenRole: service.USER,
-			mockMainPage: false,
-			mockFindDetails: false,
+			name:             "Negative Page",
+			token:            "token",
+			page:             -1,
+			mockParseToken:   true,
+			parseTokenSuc:    true,
+			parseTokenUid:    1,
+			parseTokenRole:   service.USER,
+			mockMainPage:     false,
+			mockFindDetails:  false,
 			mockGetUserInfos: false,
-			expectedCode: service.Failed,
-			expectedResult: nil,
+			expectedCode:     service.Failed,
+			expectedResult:   nil,
 		},
 		{
-			name: "Failed to Get Main Page",
-			token:"token",
-			page:1,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 1,
-			parseTokenRole: service.USER,
-			mockMainPage: true,
-			mainPageResult: nil,
-			mainPageErr: errors.New("error"),
-			mockFindDetails: false,
+			name:             "Failed to Get Main Page",
+			token:            "token",
+			page:             1,
+			mockParseToken:   true,
+			parseTokenSuc:    true,
+			parseTokenUid:    1,
+			parseTokenRole:   service.USER,
+			mockMainPage:     true,
+			mainPageResult:   nil,
+			mainPageErr:      errors.New("error"),
+			mockFindDetails:  false,
 			mockGetUserInfos: false,
-			expectedCode: service.Failed,
-			expectedResult: nil,
+			expectedCode:     service.Failed,
+			expectedResult:   nil,
 		},
 		{
-			name: "Failed to Get User Infos",
-			token:"token",
-			page:1,
-			mockParseToken: true,
-			parseTokenSuc: true,
-			parseTokenUid: 1,
-			parseTokenRole: service.USER,
-			mockMainPage: true,
-			mainPageResult: MainPageResult,
-			mainPageErr: nil,
-			mockFindDetails: true,
-			findDetailsResult: DetailsResult,
-			mockGetUserInfos: true,
-			getUserInfosUids: []int64{MainPageResult[0].Raiser},
+			name:               "Failed to Get User Infos",
+			token:              "token",
+			page:               1,
+			mockParseToken:     true,
+			parseTokenSuc:      true,
+			parseTokenUid:      1,
+			parseTokenRole:     service.USER,
+			mockMainPage:       true,
+			mainPageResult:     MainPageResult,
+			mainPageErr:        nil,
+			mockFindDetails:    true,
+			findDetailsResult:  DetailsResult,
+			mockGetUserInfos:   true,
+			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: nil,
-			getUserInfosErr: errors.New("error"),
-			expectedCode: service.Failed,
-			expectedResult: nil,
+			getUserInfosErr:    errors.New("error"),
+			expectedCode:       service.Failed,
+			expectedResult:     nil,
 		},
 	}
 	for _, tt := range tests {
@@ -1057,7 +1063,7 @@ func TestMainPage(t *testing.T) {
 				mockQaDao.EXPECT().MainPage(gomock.Any(), tt.parseTokenUid, tt.page).Return(tt.mainPageResult, tt.mainPageErr)
 			}
 			if tt.mockFindDetails {
-				mockQaDao.EXPECT().FindDetails(gomock.Any(), tt.mainPageResult).Return(tt.findDetailsResult)
+				mockQaDao.EXPECT().FindQuestionDetails(gomock.Any(), tt.mainPageResult).Return(tt.findDetailsResult)
 			}
 			if tt.mockGetUserInfos {
 				mockUsersRPC.EXPECT().GetUserInfos(tt.getUserInfosUids).Return(tt.getUserInfosResult, tt.getUserInfosErr)
@@ -1067,4 +1073,287 @@ func TestMainPage(t *testing.T) {
 			a.Equal(tt.expectedResult, result)
 		})
 	}
+}
+
+func TestQuestionDetail(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+	tests := []struct {
+		name                 string
+		token                string
+		qid                  int64
+		parseTokenSuc        bool
+		parseTokenUid        int64
+		parseTokenRole       int8
+		mockFindQuestion     bool
+		findQuestionQuestion []entity.Questions
+		findQuestionErr      error
+		mockFindDetails      bool
+		findDetailsDetails   []entity.QuestionDetails
+		mockGetUserInfos     bool
+		getUserInfosRes      []rpc.UserInfo
+		getUserInfosErr      error
+		mockSaveQuestionSkeleton bool
+		commit               bool
+		rollback             bool
+		wantCode             int8
+		wantResult           interface{}
+	}{
+		{
+			name:             "Normal",
+			token:            "token",
+			qid:              234,
+			parseTokenSuc:    true,
+			parseTokenUid:    56,
+			parseTokenRole:   service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: []entity.Questions{{
+				Qid:            234,
+				Raiser:         78,
+				Title:          "title",
+				Category:       "life",
+				AcceptedAnswer: sql.NullInt64{Valid: false},
+			}},
+			mockFindDetails: true,
+			findDetailsDetails: []entity.QuestionDetails{{
+				234,
+				"content",
+				"",
+				"content",
+			}},
+			mockGetUserInfos: true,
+			getUserInfosRes: []rpc.UserInfo{{
+				"skfe",
+				"skfe2",
+				"icon data",
+			}},
+			mockSaveQuestionSkeleton: true,
+			commit:     true,
+			wantCode:   service.Succeeded,
+			wantResult: service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "", Content: "content", Time: "0"},
+		},
+		{
+			name: "Token expired",
+			parseTokenSuc: false,
+			wantCode: service.Expired,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockUsersRPC.EXPECT().ParseToken(tt.token).Return(tt.parseTokenSuc, tt.parseTokenUid, tt.parseTokenRole)
+			if tt.mockFindQuestion {
+				mockQaDao.EXPECT().FindQuestionById(gomock.Any(), tt.qid).Return(tt.findQuestionQuestion, tt.findQuestionErr)
+			}
+			if tt.mockFindDetails {
+				mockQaDao.EXPECT().FindQuestionDetails(gomock.Any(), tt.findQuestionQuestion).Return(tt.findDetailsDetails)
+			}
+			if tt.mockGetUserInfos {
+				mockUsersRPC.EXPECT().GetUserInfos(gomock.Any()).Return(tt.getUserInfosRes, tt.getUserInfosErr)
+			}
+			if tt.mockSaveQuestionSkeleton {
+				mockQaDao.EXPECT().SaveQuestionSkeleton(gomock.Any(), gomock.Any())
+			}
+			if tt.commit {
+				mockQaDao.EXPECT().Commit(gomock.Any())
+			}
+			if tt.rollback {
+				mockQaDao.EXPECT().Rollback(gomock.Any())
+			}
+			code, result := q.QuestionDetail(tt.token, tt.qid)
+			a.Equal(tt.wantCode, code)
+			a.Equal(tt.wantResult, result)
+		})
+	}
+}
+
+func TestAnswerListResponse(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	t.Run("Normal", func(t *testing.T) {
+		var ctx dao.TransactionContext
+		var uid int64 = 5
+		answers := []entity.Answers {{Aid: 56, Answerer: 7, Qid: 234}}
+		answerDetails := []entity.AnswerDetails {{Aid: 56, Content: "content", PictureUrl: "pic url", Head: "Head"}}
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return([]rpc.UserInfo{{Name: "sk", Nickname: "nick", Icon: "icon"}}, nil)
+		mockQaDao.EXPECT().GetAnswerActionInfos(ctx, uid, []int64{234}, []int64{56}).Return([]dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: true}}, nil)
+		result, err := q.AnswerListResponse(ctx, uid, answers, answerDetails)
+		a.Nil(err)
+		res := result.([]service.AnswerListItem)[0]
+		a.True(res.Liked)
+		a.False(res.Approved)
+		a.True(res.Approvable)
+		a.Equal("7", res.Owner.Uid)
+		a.Equal("pic url", res.PictureUrls[0])
+		a.Equal("icon", res.Owner.Icon)
+		a.Equal("nick", res.Owner.Nickname)
+	})
+}
+
+func TestAddAnswer(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	t.Run("Normal", func(t *testing.T) {
+		token := "token"
+		req := service.ReqAnswersPost{
+			Qid:     "456",
+			Content: "content",
+		}
+		var uid int64 = 5
+		var role int8 = service.USER
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		banned := []string{"river"}
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		pictureUrl := ""
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
+		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(nil)
+		questions := []entity.Questions{{Qid: 456, Raiser: 89, Title: "title", Category: "life", Labels: []string{}}}
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), int64(456)).Return(questions, nil)
+		mockQaDao.EXPECT().SaveQuestionSkeleton(gomock.Any(), gomock.Any()).Return(nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(int8(service.Succeeded), code)
+		a.Equal("47", result.(map[string]string)["aid"])
+	})
+	// more
+}
+
+func TestModifyAnswer(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	t.Run("Normal", func(t *testing.T) {
+		token := "token"
+		req := service.ReqAnswersPut{
+			Aid: "346",
+			Content: "content",
+		}
+		var aid int64 = 346
+		var uid int64 = 76
+		var role int8 = service.USER
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		answer := []entity.Answers {{Aid: 345, Answerer: 76, Qid: 123}}
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answer, nil)
+		banned := []string{"tiger"}
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().ModifyAnswer(gomock.Any(), aid, "content", "", "content ").Return(nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Nil(result)
+		a.Equal(int8(service.Succeeded), code)
+	})
+}
+
+func TestListAnswers(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	t.Run("Normal", func(t *testing.T) {
+		token := "token"
+		var (
+			qid int64 = 234
+			page int64 = 2
+			sort int8 = 1
+			uid int64 = 76
+			role int8 = service.USER
+		)
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
+		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(answers, nil)
+		details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
+		actionInfos := []dao.AnswerActionInfo{{Liked: false, Approved: false, Approvable: true}}
+		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(actionInfos, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Succeeded), code)
+		res := result.([]service.AnswerListItem)[0]
+		a.Equal("36", res.Owner.Uid)
+		a.Equal("sk", res.Owner.Nickname)
+		a.True(res.Approvable)
+		a.Equal("content ", res.Head)
+	})
+}
+
+func TestAnswerDetail(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	t.Run("Normal", func(t *testing.T) {
+		token := "token"
+		var (
+			aid int64 = 345
+			uid int64 = 76
+			role int8 = service.USER
+		)
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answers, nil)
+		details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
+		mockQaDao.EXPECT().SaveAnswerSkeleton(gomock.Any(), gomock.Any())
+		actionInfos := []dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: false}}
+		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(actionInfos, nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, result := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Succeeded), code)
+		res := result.(service.AnswerInfo)
+		a.Equal("nick", res.Owner.Nickname)
+		a.Equal("icon", res.Owner.Icon)
+		a.Equal("content", res.Content)
+		a.True(res.Liked)
+	})
 }

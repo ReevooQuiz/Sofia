@@ -35,6 +35,21 @@ func (m *MockQaService) EXPECT() *MockQaServiceMockRecorder {
 	return m.recorder
 }
 
+// AddAnswer mocks base method
+func (m *MockQaService) AddAnswer(arg0 string, arg1 service.ReqAnswersPost) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddAnswer", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// AddAnswer indicates an expected call of AddAnswer
+func (mr *MockQaServiceMockRecorder) AddAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAnswer", reflect.TypeOf((*MockQaService)(nil).AddAnswer), arg0, arg1)
+}
+
 // AddQuestion mocks base method
 func (m *MockQaService) AddQuestion(arg0 string, arg1 service.ReqQuestionsPost) (int8, interface{}) {
 	m.ctrl.T.Helper()
@@ -48,6 +63,21 @@ func (m *MockQaService) AddQuestion(arg0 string, arg1 service.ReqQuestionsPost) 
 func (mr *MockQaServiceMockRecorder) AddQuestion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQuestion", reflect.TypeOf((*MockQaService)(nil).AddQuestion), arg0, arg1)
+}
+
+// AnswerDetail mocks base method
+func (m *MockQaService) AnswerDetail(arg0 string, arg1 int64) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AnswerDetail", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// AnswerDetail indicates an expected call of AnswerDetail
+func (mr *MockQaServiceMockRecorder) AnswerDetail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnswerDetail", reflect.TypeOf((*MockQaService)(nil).AnswerDetail), arg0, arg1)
 }
 
 // Destruct mocks base method
@@ -76,6 +106,21 @@ func (mr *MockQaServiceMockRecorder) Init(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockQaService)(nil).Init), arg0, arg1)
 }
 
+// ListAnswers mocks base method
+func (m *MockQaService) ListAnswers(arg0 string, arg1, arg2 int64, arg3 int8) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAnswers", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// ListAnswers indicates an expected call of ListAnswers
+func (mr *MockQaServiceMockRecorder) ListAnswers(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAnswers", reflect.TypeOf((*MockQaService)(nil).ListAnswers), arg0, arg1, arg2, arg3)
+}
+
 // MainPage mocks base method
 func (m *MockQaService) MainPage(arg0 string, arg1 int64) (int8, interface{}) {
 	m.ctrl.T.Helper()
@@ -91,6 +136,21 @@ func (mr *MockQaServiceMockRecorder) MainPage(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaService)(nil).MainPage), arg0, arg1)
 }
 
+// ModifyAnswer mocks base method
+func (m *MockQaService) ModifyAnswer(arg0 string, arg1 service.ReqAnswersPut) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyAnswer", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// ModifyAnswer indicates an expected call of ModifyAnswer
+func (mr *MockQaServiceMockRecorder) ModifyAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyAnswer", reflect.TypeOf((*MockQaService)(nil).ModifyAnswer), arg0, arg1)
+}
+
 // ModifyQuestion mocks base method
 func (m *MockQaService) ModifyQuestion(arg0 string, arg1 service.ReqQuestionsPut) (int8, interface{}) {
 	m.ctrl.T.Helper()
@@ -104,4 +164,19 @@ func (m *MockQaService) ModifyQuestion(arg0 string, arg1 service.ReqQuestionsPut
 func (mr *MockQaServiceMockRecorder) ModifyQuestion(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyQuestion", reflect.TypeOf((*MockQaService)(nil).ModifyQuestion), arg0, arg1)
+}
+
+// QuestionDetail mocks base method
+func (m *MockQaService) QuestionDetail(arg0 string, arg1 int64) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuestionDetail", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// QuestionDetail indicates an expected call of QuestionDetail
+func (mr *MockQaServiceMockRecorder) QuestionDetail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuestionDetail", reflect.TypeOf((*MockQaService)(nil).QuestionDetail), arg0, arg1)
 }

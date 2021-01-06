@@ -34,6 +34,21 @@ func (m *MockQaDao) EXPECT() *MockQaDaoMockRecorder {
 	return m.recorder
 }
 
+// AddAnswer mocks base method
+func (m *MockQaDao) AddAnswer(arg0 dao.TransactionContext, arg1, arg2 int64, arg3, arg4, arg5 string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddAnswer", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddAnswer indicates an expected call of AddAnswer
+func (mr *MockQaDaoMockRecorder) AddAnswer(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAnswer", reflect.TypeOf((*MockQaDao)(nil).AddAnswer), arg0, arg1, arg2, arg3, arg4, arg5)
+}
+
 // AddQuestion mocks base method
 func (m *MockQaDao) AddQuestion(arg0 dao.TransactionContext, arg1 int64, arg2, arg3, arg4 string, arg5 []string, arg6, arg7 string) (int64, error) {
 	m.ctrl.T.Helper()
@@ -62,6 +77,21 @@ func (m *MockQaDao) Begin(arg0 bool) (dao.TransactionContext, error) {
 func (mr *MockQaDaoMockRecorder) Begin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Begin", reflect.TypeOf((*MockQaDao)(nil).Begin), arg0)
+}
+
+// CheckAnswerOwner mocks base method
+func (m *MockQaDao) CheckAnswerOwner(arg0 dao.TransactionContext, arg1, arg2 int64) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckAnswerOwner", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckAnswerOwner indicates an expected call of CheckAnswerOwner
+func (mr *MockQaDaoMockRecorder) CheckAnswerOwner(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckAnswerOwner", reflect.TypeOf((*MockQaDao)(nil).CheckAnswerOwner), arg0, arg1, arg2)
 }
 
 // CheckQuestionOwner mocks base method
@@ -105,18 +135,92 @@ func (mr *MockQaDaoMockRecorder) Destruct() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockQaDao)(nil).Destruct))
 }
 
-// FindDetails mocks base method
-func (m *MockQaDao) FindDetails(arg0 dao.TransactionContext, arg1 []entity.Questions) []entity.QuestionDetails {
+// FindAnswerById mocks base method
+func (m *MockQaDao) FindAnswerById(arg0 dao.TransactionContext, arg1 int64) ([]entity.Answers, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindDetails", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindAnswerById", arg0, arg1)
+	ret0, _ := ret[0].([]entity.Answers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAnswerById indicates an expected call of FindAnswerById
+func (mr *MockQaDaoMockRecorder) FindAnswerById(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswerById", reflect.TypeOf((*MockQaDao)(nil).FindAnswerById), arg0, arg1)
+}
+
+// FindAnswerDetails mocks base method
+func (m *MockQaDao) FindAnswerDetails(arg0 dao.TransactionContext, arg1 []entity.Answers) []entity.AnswerDetails {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAnswerDetails", arg0, arg1)
+	ret0, _ := ret[0].([]entity.AnswerDetails)
+	return ret0
+}
+
+// FindAnswerDetails indicates an expected call of FindAnswerDetails
+func (mr *MockQaDaoMockRecorder) FindAnswerDetails(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAnswerDetails", reflect.TypeOf((*MockQaDao)(nil).FindAnswerDetails), arg0, arg1)
+}
+
+// FindQuestionAnswers mocks base method
+func (m *MockQaDao) FindQuestionAnswers(arg0 dao.TransactionContext, arg1, arg2 int64, arg3 int8) ([]entity.Answers, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionAnswers", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]entity.Answers)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindQuestionAnswers indicates an expected call of FindQuestionAnswers
+func (mr *MockQaDaoMockRecorder) FindQuestionAnswers(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionAnswers", reflect.TypeOf((*MockQaDao)(nil).FindQuestionAnswers), arg0, arg1, arg2, arg3)
+}
+
+// FindQuestionById mocks base method
+func (m *MockQaDao) FindQuestionById(arg0 dao.TransactionContext, arg1 int64) ([]entity.Questions, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionById", arg0, arg1)
+	ret0, _ := ret[0].([]entity.Questions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindQuestionById indicates an expected call of FindQuestionById
+func (mr *MockQaDaoMockRecorder) FindQuestionById(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionById", reflect.TypeOf((*MockQaDao)(nil).FindQuestionById), arg0, arg1)
+}
+
+// FindQuestionDetails mocks base method
+func (m *MockQaDao) FindQuestionDetails(arg0 dao.TransactionContext, arg1 []entity.Questions) []entity.QuestionDetails {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindQuestionDetails", arg0, arg1)
 	ret0, _ := ret[0].([]entity.QuestionDetails)
 	return ret0
 }
 
-// FindDetails indicates an expected call of FindDetails
-func (mr *MockQaDaoMockRecorder) FindDetails(arg0, arg1 interface{}) *gomock.Call {
+// FindQuestionDetails indicates an expected call of FindQuestionDetails
+func (mr *MockQaDaoMockRecorder) FindQuestionDetails(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindDetails", reflect.TypeOf((*MockQaDao)(nil).FindDetails), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindQuestionDetails", reflect.TypeOf((*MockQaDao)(nil).FindQuestionDetails), arg0, arg1)
+}
+
+// GetAnswerActionInfos mocks base method
+func (m *MockQaDao) GetAnswerActionInfos(arg0 dao.TransactionContext, arg1 int64, arg2, arg3 []int64) ([]dao.AnswerActionInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnswerActionInfos", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].([]dao.AnswerActionInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerActionInfos indicates an expected call of GetAnswerActionInfos
+func (mr *MockQaDaoMockRecorder) GetAnswerActionInfos(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerActionInfos", reflect.TypeOf((*MockQaDao)(nil).GetAnswerActionInfos), arg0, arg1, arg2, arg3)
 }
 
 // GetBannedWords mocks base method
@@ -132,6 +236,34 @@ func (m *MockQaDao) GetBannedWords(arg0 dao.TransactionContext) ([]string, error
 func (mr *MockQaDaoMockRecorder) GetBannedWords(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBannedWords", reflect.TypeOf((*MockQaDao)(nil).GetBannedWords), arg0)
+}
+
+// IncQuestionCount mocks base method
+func (m *MockQaDao) IncQuestionCount(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncQuestionCount", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncQuestionCount indicates an expected call of IncQuestionCount
+func (mr *MockQaDaoMockRecorder) IncQuestionCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncQuestionCount", reflect.TypeOf((*MockQaDao)(nil).IncQuestionCount), arg0, arg1)
+}
+
+// IncUserAnswerCount mocks base method
+func (m *MockQaDao) IncUserAnswerCount(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncUserAnswerCount", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncUserAnswerCount indicates an expected call of IncUserAnswerCount
+func (mr *MockQaDaoMockRecorder) IncUserAnswerCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncUserAnswerCount", reflect.TypeOf((*MockQaDao)(nil).IncUserAnswerCount), arg0, arg1)
 }
 
 // Init mocks base method
@@ -178,6 +310,20 @@ func (mr *MockQaDaoMockRecorder) MakeLabels(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MakeLabels", reflect.TypeOf((*MockQaDao)(nil).MakeLabels), arg0, arg1)
 }
 
+// ModifyAnswer mocks base method
+func (m *MockQaDao) ModifyAnswer(arg0 dao.TransactionContext, arg1 int64, arg2, arg3, arg4 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModifyAnswer", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ModifyAnswer indicates an expected call of ModifyAnswer
+func (mr *MockQaDaoMockRecorder) ModifyAnswer(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyAnswer", reflect.TypeOf((*MockQaDao)(nil).ModifyAnswer), arg0, arg1, arg2, arg3, arg4)
+}
+
 // ModifyQuestion mocks base method
 func (m *MockQaDao) ModifyQuestion(arg0 dao.TransactionContext, arg1 int64, arg2, arg3, arg4 string, arg5 []string, arg6, arg7 string) error {
 	m.ctrl.T.Helper()
@@ -204,4 +350,32 @@ func (m *MockQaDao) Rollback(arg0 *dao.TransactionContext) error {
 func (mr *MockQaDaoMockRecorder) Rollback(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockQaDao)(nil).Rollback), arg0)
+}
+
+// SaveAnswerSkeleton mocks base method
+func (m *MockQaDao) SaveAnswerSkeleton(arg0 dao.TransactionContext, arg1 entity.Answers) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveAnswerSkeleton", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveAnswerSkeleton indicates an expected call of SaveAnswerSkeleton
+func (mr *MockQaDaoMockRecorder) SaveAnswerSkeleton(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveAnswerSkeleton", reflect.TypeOf((*MockQaDao)(nil).SaveAnswerSkeleton), arg0, arg1)
+}
+
+// SaveQuestionSkeleton mocks base method
+func (m *MockQaDao) SaveQuestionSkeleton(arg0 dao.TransactionContext, arg1 entity.Questions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveQuestionSkeleton", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveQuestionSkeleton indicates an expected call of SaveQuestionSkeleton
+func (mr *MockQaDaoMockRecorder) SaveQuestionSkeleton(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveQuestionSkeleton", reflect.TypeOf((*MockQaDao)(nil).SaveQuestionSkeleton), arg0, arg1)
 }
