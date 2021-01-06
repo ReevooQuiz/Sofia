@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/zhanghanchong/qa-service/controller"
-	"github.com/zhanghanchong/qa-service/service"
+	"github.com/SKFE396/qa-service/controller"
+	"github.com/SKFE396/qa-service/service"
 	"sync"
 )
 
