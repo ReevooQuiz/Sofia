@@ -38,6 +38,11 @@ type ReqInfoList struct {
 	Uids []int64 `json:"uids"`
 }
 
+type ReqLike struct {
+	Aid  string `json:"aid"`
+	Like bool   `json:"like"`
+}
+
 type ReqLogin struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
@@ -112,6 +117,10 @@ type ResFollowers struct {
 type ResInfoList struct {
 	Code   int8             `json:"code"`
 	Result []ResultInfoList `json:"result"`
+}
+
+type ResLike struct {
+	Code int8 `json:"code"`
 }
 
 type ResLogin struct {
@@ -671,6 +680,78 @@ func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error
 		}
 		res.Result = append(res.Result, ResultInfoList{user.Name, user.Nickname, userDetail.Icon})
 	}
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Like(token string, req ReqLike) (res ResLike, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var aid int64
+	aid, err = strconv.ParseInt(req.Aid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var likeAnswer entity.LikeAnswers
+	if req.Like {
+		likeAnswer.Uid = user.Uid
+		likeAnswer.Aid = aid
+		likeAnswer.Time = time.Now().Unix()
+		err = u.usersDao.InsertLikeAnswer(ctx, likeAnswer)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	} else {
+		likeAnswer, err = u.usersDao.FindLikeAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		err = u.usersDao.RemoveLikeAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	}
+	var answer entity.Answers
+	answer, err = u.usersDao.FindAnswerByAid(ctx, aid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Like {
+		answer.LikeCount++
+	} else {
+		answer.LikeCount--
+	}
+	err = u.usersDao.UpdateAnswerByAid(ctx, answer)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
 }
 
