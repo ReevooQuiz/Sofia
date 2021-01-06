@@ -1011,8 +1011,10 @@ func TestServiceRefreshToken(t *testing.T) {
 	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
 	users := []entity.Users{
 		{Uid: 1, Role: entity.DISABLE},
+		{Uid: 2, Role: entity.USER},
 	}
-	refreshToken, _ := util.SignToken(users[0].Uid, users[0].Role, true)
+	refreshToken0, _ := util.SignToken(users[0].Uid, users[0].Role, true)
+	refreshToken1, _ := util.SignToken(users[1].Uid, users[1].Role, true)
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
@@ -1020,6 +1022,10 @@ func TestServiceRefreshToken(t *testing.T) {
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
 		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(users[1], nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(entity.UserDetails{}, errors.New("mongo: no rows in result set")),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Destruct(),
 	)
@@ -1034,8 +1040,9 @@ func TestServiceRefreshToken(t *testing.T) {
 		args    args
 		wantRes service.ResRefreshToken
 	}{
-		{"Disable", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 0}}},
-		{"UserNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
+		{"Disable", args{req: service.ReqRefreshToken{Refresh: refreshToken0}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 0}}},
+		{"UserNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken0}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
+		{"UserDetailNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken1}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
