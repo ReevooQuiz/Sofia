@@ -88,6 +88,62 @@ func TestServiceBan(t *testing.T) {
 	}
 }
 
+func TestServiceBanned(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	userDetails := []entity.UserDetails{
+		{Uid: 2},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUsersByRolePageable(gomock.Any(), entity.DISABLE, dao.Pageable{Number: 0, Size: 10}).Return([]entity.Users{users[1]}, nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(userDetails[0], nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUsersByRolePageable(gomock.Any(), entity.DISABLE, dao.Pageable{Number: 0, Size: 10}).Return([]entity.Users{users[1]}, nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(entity.UserDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResBanned
+	}{
+		{"Normal", args{token: token0, page: 0}, service.ResBanned{Code: 0}},
+		{"NotAdmin", args{token: token1, page: 0}, service.ResBanned{Code: 1}},
+		{"UserDetailNotFound", args{token: token0, page: 0}, service.ResBanned{Code: 1}},
+		{"WrongToken", args{page: 0}, service.ResBanned{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Banned(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceCheckToken(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)

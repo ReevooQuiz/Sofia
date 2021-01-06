@@ -414,6 +414,30 @@ func (u *UsersDaoImpl) FindUserDetailByUid(ctx TransactionContext, uid int64) (u
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) FindUsersByRolePageable(ctx TransactionContext, role int8, pageable Pageable) (users []entity.Users, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from users where role = ? limit ?, ?")
+	if err != nil {
+		return users, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(role, pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return users, err
+	}
+	users = []entity.Users{}
+	for res.Next() {
+		var user entity.Users
+		err = res.Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.QuestionCount, &user.AnswerCount, &user.LikeCount, &user.ApprovalCount, &user.NotificationTime)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, user)
+	}
+	return users, err
+}
+
 func (u *UsersDaoImpl) InsertBanWord(ctx TransactionContext, banWord entity.BanWords) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into ban_words values(?)")

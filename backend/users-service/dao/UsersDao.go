@@ -32,6 +32,7 @@ type UsersDao interface {
 	FindUserByOidAndAccountType(ctx TransactionContext, oid string, accountType int8) (user entity.Users, err error)
 	FindUserByUid(ctx TransactionContext, uid int64) (user entity.Users, err error)
 	FindUserDetailByUid(ctx TransactionContext, uid int64) (userDetail entity.UserDetails, err error)
+	FindUsersByRolePageable(ctx TransactionContext, role int8, pageable Pageable) (users []entity.Users, err error)
 	InsertBanWord(ctx TransactionContext, banWord entity.BanWords) (err error)
 	InsertFavorite(ctx TransactionContext, favorite entity.Favorites) (fid int64, err error)
 	InsertFollow(ctx TransactionContext, follow entity.Follows) (err error)
