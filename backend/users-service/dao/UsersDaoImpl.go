@@ -516,6 +516,17 @@ func (u *UsersDaoImpl) InsertLabel(ctx TransactionContext, label entity.Labels) 
 	return lid, err
 }
 
+func (u *UsersDaoImpl) InsertLikeAnswer(ctx TransactionContext, likeAnswer entity.LikeAnswers) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into like_answers values(?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(likeAnswer.Uid, likeAnswer.Aid, likeAnswer.Time)
+	return err
+}
+
 func (u *UsersDaoImpl) InsertUser(ctx TransactionContext, user entity.Users) (uid int64, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into users(oid, name, nickname, salt, hash_password, email, gender, profile, role, account_type, active_code, passwd_code, exp, follower_count, following_count, question_count, answer_count, like_count, approval_count, notification_time) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
@@ -569,6 +580,17 @@ func (u *UsersDaoImpl) RemoveFollowByUidAndFollower(ctx TransactionContext, uid 
 	return err
 }
 
+func (u *UsersDaoImpl) RemoveLikeAnswerByUidAndAid(ctx TransactionContext, uid int64, aid int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from like_answers where uid = ? and aid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(uid, aid)
+	return err
+}
+
 func (u *UsersDaoImpl) RemoveUserLabelsByUid(ctx TransactionContext, uid int64) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("delete from user_labels where uid = ?")
@@ -577,6 +599,17 @@ func (u *UsersDaoImpl) RemoveUserLabelsByUid(ctx TransactionContext, uid int64) 
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(uid)
+	return err
+}
+
+func (u *UsersDaoImpl) UpdateAnswerByAid(ctx TransactionContext, answer entity.Answers) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("update answers set answerer = ?, qid = ?, comment_count = ?, criticism_count = ?, like_count = ?, approval_count = ?, time = ? where aid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(answer.Answerer, answer.Qid, answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Time, answer.Aid)
 	return err
 }
 

@@ -507,6 +507,20 @@ func (mr *MockUsersDaoMockRecorder) InsertLabel(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertLabel), arg0, arg1)
 }
 
+// InsertLikeAnswer mocks base method
+func (m *MockUsersDao) InsertLikeAnswer(arg0 dao.TransactionContext, arg1 entity.LikeAnswers) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertLikeAnswer", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertLikeAnswer indicates an expected call of InsertLikeAnswer
+func (mr *MockUsersDaoMockRecorder) InsertLikeAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertLikeAnswer", reflect.TypeOf((*MockUsersDao)(nil).InsertLikeAnswer), arg0, arg1)
+}
+
 // InsertUser mocks base method
 func (m *MockUsersDao) InsertUser(arg0 dao.TransactionContext, arg1 entity.Users) (int64, error) {
 	m.ctrl.T.Helper()
@@ -578,6 +592,20 @@ func (mr *MockUsersDaoMockRecorder) RemoveFollowByUidAndFollower(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFollowByUidAndFollower", reflect.TypeOf((*MockUsersDao)(nil).RemoveFollowByUidAndFollower), arg0, arg1, arg2)
 }
 
+// RemoveLikeAnswerByUidAndAid mocks base method
+func (m *MockUsersDao) RemoveLikeAnswerByUidAndAid(arg0 dao.TransactionContext, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveLikeAnswerByUidAndAid", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveLikeAnswerByUidAndAid indicates an expected call of RemoveLikeAnswerByUidAndAid
+func (mr *MockUsersDaoMockRecorder) RemoveLikeAnswerByUidAndAid(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveLikeAnswerByUidAndAid", reflect.TypeOf((*MockUsersDao)(nil).RemoveLikeAnswerByUidAndAid), arg0, arg1, arg2)
+}
+
 // RemoveUserLabelsByUid mocks base method
 func (m *MockUsersDao) RemoveUserLabelsByUid(arg0 dao.TransactionContext, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -604,6 +632,20 @@ func (m *MockUsersDao) Rollback(arg0 *dao.TransactionContext) error {
 func (mr *MockUsersDaoMockRecorder) Rollback(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockUsersDao)(nil).Rollback), arg0)
+}
+
+// UpdateAnswerByAid mocks base method
+func (m *MockUsersDao) UpdateAnswerByAid(arg0 dao.TransactionContext, arg1 entity.Answers) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateAnswerByAid", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateAnswerByAid indicates an expected call of UpdateAnswerByAid
+func (mr *MockUsersDaoMockRecorder) UpdateAnswerByAid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateAnswerByAid", reflect.TypeOf((*MockUsersDao)(nil).UpdateAnswerByAid), arg0, arg1)
 }
 
 // UpdateUserByUid mocks base method

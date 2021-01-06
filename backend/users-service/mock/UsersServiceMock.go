@@ -184,6 +184,21 @@ func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersService)(nil).Init), arg0...)
 }
 
+// Like mocks base method
+func (m *MockUsersService) Like(arg0 string, arg1 service.ReqLike) (service.ResLike, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Like", arg0, arg1)
+	ret0, _ := ret[0].(service.ResLike)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Like indicates an expected call of Like
+func (mr *MockUsersServiceMockRecorder) Like(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Like", reflect.TypeOf((*MockUsersService)(nil).Like), arg0, arg1)
+}
+
 // Login mocks base method
 func (m *MockUsersService) Login(arg0 service.ReqLogin) (service.ResLogin, error) {
 	m.ctrl.T.Helper()

@@ -33,6 +33,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/followed", u.Followed)
 	http.HandleFunc("/followers", u.Followers)
 	http.HandleFunc("/infoList", u.InfoList)
+	http.HandleFunc("/like", u.Like)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/notifications", u.Notifications)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
@@ -227,6 +228,25 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.InfoList(req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqLike
+	var res service.ResLike
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Like(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}

@@ -15,6 +15,7 @@ type UsersService interface {
 	Followed(token string, uid int64) (res ResFollowed, err error)
 	Followers(token string, uid int64) (res ResFollowers, err error)
 	InfoList(req ReqInfoList) (res ResInfoList, err error)
+	Like(token string, req ReqLike) (res ResLike, err error)
 	Login(req ReqLogin) (res ResLogin, err error)
 	Notifications(token string, page int64) (res ResNotifications, err error)
 	OAuthGithub(code string, error string) (res ResOAuthGithub, err error)
