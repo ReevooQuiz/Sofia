@@ -11,6 +11,7 @@ func main() {
 	w.Add(1)
 	c := &controller.QaController{}
 	c.Init(w, &service.QaServiceImpl{})
+	defer c.Destruct()
 	w.Add(1)
 	w.Wait()
 }

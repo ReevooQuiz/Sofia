@@ -38,7 +38,7 @@ type QaDao interface {
 	GetAnswerActionInfos(ctx TransactionContext, uid int64, qids []int64, aids []int64) (infos []AnswerActionInfo, err error)
 
 	MakeLabels(ctx TransactionContext, titles []string) (labels []int64, err error)
-	GetBannedWords(ctx TransactionContext, ) (words []string, err error)
+	GetBannedWords(ctx TransactionContext) (words []string, err error)
 	AddQuestion(ctx TransactionContext, uid int64, title string, content string, category string, labels []string, pictureUrl string, head string) (qid int64, err error)
 	ModifyQuestion(ctx TransactionContext, qid int64, title string, content string, category string, labels []string, pictureUrl string, head string) (err error)
 
@@ -47,4 +47,8 @@ type QaDao interface {
 
 	MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error)
 	FindQuestionAnswers(ctx TransactionContext, qid int64, page int64, sort int8) (answers []entity.Answers, err error)
+
+	GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error)
+	FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails, err error)
+	AddComment(ctx TransactionContext, uid int64, aid int64, content string) (cmid int64, err error)
 }

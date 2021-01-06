@@ -16,6 +16,7 @@ import (
 
 const (
 	PageSize = 5
+	CommentPageSize = 10
 	answerFields = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
 	questionFields = "qid,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 )
@@ -196,13 +197,28 @@ func (q *QaDaoImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (er
 	return err
 }*/
 
+func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails, err error) {
+	var findErr error
+	var current entity.CommentDetails
+	for _, v := range comments {
+		findErr = ctx.session.DB("sofia").C("comment_details").FindId(v.Cmid).One(current)
+		if findErr != nil {
+			log.Warn(findErr)
+			details = append(details, current)
+		} else {
+			details = append(details, entity.CommentDetails{})
+		}
+	}
+	return
+}
+
 func (q *QaDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails) {
 	var findErr error
 	var current entity.QuestionDetails
 	for _, v := range questions {
 		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(current)
 		if findErr != nil {
-			log.Info(findErr)
+			log.Warn(findErr)
 			questionDetails = append(questionDetails, current)
 		} else {
 			questionDetails = append(questionDetails, entity.QuestionDetails{})
@@ -557,6 +573,31 @@ func (q *QaDaoImpl) ModifyAnswer(ctx TransactionContext, aid int64, content stri
 		bson.D{{"$set", bson.D{{"content", content}, {"pictureUrl", pictureUrl}, {"head", head}}}})
 }
 
+func (q *QaDaoImpl) ParseComments(rows *sql.Rows) (comments []entity.Comments, err error) {
+	var res []entity.Comments
+	for rows.Next() {
+		var it entity.Comments
+		err = rows.Scan(&it.Cmid, &it.Uid, &it.Time)
+		if err != nil {
+			return
+		}
+		res = append(res, it)
+	}
+	return res, nil
+}
+
+func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query(
+		"select cmid,uid,time from comments where aid=? limit ?,?", aid, page * CommentPageSize, CommentPageSize)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	comments, err = q.ParseComments(rows)
+	return
+}
+
 func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
@@ -649,4 +690,25 @@ func (q *QaDaoImpl) FindQuestionAnswers(ctx TransactionContext, qid int64, page 
 	defer rows.Close()
 	answers, err = q.ParseAnswers(rows)
 	return answers, err
+}
+
+func (q *QaDaoImpl) AddComment(ctx TransactionContext, uid int64, aid int64, content string) (cmid int64, err error) {
+	// insert into answers
+	var res sql.Result
+	res, err = ctx.sqlTx.Exec(
+		"insert into comments(uid, aid,time)values(?,?,?)",
+		uid, aid, time.Now().Unix())
+	if err != nil {
+		return
+	}
+	cmid, err = res.LastInsertId()
+	// insert into answer_details
+	var commentDetail entity.CommentDetails
+	commentDetail.Cmid = cmid
+	commentDetail.Content = content
+	err = ctx.session.DB("sofia").C("comment_details").Insert(commentDetail)
+	if err != nil {
+		return
+	}
+	return cmid, nil
 }
