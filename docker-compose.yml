@@ -1,0 +1,145 @@
+version: '3.2'
+
+services:
+  qa-service:
+    image: sofia2020/qa-service:latest
+    hostname: qa-service
+    restart: always
+    volumes:
+      - ./credentials.env:/credentials.env
+    ports:
+      - "9093:9093"
+    logging:
+      driver: syslog
+      options:
+        tag: qa-service
+    labels:
+      - "traefik.http.routers.redirect-finalbackend.rule=Path(`/{short:[A-Za-z0-9]{6}}`)"
+    networks:
+      - sofia
+
+  users-service:
+    image: sofia2020/users-service:2.4
+    container_name: users-service
+    hostname: users-service
+    restart: always
+    volumes:
+      - ./credentials.env:/credentials.env
+    ports:
+      - "9092:9092"
+    logging:
+      driver: syslog
+      options:
+        tag: users-service
+    networks:
+      - sofia
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    hostname: prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9091:9090"
+    networks:
+      - sofia
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    hostname: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - sofia
+
+  cadvisor:
+    image: gcr.io/google-containers/cadvisor:latest
+    container_name: cadvisor
+    hostname: cadvisor
+    restart: always
+    ports:
+      - "4040:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    depends_on:
+      - redis
+    networks:
+      - sofia
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    hostname: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - sofia
+
+  zookeeper-server:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper-server
+    hostname: zookeeper-server
+    restart: always
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - sofia
+
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: kafka
+    hostname: kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-server:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.31.77.222:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+    depends_on:
+      - zookeeper-server
+    networks:
+      - sofia
+
+  traefik:
+    image: traefik:v2.2
+    container_name: traefik
+    hostname: traefik
+    restart: always
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --accesslog
+      - --accesslog.fields.names.StartUTC=drop
+      - --metrics.prometheus
+      - --tracing.elastic
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: syslog
+      options:
+        tag: traefik
+    environment:
+      - TZ=US/Alaska
+    networks:
+      - sofia
+
+networks:
+  sofia:
+    driver: bridge

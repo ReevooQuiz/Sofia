@@ -38,6 +38,11 @@ type ReqInfoList struct {
 	Uids []int64 `json:"uids"`
 }
 
+type ReqLike struct {
+	Aid  string `json:"aid"`
+	Like bool   `json:"like"`
+}
+
 type ReqLogin struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
@@ -80,6 +85,15 @@ type ResBan struct {
 	Code int8 `json:"code"`
 }
 
+type ResBanned struct {
+	Code   int8           `json:"code"`
+	Result []ResultBanned `json:"result"`
+}
+
+type ResCheckSession struct {
+	Code int8 `json:"code"`
+}
+
 type ResCheckToken struct {
 	Successful bool  `json:"successful"`
 	Uid        int64 `json:"uid"`
@@ -103,6 +117,10 @@ type ResFollowers struct {
 type ResInfoList struct {
 	Code   int8             `json:"code"`
 	Result []ResultInfoList `json:"result"`
+}
+
+type ResLike struct {
+	Code int8 `json:"code"`
 }
 
 type ResLogin struct {
@@ -166,6 +184,18 @@ type ResVerify struct {
 
 type ResWordBan struct {
 	Code int8 `json:"code"`
+}
+
+type ResWordsBanned struct {
+	Code   int8     `json:"code"`
+	Result []string `json:"result"`
+}
+
+type ResultBanned struct {
+	Uid      string `json:"uid"`
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Icon     string `json:"icon"`
 }
 
 type ResultFollowed struct {
@@ -253,6 +283,9 @@ type ResultRefreshToken struct {
 	Type         int8   `json:"type"`
 	Role         int8   `json:"role"`
 	Uid          string `json:"uid"`
+	Icon         string `json:"icon"`
+	Name         string `json:"name"`
+	Nickname     string `json:"nickname"`
 	Token        string `json:"token"`
 	RefreshToken string `json:"refresh_token"`
 }
@@ -390,6 +423,61 @@ func (u *UsersServiceImpl) Ban(token string, req ReqBan) (res ResBan, err error)
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Banned(token string, page int64) (res ResBanned, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var users []entity.Users
+	users, err = u.usersDao.FindUsersByRolePageable(ctx, entity.DISABLE, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultBanned{}
+	for _, user = range users {
+		var userDetail entity.UserDetails
+		userDetail, err = u.usersDao.FindUserDetailByUid(ctx, user.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		res.Result = append(res.Result, ResultBanned{strconv.FormatInt(user.Uid, 10), user.Name, user.Nickname, userDetail.Icon})
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) CheckSession(token string) (res ResCheckSession, err error) {
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+	} else {
+		res.Code = 0
+	}
+	return res, err
 }
 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
@@ -595,6 +683,78 @@ func (u *UsersServiceImpl) InfoList(req ReqInfoList) (res ResInfoList, err error
 		}
 		res.Result = append(res.Result, ResultInfoList{user.Name, user.Nickname, userDetail.Icon})
 	}
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) Like(token string, req ReqLike) (res ResLike, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var aid int64
+	aid, err = strconv.ParseInt(req.Aid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var likeAnswer entity.LikeAnswers
+	if req.Like {
+		likeAnswer.Uid = user.Uid
+		likeAnswer.Aid = aid
+		likeAnswer.Time = time.Now().Unix()
+		err = u.usersDao.InsertLikeAnswer(ctx, likeAnswer)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	} else {
+		likeAnswer, err = u.usersDao.FindLikeAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		err = u.usersDao.RemoveLikeAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	}
+	var answer entity.Answers
+	answer, err = u.usersDao.FindAnswerByAid(ctx, aid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Like {
+		answer.LikeCount++
+	} else {
+		answer.LikeCount--
+	}
+	err = u.usersDao.UpdateAnswerByAid(ctx, answer)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
 }
 
@@ -1429,6 +1589,14 @@ func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToke
 		res.Result.Type = 0
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var userDetail entity.UserDetails
+	userDetail, err = u.usersDao.FindUserDetailByUid(ctx, uid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	var token string
 	token, err = util.SignToken(user.Uid, user.Role, false)
 	if err != nil {
@@ -1448,6 +1616,9 @@ func (u *UsersServiceImpl) RefreshToken(req ReqRefreshToken) (res ResRefreshToke
 	res.Code = 0
 	res.Result.Role = user.Role
 	res.Result.Uid = strconv.FormatInt(user.Uid, 10)
+	res.Result.Icon = userDetail.Icon
+	res.Result.Name = user.Name
+	res.Result.Nickname = user.Nickname
 	res.Result.Token = token
 	res.Result.RefreshToken = refreshToken
 	return res, u.usersDao.Commit(&ctx)
@@ -1809,5 +1980,42 @@ func (u *UsersServiceImpl) WordBan(token string, req ReqWordBan) (res ResWordBan
 		return res, u.usersDao.Rollback(&ctx)
 	}
 	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) WordsBanned(token string, page int64) (res ResWordsBanned, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var banWords []entity.BanWords
+	banWords, err = u.usersDao.FindBanWordsPageable(ctx, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	res.Result = []string{}
+	for _, banWord := range banWords {
+		res.Result = append(res.Result, banWord.Word)
+	}
 	return res, u.usersDao.Commit(&ctx)
 }

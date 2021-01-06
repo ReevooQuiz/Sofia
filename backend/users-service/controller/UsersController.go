@@ -26,11 +26,14 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	}
 	server = &http.Server{Addr: ":9092"}
 	http.HandleFunc("/ban", u.Ban)
+	http.HandleFunc("/banned", u.Banned)
+	http.HandleFunc("/checkSession", u.CheckSession)
 	http.HandleFunc("/checkToken", u.CheckToken)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
 	http.HandleFunc("/followers", u.Followers)
 	http.HandleFunc("/infoList", u.InfoList)
+	http.HandleFunc("/like", u.Like)
 	http.HandleFunc("/login", u.Login)
 	http.HandleFunc("/notifications", u.Notifications)
 	http.HandleFunc("/oauth/github", u.OAuthGithub)
@@ -43,6 +46,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/verificationCode", u.VerificationCode)
 	http.HandleFunc("/verify", u.Verify)
 	http.HandleFunc("/wordBan", u.WordBan)
+	http.HandleFunc("/wordsBanned", u.WordsBanned)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -68,6 +72,44 @@ func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.Ban(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
+	var res service.ResBanned
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Banned(r.Header.Get("Authorization"), page)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
+	res, err := u.usersService.CheckSession(r.Header.Get("Authorization"))
 	if err != nil {
 		log.Info(err)
 	}
@@ -186,6 +228,25 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.InfoList(req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqLike
+	var res service.ResLike
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Like(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}
@@ -502,6 +563,35 @@ func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.WordBan(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) WordsBanned(w http.ResponseWriter, r *http.Request) {
+	var res service.ResWordsBanned
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.WordsBanned(r.Header.Get("Authorization"), page)
 	if err != nil {
 		log.Info(err)
 	}

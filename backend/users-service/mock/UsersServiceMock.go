@@ -49,6 +49,36 @@ func (mr *MockUsersServiceMockRecorder) Ban(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ban", reflect.TypeOf((*MockUsersService)(nil).Ban), arg0, arg1)
 }
 
+// Banned mocks base method
+func (m *MockUsersService) Banned(arg0 string, arg1 int64) (service.ResBanned, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Banned", arg0, arg1)
+	ret0, _ := ret[0].(service.ResBanned)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Banned indicates an expected call of Banned
+func (mr *MockUsersServiceMockRecorder) Banned(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Banned", reflect.TypeOf((*MockUsersService)(nil).Banned), arg0, arg1)
+}
+
+// CheckSession mocks base method
+func (m *MockUsersService) CheckSession(arg0 string) (service.ResCheckSession, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckSession", arg0)
+	ret0, _ := ret[0].(service.ResCheckSession)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckSession indicates an expected call of CheckSession
+func (mr *MockUsersServiceMockRecorder) CheckSession(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckSession", reflect.TypeOf((*MockUsersService)(nil).CheckSession), arg0)
+}
+
 // CheckToken mocks base method
 func (m *MockUsersService) CheckToken(arg0 string) (service.ResCheckToken, error) {
 	m.ctrl.T.Helper()
@@ -152,6 +182,21 @@ func (m *MockUsersService) Init(arg0 ...dao.UsersDao) error {
 func (mr *MockUsersServiceMockRecorder) Init(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersService)(nil).Init), arg0...)
+}
+
+// Like mocks base method
+func (m *MockUsersService) Like(arg0 string, arg1 service.ReqLike) (service.ResLike, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Like", arg0, arg1)
+	ret0, _ := ret[0].(service.ResLike)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Like indicates an expected call of Like
+func (mr *MockUsersServiceMockRecorder) Like(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Like", reflect.TypeOf((*MockUsersService)(nil).Like), arg0, arg1)
 }
 
 // Login mocks base method
@@ -347,4 +392,19 @@ func (m *MockUsersService) WordBan(arg0 string, arg1 service.ReqWordBan) (servic
 func (mr *MockUsersServiceMockRecorder) WordBan(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WordBan", reflect.TypeOf((*MockUsersService)(nil).WordBan), arg0, arg1)
+}
+
+// WordsBanned mocks base method
+func (m *MockUsersService) WordsBanned(arg0 string, arg1 int64) (service.ResWordsBanned, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WordsBanned", arg0, arg1)
+	ret0, _ := ret[0].(service.ResWordsBanned)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WordsBanned indicates an expected call of WordsBanned
+func (mr *MockUsersServiceMockRecorder) WordsBanned(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WordsBanned", reflect.TypeOf((*MockUsersService)(nil).WordsBanned), arg0, arg1)
 }

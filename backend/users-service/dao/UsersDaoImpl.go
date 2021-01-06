@@ -140,6 +140,30 @@ func (u *UsersDaoImpl) FindApproveAnswerByUidAndAid(ctx TransactionContext, uid 
 	return approveAnswer, err
 }
 
+func (u *UsersDaoImpl) FindBanWordsPageable(ctx TransactionContext, pageable Pageable) (banWords []entity.BanWords, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from ban_words limit ?, ?")
+	if err != nil {
+		return banWords, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return banWords, err
+	}
+	banWords = []entity.BanWords{}
+	for res.Next() {
+		var banWord entity.BanWords
+		err = res.Scan(&banWord.Word)
+		if err != nil {
+			return banWords, err
+		}
+		banWords = append(banWords, banWord)
+	}
+	return banWords, err
+}
+
 func (u *UsersDaoImpl) FindCommentByCmid(ctx TransactionContext, cmid int64) (comment entity.Comments, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from comments where cmid = ?")
@@ -414,6 +438,30 @@ func (u *UsersDaoImpl) FindUserDetailByUid(ctx TransactionContext, uid int64) (u
 	return res[0], err
 }
 
+func (u *UsersDaoImpl) FindUsersByRolePageable(ctx TransactionContext, role int8, pageable Pageable) (users []entity.Users, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from users where role = ? limit ?, ?")
+	if err != nil {
+		return users, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(role, pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return users, err
+	}
+	users = []entity.Users{}
+	for res.Next() {
+		var user entity.Users
+		err = res.Scan(&user.Uid, &user.Oid, &user.Name, &user.Nickname, &user.Salt, &user.HashPassword, &user.Email, &user.Gender, &user.Profile, &user.Role, &user.AccountType, &user.ActiveCode, &user.PasswdCode, &user.Exp, &user.FollowerCount, &user.FollowingCount, &user.QuestionCount, &user.AnswerCount, &user.LikeCount, &user.ApprovalCount, &user.NotificationTime)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, user)
+	}
+	return users, err
+}
+
 func (u *UsersDaoImpl) InsertBanWord(ctx TransactionContext, banWord entity.BanWords) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into ban_words values(?)")
@@ -466,6 +514,17 @@ func (u *UsersDaoImpl) InsertLabel(ctx TransactionContext, label entity.Labels) 
 	}
 	lid, err = res.LastInsertId()
 	return lid, err
+}
+
+func (u *UsersDaoImpl) InsertLikeAnswer(ctx TransactionContext, likeAnswer entity.LikeAnswers) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into like_answers values(?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(likeAnswer.Uid, likeAnswer.Aid, likeAnswer.Time)
+	return err
 }
 
 func (u *UsersDaoImpl) InsertUser(ctx TransactionContext, user entity.Users) (uid int64, err error) {
@@ -521,6 +580,17 @@ func (u *UsersDaoImpl) RemoveFollowByUidAndFollower(ctx TransactionContext, uid 
 	return err
 }
 
+func (u *UsersDaoImpl) RemoveLikeAnswerByUidAndAid(ctx TransactionContext, uid int64, aid int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from like_answers where uid = ? and aid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(uid, aid)
+	return err
+}
+
 func (u *UsersDaoImpl) RemoveUserLabelsByUid(ctx TransactionContext, uid int64) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("delete from user_labels where uid = ?")
@@ -529,6 +599,17 @@ func (u *UsersDaoImpl) RemoveUserLabelsByUid(ctx TransactionContext, uid int64) 
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(uid)
+	return err
+}
+
+func (u *UsersDaoImpl) UpdateAnswerByAid(ctx TransactionContext, answer entity.Answers) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("update answers set answerer = ?, qid = ?, comment_count = ?, criticism_count = ?, like_count = ?, approval_count = ?, time = ? where aid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(answer.Answerer, answer.Qid, answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Time, answer.Aid)
 	return err
 }
 

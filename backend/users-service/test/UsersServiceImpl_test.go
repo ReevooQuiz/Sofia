@@ -88,6 +88,98 @@ func TestServiceBan(t *testing.T) {
 	}
 }
 
+func TestServiceBanned(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	userDetails := []entity.UserDetails{
+		{Uid: 2},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUsersByRolePageable(gomock.Any(), entity.DISABLE, dao.Pageable{Number: 0, Size: 10}).Return([]entity.Users{users[1]}, nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(userDetails[0], nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUsersByRolePageable(gomock.Any(), entity.DISABLE, dao.Pageable{Number: 0, Size: 10}).Return([]entity.Users{users[1]}, nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(entity.UserDetails{}, errors.New("mongo: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResBanned
+	}{
+		{"Normal", args{token: token0, page: 0}, service.ResBanned{Code: 0}},
+		{"NotAdmin", args{token: token1, page: 0}, service.ResBanned{Code: 1}},
+		{"UserDetailNotFound", args{token: token0, page: 0}, service.ResBanned{Code: 1}},
+		{"WrongToken", args{page: 0}, service.ResBanned{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Banned(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestServiceCheckSession(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResCheckSession
+	}{
+		{"Normal", args{token: token}, service.ResCheckSession{Code: 0}},
+		{"WrongToken", args{}, service.ResCheckSession{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.CheckSession(tt.args.token); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceCheckToken(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
@@ -154,7 +246,7 @@ func TestServiceFollow(t *testing.T) {
 		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
-		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), gomock.Any()).Return(errors.New("error 1062: Duplicate entry '2-1' for key 'PRIMARY'")),
+		mockUsersDao.EXPECT().InsertFollow(gomock.Any(), gomock.Any()).Return(errors.New("error 1062: Duplicate entry '0-0' for key 'PRIMARY'")),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
 		mockUsersDao.EXPECT().FindFollowByUidAndFollower(gomock.Any(), follows[0].Uid, follows[0].Follower).Return(entity.Follows{}, errors.New("sql: no rows in result set")),
@@ -372,6 +464,77 @@ func TestServiceInfoList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if res, _ := u.InfoList(tt.args.req); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestServiceLike(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	answers := []entity.Answers{
+		{Aid: 1, LikeCount: 0},
+		{Aid: 1, LikeCount: 1},
+	}
+	likeAnswers := []entity.LikeAnswers{
+		{Uid: 1, Aid: 1},
+	}
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertLikeAnswer(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), answers[0].Aid).Return(answers[0], nil),
+		mockUsersDao.EXPECT().UpdateAnswerByAid(gomock.Any(), answers[1]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[1].Aid).Return(likeAnswers[0], nil),
+		mockUsersDao.EXPECT().RemoveLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[1].Aid).Return(nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), answers[1].Aid).Return(answers[1], nil),
+		mockUsersDao.EXPECT().UpdateAnswerByAid(gomock.Any(), answers[0]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertLikeAnswer(gomock.Any(), gomock.Any()).Return(errors.New("error 1062: Duplicate entry '0-0' for key 'PRIMARY'")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindLikeAnswerByUidAndAid(gomock.Any(), users[0].Uid, answers[1].Aid).Return(entity.LikeAnswers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().InsertLikeAnswer(gomock.Any(), gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().FindAnswerByAid(gomock.Any(), answers[0].Aid).Return(entity.Answers{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqLike
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResLike
+	}{
+		{"LikeNormal", args{token: token, req: service.ReqLike{Aid: strconv.FormatInt(answers[0].Aid, 10), Like: true}}, service.ResLike{Code: 0}},
+		{"DislikeNormal", args{token: token, req: service.ReqLike{Aid: strconv.FormatInt(answers[1].Aid, 10), Like: false}}, service.ResLike{Code: 0}},
+		{"LikeAnswerFound", args{token: token, req: service.ReqLike{Aid: strconv.FormatInt(answers[0].Aid, 10), Like: true}}, service.ResLike{Code: 1}},
+		{"LikeAnswerNotFound", args{token: token, req: service.ReqLike{Aid: strconv.FormatInt(answers[1].Aid, 10), Like: false}}, service.ResLike{Code: 1}},
+		{"AnswerNotFound", args{token: token, req: service.ReqLike{Aid: strconv.FormatInt(answers[0].Aid, 10), Like: true}}, service.ResLike{Code: 1}},
+		{"WrongToken", args{req: service.ReqLike{Aid: strconv.FormatInt(answers[0].Aid, 10), Like: true}}, service.ResLike{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Like(tt.args.token, tt.args.req); res != tt.wantRes {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})
@@ -848,8 +1011,10 @@ func TestServiceRefreshToken(t *testing.T) {
 	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
 	users := []entity.Users{
 		{Uid: 1, Role: entity.DISABLE},
+		{Uid: 2, Role: entity.USER},
 	}
-	refreshToken, _ := util.SignToken(users[0].Uid, users[0].Role, true)
+	refreshToken0, _ := util.SignToken(users[0].Uid, users[0].Role, true)
+	refreshToken1, _ := util.SignToken(users[1].Uid, users[1].Role, true)
 	gomock.InOrder(
 		mockUsersDao.EXPECT().Init().Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
@@ -857,6 +1022,10 @@ func TestServiceRefreshToken(t *testing.T) {
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
 		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[0].Uid).Return(entity.Users{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), users[1].Uid).Return(users[1], nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[1].Uid).Return(entity.UserDetails{}, errors.New("mongo: no rows in result set")),
 		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
 		mockUsersDao.EXPECT().Destruct(),
 	)
@@ -871,8 +1040,9 @@ func TestServiceRefreshToken(t *testing.T) {
 		args    args
 		wantRes service.ResRefreshToken
 	}{
-		{"Disable", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 0}}},
-		{"UserNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
+		{"Disable", args{req: service.ReqRefreshToken{Refresh: refreshToken0}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 0}}},
+		{"UserNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken0}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
+		{"UserDetailNotFound", args{req: service.ReqRefreshToken{Refresh: refreshToken1}}, service.ResRefreshToken{Code: 1, Result: service.ResultRefreshToken{Type: 1}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1260,6 +1430,56 @@ func TestServiceWordBan(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if res, _ := u.WordBan(tt.args.token, tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
+func TestServiceWordsBanned(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	banWords := []entity.BanWords{
+		{Word: "test"},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindBanWordsPageable(gomock.Any(), dao.Pageable{Number: 0, Size: 10}).Return(banWords, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResWordsBanned
+	}{
+		{"Normal", args{token: token0, page: 0}, service.ResWordsBanned{Code: 0}},
+		{"NotAdmin", args{token: token1, page: 0}, service.ResWordsBanned{Code: 1}},
+		{"WrongToken", args{page: 0}, service.ResWordsBanned{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.WordsBanned(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
 				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
 			}
 		})
