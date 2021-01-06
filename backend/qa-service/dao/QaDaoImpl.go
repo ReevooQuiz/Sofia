@@ -253,7 +253,6 @@ func (q *QaDaoImpl) ParseAnswers(rows *sql.Rows) (result []entity.Answers, err e
 			&it.Aid,
 			&it.Answerer,
 			&it.Qid,
-			&it.ViewCount,
 			&it.CommentCount,
 			&it.CriticismCount,
 			&it.LikeCount,
@@ -621,8 +620,8 @@ func (q *QaDaoImpl) SaveQuestionSkeleton(ctx TransactionContext, question entity
 
 func (q *QaDaoImpl) SaveAnswerSkeleton(ctx TransactionContext, answer entity.Answers) (err error) {
 	res, err := ctx.sqlTx.Exec(
-		"update answers set view_count=?,comment_count_count=?,criticism_count=?like_count=?,approval_count=?,scanned=?",
-		answer.ViewCount, answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Scanned)
+		"update answers set comment_count_count=?,criticism_count=?like_count=?,approval_count=?,scanned=?",
+		answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Scanned)
 	if err != nil {
 		return
 	}

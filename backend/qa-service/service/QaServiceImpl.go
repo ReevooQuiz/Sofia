@@ -103,7 +103,6 @@ type AnswerInfo struct {
 	Owner          Owner  `json:"answerer"`
 	Time           string `json:"time"`
 	LikeCount      int64  `json:"like_count"`
-	ViewCount      int64  `json:"view_count"`
 	CriticismCount int64  `json:"criticism_count"`
 	ApprovalCount  int64  `json:"approval_count"`
 	CommentCount   int64  `json:"comment_count"`
@@ -828,7 +827,6 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	res.Aid = strconv.FormatInt(ans.Aid, 10)
 	res.Time = fmt.Sprint(ans.Time)
 	res.LikeCount = ans.LikeCount
-	res.ViewCount = ans.ViewCount
 	res.CriticismCount = ans.CriticismCount
 	res.ApprovalCount = ans.ApprovalCount
 	res.CommentCount = ans.CommentCount
@@ -845,8 +843,6 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 		log.Warn(err)
 		return Failed, nil
 	}
-	answer[0].ViewCount++
-	_ = q.qaDao.SaveAnswerSkeleton(ctx, answer[0])
 	actionInfos, err := q.qaDao.GetAnswerActionInfos(ctx, uid, []int64{ans.Qid}, []int64{aid})
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)

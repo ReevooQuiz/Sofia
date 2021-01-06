@@ -1344,7 +1344,6 @@ func TestAnswerDetail(t *testing.T) {
 		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
 		userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
-		mockQaDao.EXPECT().SaveAnswerSkeleton(gomock.Any(), gomock.Any())
 		actionInfos := []dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: false}}
 		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(actionInfos, nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
