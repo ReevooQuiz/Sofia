@@ -28,4 +28,7 @@ type QaService interface {
 	QuestionDetail(token string, qid int64) (int8, interface{})
 	ListAnswers(token string, qid int64, page int64, sort int8) (int8, interface{})
 	AnswerDetail(token string, aid int64) (int8, interface{})
+
+	GetComments(token string, aid int64, page int64) (int8, interface{})
+	AddComment(token string, req ReqCommentsPost) (int8, interface{})
 }
