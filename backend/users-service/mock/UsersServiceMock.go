@@ -363,3 +363,18 @@ func (mr *MockUsersServiceMockRecorder) WordBan(arg0, arg1 interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WordBan", reflect.TypeOf((*MockUsersService)(nil).WordBan), arg0, arg1)
 }
+
+// WordsBanned mocks base method
+func (m *MockUsersService) WordsBanned(arg0 string, arg1 int64) (service.ResWordsBanned, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WordsBanned", arg0, arg1)
+	ret0, _ := ret[0].(service.ResWordsBanned)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WordsBanned indicates an expected call of WordsBanned
+func (mr *MockUsersServiceMockRecorder) WordsBanned(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WordsBanned", reflect.TypeOf((*MockUsersService)(nil).WordsBanned), arg0, arg1)
+}

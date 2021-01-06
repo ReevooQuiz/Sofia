@@ -955,3 +955,49 @@ func TestControllerWordBan(t *testing.T) {
 		})
 	}
 }
+
+func TestControllerWordsBanned(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().WordsBanned(gomock.Any(), gomock.Any()).Return(service.ResWordsBanned{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/wordsBanned", u.WordsBanned)
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResWordsBanned
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResWordsBanned{}},
+		{"WrongPage", args{page: -1}, http.StatusOK, service.ResWordsBanned{Code: 1}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, _ := http.NewRequest("GET", "/wordsBanned?page="+strconv.FormatInt(tt.args.page, 10), nil)
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResWordsBanned
+			_ = json.Unmarshal(responseBody, &res)
+			if res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}

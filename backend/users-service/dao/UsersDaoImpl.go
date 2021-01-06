@@ -140,6 +140,30 @@ func (u *UsersDaoImpl) FindApproveAnswerByUidAndAid(ctx TransactionContext, uid 
 	return approveAnswer, err
 }
 
+func (u *UsersDaoImpl) FindBanWordsPageable(ctx TransactionContext, pageable Pageable) (banWords []entity.BanWords, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from ban_words limit ?, ?")
+	if err != nil {
+		return banWords, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return banWords, err
+	}
+	banWords = []entity.BanWords{}
+	for res.Next() {
+		var banWord entity.BanWords
+		err = res.Scan(&banWord.Word)
+		if err != nil {
+			return banWords, err
+		}
+		banWords = append(banWords, banWord)
+	}
+	return banWords, err
+}
+
 func (u *UsersDaoImpl) FindCommentByCmid(ctx TransactionContext, cmid int64) (comment entity.Comments, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from comments where cmid = ?")
