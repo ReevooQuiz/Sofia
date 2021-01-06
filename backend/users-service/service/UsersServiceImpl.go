@@ -85,6 +85,10 @@ type ResBanned struct {
 	Result []ResultBanned `json:"result"`
 }
 
+type ResCheckSession struct {
+	Code int8 `json:"code"`
+}
+
 type ResCheckToken struct {
 	Successful bool  `json:"successful"`
 	Uid        int64 `json:"uid"`
@@ -451,6 +455,17 @@ func (u *UsersServiceImpl) Banned(token string, page int64) (res ResBanned, err 
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) CheckSession(token string) (res ResCheckSession, err error) {
+	var successful bool
+	successful, _, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		res.Code = 2
+	} else {
+		res.Code = 0
+	}
+	return res, err
 }
 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
