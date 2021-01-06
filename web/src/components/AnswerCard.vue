@@ -1,41 +1,33 @@
 <template>
   <div id="answerCard">
     <a-card  size="small" style="border-radius : 3px">
-        <!-- <a-card-meta title="ans.user">
-            <template #avatar>
-                <a-avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
-            </template>
-        </a-card-meta> -->
       <a-row>
-        <a-col :span="3">
-          <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" style="width:120px" />
-        </a-col>
-        <a-col :span="21">
+        <a-col :span="22" :offset="1">
           <a-comment>
             <template #actions>
+              <span key="comment-basic-approve" v-if="ans.approvable">
+                <a-tooltip title="Approve">
+                  <template v-if="ans.approved">
+                    <LikeFilled @click="onApprove" />
+                  </template>
+                  <template v-else>
+                    <LikeOutlined @click="onApprove" />
+                  </template>
+                </a-tooltip>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.approval_count }}</span>
+              </span>
               <span key="comment-basic-like">
                 <a-tooltip title="Like">
-                  <template v-if="action === 'liked'">
-                    <LikeFilled @click="like" />
+                  <template v-if="ans.liked">
+                    <HeartFilled @click="onLike" />
                   </template>
                   <template v-else>
-                    <LikeOutlined @click="like" />
+                    <HeartOutlined @click="onLike" />
                   </template>
                 </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ likes }}</span>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.like_count }}</span>
               </span>
-              <span key="comment-basic-dislike">
-                <a-tooltip title="Dislike">
 
-                  <template v-if="action === 'disliked'">
-                    <DislikeFilled @click="dislike" />
-                  </template>
-                  <template v-else>
-                    <DislikeOutlined @click="dislike" />
-                  </template>
-                </a-tooltip>
-                <!-- <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span> -->
-              </span>
               <span key="comment-basic-comment" @click="clickComment" >
                 <MessageTwoTone v-if="showComment" />
                 <MessageOutlined v-else />
@@ -45,33 +37,37 @@
               <a-button v-else @click="onWriteComment" type="primary" shape="pill" size="small">我要评论</a-button>
             </template>
             <template #author>
-              <a> {{ans.owner.user_name}}</a>
+              <a> {{ans.answerer.name}}</a>
             </template>
             <template #avatar>
               <a-avatar
-                src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-                alt="Han Solo"
+                :src="ans.answerer.icon"
+                :alt="ans.answerer.name"
               />
             </template>
-            <template #extra>
-                <a-tag>
-                    #tag
-                </a-tag>
-            </template>
             <template #content>
-              <p>
-                {{ans.content}}
+              <p v-if="full">
+                <v-md-editor mode="preview" v-model="ans.content"></v-md-editor>
+              </p>
+              <p v-else>
+                <v-md-editor mode="preview" v-model="ans.head"></v-md-editor>
+                <a @click="getAnswerDetail">...查看全部</a>
               </p>
             </template>
-            </a-comment>
-            <span v-if="writeComment">
-              <a-textarea v-model:value="writeCommentValue" placeholder="您的评论" :rows="4" />
+            <template #datetime>
+              <a-tooltip :title="time.format('YYYY-MM-DD HH:mm:ss')">
+                <span>{{ time.fromNow() }}</span>
+              </a-tooltip>
+            </template>
+          </a-comment>
+          <span v-if="writeComment">
+              <a-textarea v-model:value="writeCommentValue" placeholder="您的评论..." :rows="4" />
               <br/>
               <a-row type="flex" justify="end">
                 <a-button @click="onCommitComment" type="primary" shape="pill" size="small">提交评论</a-button>
               </a-row>
             </span>
-            <span v-if="showComment">
+          <span v-if="showComment">
 <!--              <a-divider/>-->
               <a-list
                   class="comment-list"
@@ -82,7 +78,7 @@
                 <template #loadMore>
                   <div
                       v-if="showLoadingMore"
-                    :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
+                      :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
                   >
                     <a-spin v-if="loadingMore" />
                     <a-button v-else @click="onLoadMore">
@@ -93,20 +89,18 @@
                 </template>
                 <template #renderItem="{ item }">
                   <a-list-item>
-                    <a-comment :author="item.user" :avatar="item.avatar">
-<!--                      <template #actions>-->
-<!--                        <span v-for="action in item.actions">{{ action }}</span>-->
-<!--                      </template>-->
+                    <a-comment :author="item.nickname" :avatar="item.icon">
                       <template #content>
                         <p>
                           {{ item.content }}
                         </p>
                       </template>
-<!--                      <template #datetime>-->
-<!--                        <a-tooltip :title="item.datetime.format('YYYY-MM-DD HH:mm:ss')">-->
-<!--                          <span>{{ item.datetime.fromNow() }}</span>-->
-<!--                        </a-tooltip>-->
-<!--                      </template>-->
+                      <template #datetime>
+                        <a-tooltip :title="time.format('YYYY-MM-DD HH:mm:ss')">
+                         <span>{{ time.fromNow() }}</span>
+                        </a-tooltip>
+                     </template>
+
                     </a-comment>
                   </a-list-item>
                 </template>
@@ -114,7 +108,6 @@
 
             </span>
         </a-col>
-
       </a-row>
     </a-card>
     <br/>
@@ -125,91 +118,87 @@
 
 <script >
 import moment from "moment";
-import { LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined,MessageOutlined,MessageTwoTone } from '@ant-design/icons-vue';
+import { LikeFilled, LikeOutlined,MessageOutlined,MessageTwoTone,HeartOutlined,HeartFilled } from '@ant-design/icons-vue';
 import { notification } from 'ant-design-vue';
-
-const comments=[{
-    id:1,
-    user:"violedo",
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-    content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},{
-  id:2,
-  user:"violedo",
-  avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-  content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},{
-  id:3,
-  user:"violedo",
-  avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-  content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},
-];
+import { postRequest,getRequest } from "@/http/request.js";
 
 export default {
   components: {
-     LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined,MessageOutlined,MessageTwoTone
+     LikeFilled, LikeOutlined,MessageOutlined,MessageTwoTone,HeartOutlined,HeartFilled
   },
   props: ['ans'] ,
 
   data() {
     return {
       action: null,
-      likes:this.ans.like_count,
-      // dislikes:this.ans.dislike_count,
       showComment:false,
-      comments,
+      comments:[],
       showLoadingMore: true,
       writeComment:false,
       writeCommentValue:"",
-      moment
+      full:false,
+      pageNow:0,
+      time:null,
+      loadingMore:true
     };
   },
+  created(){
+    this.time=moment(this.ans.time);
+  },
   methods: {
-    like() {
-      this.likes = 1;
-      // this.dislikes =  0;
-      this.action = "liked";
+    getAnswerDetail(){
+      getRequest("/answer",(e)=>{
+        this.ans.content=e.result.content;
+        this.full=true;
+      }, {errorCallback:(e)=>{console.log(e)},
+            params:{aid:this.ans.aid}});
     },
-    dislike() {
-      this.likes = 0;
-      // this.dislikes = 1;
-      this.action = "disliked";
+    onLike() {
+      this.ans.liked=!this.ans.liked;
+      if (this.ans.liked)
+        this.ans.like_count++;
+      else this.ans.like_count--;
+      postRequest("/like", {aid:this.ans.aid,like:this.ans.liked},(e)=>{
+        console.log(e);
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
+    },
+    onApprove(){
+      this.ans.approved=!this.ans.approved;
+      if (this.ans.approved)
+        this.ans.approval_count++;
+      else this.ans.approval_count--;
+      postRequest("/approve", {aid:this.ans.aid,approve:this.ans.approved},(e)=>{
+        console.log(e);
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
     },
     clickComment() {
         this.showComment=!this.showComment;
         if (this.showComment){
-          console.log(this.showComment);
-
+          if (this.pageNow==0){
+            this.getData();
+          }
         }
     },
-    getData(callback) {/****************************************TODO getData********************************/
-      callback({results:null});
-      // reqwest({
-      //   url: fakeDataUrl,
-      //   type: 'json',
-      //   method: 'get',
-      //   contentType: 'application/json',
-      //   success: res => {
-      //     callback(res);
-      //   },
-      // });
+    getData() {
+      getRequest("/comments",
+          (response)=>{
+          this.comments=this.comments.concat(response.result);
+          this.pageNow++;
+          this.loadingMore=false;
+          if (response.res.length==0)
+            this.showLoadingMore=false;
+        },
+          {errorCallback:(e)=>{console.log(e);},
+        params:{aid:this.ans.aid,page:this.pageNow}
+      });
     },
     onLoadMore() {
       this.loadingMore = true;
-      this.getData(res => {
-        //this.comments = this.comments.concat(res.results);
-        this.loadingMore = false;
-        // if (xxxxx){
-        //   this.showLoadingMore=false;
-        // }
-        // this.$nextTick(() => {
-        //   window.dispatchEvent(new Event('resize'));
-        // });
-      });
+      this.getData();
     },
     onWriteComment(){
       if (!this.writeComment)
@@ -239,10 +228,20 @@ export default {
         });
         return;
       }
-      /*********************************TODO commit comment*********************************************/
-
-      this.writeComment=false;
-      this.writeCommentValue="";
+      let body={aid:this.ans.aid,content:this.writeCommentValue};
+      postRequest("/comments",body,(e)=>{
+        console.log(e);
+        this.writeComment=false;
+        this.writeCommentValue="";
+        this.ans.comment_count++;
+        if (this.showComment){
+          this.comments=[];
+          this.pageNow=0;
+          this.getData();
+        }
+      },{errorCallback:(e)=>{
+        console.log(e);
+      }});
     }
   }
 };

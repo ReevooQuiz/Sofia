@@ -11,7 +11,7 @@
       </a-card>
     </a-col>
     <a-col :span="12">
-      <QuestionForSearch v-for="(item) in recommendedQuestionData" v-bind:key="item.id" :ques="item" />
+      <QuestionForSearch v-for="(item) in recommendedQuestionData" v-bind:key="item.qid" :ques="item" />
     </a-col>
     <a-col :span="4">
       <a-table
@@ -32,65 +32,8 @@
 import QuestionForSearch from "@/components/QuestionForSearch.vue";
 import UserForSearch from "@/components/UserForSearch";
 import CardForSearch from "@/components/CardForSearch";
-const recommendedQuestionData = [
-  {
-    qid: 1,
-    owner: {
-      user_id: 1,
-      user_name: "阿钪",
-      user_icon:
-          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
+import { postRequest,getRequest } from "@/http/request.js";
 
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-          "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  }
-];
 const userData=[{
   uid:"sdfw",
   name:"dsfwfwg",
@@ -111,48 +54,6 @@ const userData=[{
   icon:"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
 },
 ];
-const hotRankData=[{
-  index:1,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:2,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:3,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:4,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:5,
-  name:"wg23rgeeafsssssssgeqwhrnjetkry,tu.lkjehwrgeb",
-  heat:"2346"
-},{
-  index:6,
-  name:"wg23rgeerkdjehsktdulyktjhrstykfjtretjsytstjhrsjheratjb",
-  heat:"2346"
-},{
-  index:7,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:8,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:9,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:10,
-  name:"wg23rgeeb",
-  heat:"2346"
-}
-];
 const columns=[
   {
     dataIndex: 'index',
@@ -160,12 +61,12 @@ const columns=[
     slots: {  title: 'customTitle' },
     width:50
   },{
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: 'title',
+    key: 'title',
     ellipsis:true,
   },{
-    dataIndex: 'heat',
-    key: 'heat',
+    dataIndex: 'view_count',
+    key: 'view_count',
     width:70
   },
 ];
@@ -174,11 +75,33 @@ export default {
   data() {
     return {
       userData:userData,
-      recommendedQuestionData:recommendedQuestionData,
-      hotRankData:hotRankData,
+      recommendedQuestionData: [],
+      hotRankData:[],
       columns,
     };
   },
+  created() {
+    getRequest("/questions",
+        (response)=>{
+          this.recommendedQuestionData=response.result;
+        }, {
+          errorCallback:(e)=>{console.log(e)},
+          params:{}
+        });
+    getRequest("/hotlist",
+        (response)=>{
+          this.hotRankData=response.result;
+          let i=0;
+          for (;i<10;){
+            if (i>=this.hotRankData.length)
+              break;
+            this.hotRankData[i].index=++i;
+          }
+        }, {
+          errorCallback:(e)=>{console.log(e)},
+          params:{}
+        });
+  }
 }
 </script>
 
