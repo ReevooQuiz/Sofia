@@ -47,15 +47,15 @@
             </template>
             <template #content>
               <p v-if="full">
-                {{ans.content}}
+                <v-md-editor mode="preview" v-model="ans.content"></v-md-editor>
               </p>
               <p v-else>
-                {{ans.head}}
+                <v-md-editor mode="preview" v-model="ans.head"></v-md-editor>
                 <a @click="getAnswerDetail">...查看全部</a>
               </p>
             </template>
             <template #datetime>
-              <a-tooltip :title="item.datetime.format('YYYY-MM-DD HH:mm:ss')">
+              <a-tooltip :title="time.format('YYYY-MM-DD HH:mm:ss')">
                 <span>{{ time.fromNow() }}</span>
               </a-tooltip>
             </template>
@@ -89,18 +89,15 @@
                 </template>
                 <template #renderItem="{ item }">
                   <a-list-item>
-                    <a-comment :author="item.user" :avatar="item.avatar">
-<!--                      <template #actions>-->
-                      <!--                        <span v-for="action in item.actions">{{ action }}</span>-->
-                      <!--                      </template>-->
+                    <a-comment :author="item.nickname" :avatar="item.icon">
                       <template #content>
                         <p>
                           {{ item.content }}
                         </p>
                       </template>
                       <template #datetime>
-                        <a-tooltip :title="item.datetime.format('YYYY-MM-DD HH:mm:ss')">
-                         <span>{{ moment(item.time).fromNow() }}</span>
+                        <a-tooltip :title="time.format('YYYY-MM-DD HH:mm:ss')">
+                         <span>{{ time.fromNow() }}</span>
                         </a-tooltip>
                      </template>
 
@@ -125,27 +122,6 @@ import { LikeFilled, LikeOutlined,MessageOutlined,MessageTwoTone,HeartOutlined,H
 import { notification } from 'ant-design-vue';
 import { postRequest,getRequest } from "@/http/request.js";
 
-const comments=[{
-    id:1,
-    user:"violedo",
-    avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-    content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},{
-  id:2,
-  user:"violedo",
-  avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-  content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},{
-  id:3,
-  user:"violedo",
-  avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-  content:"We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully andefficiently.",
-
-},
-];
-
 export default {
   components: {
      LikeFilled, LikeOutlined,MessageOutlined,MessageTwoTone,HeartOutlined,HeartFilled
@@ -162,8 +138,12 @@ export default {
       writeCommentValue:"",
       full:false,
       pageNow:0,
-      time:moment(ans.time)
+      time:null,
+      loadingMore:true
     };
+  },
+  created(){
+    this.time=moment(this.ans.time);
   },
   methods: {
     getAnswerDetail(){
@@ -209,6 +189,8 @@ export default {
           this.comments=this.comments.concat(response.result);
           this.pageNow++;
           this.loadingMore=false;
+          if (response.res.length==0)
+            this.showLoadingMore=false;
         },
           {errorCallback:(e)=>{console.log(e);},
         params:{aid:this.ans.aid,page:this.pageNow}

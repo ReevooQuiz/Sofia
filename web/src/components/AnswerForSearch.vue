@@ -1,23 +1,23 @@
 <template>
   <div class="questionForSearch">
-    <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
+    <a-card hoverable :title="title" size="small" style="border-radius : 3px">
       <a-row>
         <a-col :span="5">
-          <img :src="ques.picture_urls" style="width:120px" @click="toQuestion"/>
+          <img :src="ans.picture_urls" style="width:120px" @click="toQuestion"/>
         </a-col>
         <a-col :span="19">
-          <a-comment>
+          <a-comment @click="toQuestion">
             <template #author>
-              <a> {{ques.raiser.nickname}}</a>
+              <a> {{ans.answerer.nickname}}</a>
             </template>
             <template #avatar>
               <a-avatar
-                :src="ques.raiser.icon"
-                :alt="ques.raiser.nickname"
+                  :src="ans.answerer.icon"
+                  :alt="ans.answerer.nickname"
               />
             </template>
             <template #content>
-              <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
+              <v-md-editor mode="preview" v-model="ans.head" @click="toQuestion"></v-md-editor>...查看全部
             </template>
           </a-comment>
         </a-col>
@@ -34,21 +34,18 @@ import moment from "moment";
 import { LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined } from '@ant-design/icons-vue';
 export default {
   components: {
-     LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined
+    LikeFilled, LikeOutlined,DislikeFilled,DislikeOutlined
   },
-  props: ['ques'] ,
+  props: ['ans'] ,
 
   data() {
     return {
-      // likes :  this.ques.likeNum,
-      // dislikes:   this.ques.dislikeNum,
-      action: null,
-      moment
+      title:"来自问题："+this.ans.question_title
     };
   },
   methods: {
     toQuestion() {
-      this.$router.push({ path:'/question' , query: { questionId: this.ques.qid } });
+      this.$router.push({ path:'/question' , query: { questionId: this.ans.qid } });
     }
   }
 };

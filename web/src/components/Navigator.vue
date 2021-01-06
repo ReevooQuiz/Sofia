@@ -12,7 +12,7 @@
         <a-menu-item key="mine">
           <router-link to="/personal">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">
-          <router-link to="/hotRank">热榜</router-link></a-menu-item>
+          <router-link to="/hotRank">热榜管理</router-link></a-menu-item>
       </a-menu>
       <a-space :size="10" style="marginRight:20px">
         <router-link to="/">

@@ -37,6 +37,20 @@
       <a-row>
         <AnswerCard v-for="(item) in answerData" v-bind:key="item.aid" :ans="item" />
       </a-row>
+      <a-row type="flex" justify="space-around" >
+        <a-col>
+          <div
+              v-if="showLoadingMore"
+              :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
+          >
+            <a-spin v-if="loadingMore" />
+            <a-button v-else @click="onLoadMore">
+              加载更多
+            </a-button>
+          </div>
+          <div v-else>已经到底了</div>
+        </a-col>
+      </a-row>
     </a-col>
   </div>
 </template>
@@ -49,7 +63,6 @@ import { DownOutlined } from "@ant-design/icons-vue";
 import { postRequest,getRequest } from "@/http/request.js";
 
 const orderBy = ["按时间排序", "按热度排序"];
-
 export default {
   components: {
     QuestionHead,
@@ -62,17 +75,21 @@ export default {
       orderKey:0,
       writeAnswer:false,
       writeAnswerValue:"",
-      questionHead:{},
+      questionHead:{raiser:{}},
       answerData:[],
-      pageNow:0
+      pageNow:0,
+      showLoadingMore: true,
+      loadingMore:true
     };
   },
   created() {
-    console.log(this.$route.query.questionId);
+    //console.log(this.$route.query.questionId);
     let p= this.$route.query.questionId;
+    this.qid=p;
     getRequest("/question",
         (response)=>{
-      this.questionHead=response.result
+      this.questionHead=response.result;
+      console.log(response);
     }, {
       errorCallback:(e)=>{console.log(e)},
       params:{qid:p}
@@ -82,12 +99,20 @@ export default {
   methods: {
     getAnswers(){
       getRequest("/answers",
-          (response)=>{this.answerData.append(response.result);},
+          (response)=>{
+            this.answerData=this.answerData.concat(response.result);
+            this.loadingMore=false;
+            if (response.res.length==0)
+              this.showLoadingMore=false;
+          },
           {
         errorCallback:(e)=>{console.log(e)},
-        params:{qid:p,page:this.pageNow++,sort:this.orderKey}
+        params:{qid:this.questionHead.qid,page:this.pageNow++,sort:this.orderKey}
       });
-
+    },
+    onLoadMore(){
+      this.loadingMore = true;
+      this.getAnswers();
     },
     reorderAnswers(response){
       this.answerData=response.result;
@@ -98,7 +123,7 @@ export default {
       this.orderKey=e.key;
       getRequest("/answers",this.reorderAnswers, {
         errorCallback:(event)=>{console.log(event)},
-        params:{qid:p,page:0,sort:e.key}
+        params:{qid:this.questionHead.qid,page:0,sort:e.key}
       });
     },
     onWriteAnswer(){
@@ -110,6 +135,7 @@ export default {
       this.writeAnswer=true;
     },
     onCommitAnswer(){
+      console.log(this.writeAnswerValue);
       postRequest("/answers", {qid:this.questionHead.qid,content:this.writeAnswerValue},(e)=>{
         console.log(e);
         this.writeAnswer=false;

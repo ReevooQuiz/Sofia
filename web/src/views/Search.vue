@@ -16,18 +16,21 @@
         <br />
 
         <div>
-          <a-tabs default-active-key="1" @change="callback" :size="small">
+          <a-tabs :default-active-key="tabNow" @change="onChangeTab" size="small">
             <a-tab-pane key="1" tab="问题">
-              <QuestionForSearch v-for="(item) in questionData" v-bind:key="item.id" :ques="item" />
+              <QuestionForSearch v-for="(item) in questionData" v-bind:key="item.qid" :ques="item" />
             </a-tab-pane>
             <a-tab-pane key="2" tab="用户">
               <UserForSearch v-for="(item) in userData" v-bind:key="item.uid" :user="item"/>
+            </a-tab-pane>
+            <a-tab-pane key="3" tab="回答">
+              <AnswerForSearch v-for="(item) in answerData" v-bind:key="item.aid" :ans="item"/>
             </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
       <a-col :span="8" :offset="1">
-        <CardForSearch :info="cardInfo" />
+        <CardForSearch v-for="(item) in cardInfo" v-bind:key="item.title" :info="item" />
       </a-col>
     </a-row>
   </div>
@@ -39,152 +42,90 @@ import QuestionForSearch from "@/components/QuestionForSearch.vue";
 import CardForSearch from "@/components/CardForSearch.vue";
 import server from "@/http/request.js";
 import UserForSearch from "@/components/UserForSearch";
+import AnswerForSearch from "@/components/AnswerForSearch";
+import { postRequest,getRequest } from "@/http/request.js";
 
-const data = [
-  {
-    qid: 1,
-    owner: {
-      user_id: 1,
-      user_name: "阿钪",
-      user_icon:
-        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
 
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  },
-  {
-    qid: 345,
-    owner: {
-      user_id: 3,
-      user_name: "violedo",
-      user_icon:
-        "https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-    },
-    title: "如何看待上海交通大学花店事件",
-    description:
-      "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打",
-    answer_count: 4,
-    follow_count: 234
-  }
-];
-
-const userData=[{
-  uid:"sdfw",
-  name:"dsfwfwg",
-  nickname:"nick",
-  profile:"sdg3g2gbrgefgrwwgbfrrwfgerwger",
-  icon:"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-},{
-  uid:"sdfw",
-  name:"dsfwfwg",
-  nickname:"nick",
-  profile:"sdg3g2gbrgefgrwwgbfrrwfgerwger",
-  icon:"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-},{
-  uid:"sdfw",
-  name:"dsfwfwg",
-  nickname:"nick",
-  profile:"sdg3g2gbrgefgrwwgbfrrwfgerwger",
-  icon:"https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-},
-];
-
-const data2 = {
-  title: "上海交通大学",
-  keyWords: ["国际知名大学", "二月十三", "C9高校"],
-  attributes: [
-    ["前身", "南洋公学"],
-    ["校长", "林忠钦"],
-    ["位于", "上海"],
-    ["书记", "姜斯宪"]
-  ],
-  tags: ["二月十三", "复旦"]
-};
 export default {
-  components: {UserForSearch, QuestionForSearch, CardForSearch },
+  components: {UserForSearch, QuestionForSearch, CardForSearch, AnswerForSearch },
   data() {
     return {
-      questionData: data,
-      userData:userData,
+      questionData: [],
+      userData:[],
+      answerData:[],
       searchValue: "",
-      cardInfo: data2,
-      inputValue: "wge"
+      cardInfo: [],
+      inputValue: "wge",
+      questionPageNow:0,
+      answerPageNow:0,
+      userPageNow:0,
+      tabNow:1
     };
   },
   created() {
     this.searchValue=this.$route.query.content;
     this.inputValue=this.$route.query.content;
     console.log(this.inputValue);
+    this.searchQuestion();
+    this.searchCard();
   },
   methods: {
     onSearch(value) {
       this.searchValue = value;
-      console.log(this.searchValue);
-
-      server
-        .get("/search", {
-          params: this.searchValue
-        })
-        .catch(function(error) {
-          console.log(error);
-        })
-        .then(response => {
-          console.log("!");
-          console.log(response.data);
-          console.log(response.data.question_list);
-          this.questionData = response.data.question_list;
-          console.log(this.questionData);
-        });
+      this.questionPageNow=0;
+      this.userPageNow=0;
+      this.answerPageNow=0;
+      if (this.tabNow===1){
+        this.searchQuestion();
+      } else if (this.tabNow===2){
+        this.searchUser();
+      } else {
+        this.searchAnswer();
+      }
+      this.searchCard();
     },
-
-    handleInit(response) {
-      this.questionData = response.data.questionData;
-      this.cardInfo = response.data.cardInfo;
+    searchQuestion(){
+      getRequest("/searchQuestions",(e)=>{
+        this.questionData=this.questionData.concat(e.result);
+        this.questionPageNow++;
+      }, {errorCallback:(e)=>{console.log(e)},
+        params:{page:this.questionPageNow,text:this.searchValue}});
+    },
+    searchUser(){
+      getRequest("/searchUsers",(e)=>{
+        console.log(e);
+        this.userData=this.userData.concat(e.result);
+        this.userPageNow++;
+      }, {errorCallback:(e)=>{console.log(e)},
+        params:{page:this.userPageNow,text:this.searchValue}});
+    },
+    searchAnswer(){
+      getRequest("/searchAnswers",(e)=>{
+        this.answerData=this.answerData.concat(e.result);
+        this.answerPageNow++;
+      }, {errorCallback:(e)=>{console.log(e)},
+        params:{page:this.answerPageNow,text:this.searchValue}});
+    },
+    searchCard(){
+      getRequest("/search",(e)=>{
+        this.cardInfo=e.result;
+      }, {errorCallback:(e)=>{console.log(e)},
+        params:{text:this.searchValue}});
+    },
+    onChangeTab(key){
+      this.tabNow=key;
+      if (this.tabNow==1){
+        if (this.questionData.length==0)
+          this.searchQuestion();
+      } else if (this.tabNow==2){
+        if (this.userData.length==0)
+          this.searchUser();
+      } else {
+        if (this.answerData.length==0)
+          this.searchAnswer();
+      }
     }
   },
-  // created: function() {
-  //   server
-  //     .get("/get", {
-  //       params: {}
-  //     })
-  //     .then(response => this.handleInit(response))
-  //     .catch(function(error) {
-  //       console.log(error);
-  //     });
-  // }
-
 };
 </script>
 

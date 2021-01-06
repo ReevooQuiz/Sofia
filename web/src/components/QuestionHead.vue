@@ -21,23 +21,23 @@
               />
             </template>
             <template #content>
-              <p>{{ques.content}}</p>
+              <v-md-editor mode="preview" v-model="ques.content"></v-md-editor>
             </template>
             <template #actions>
               <span key="comment-basic-approve">
                 <a-tooltip title="favorite">
-                  <template v-if="ans.favorited">
+                  <template v-if="ques.collected">
                     <HeartFilled @click="onFavorite" />
                   </template>
                   <template v-else>
                     <HeartOutlined @click="onFavorite" />
                   </template>
                 </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.favorite_count }}</span>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ques.favorite_count }}</span>
               </span>
             </template>
             <template #datetime>
-              <a-tooltip :title="item.datetime.format('YYYY-MM-DD HH:mm:ss')">
+              <a-tooltip :title="time.format('YYYY-MM-DD HH:mm:ss')">
                 <span>{{ time.fromNow() }}</span>
               </a-tooltip>
             </template>
@@ -45,10 +45,9 @@
         </a-col>
         <a-col :span="2" align="center">
           <h2>{{ques.category}}</h2>
-          <br/>
-          <h2>关注者</h2>
+          <h3>关注者</h3>
           <h3>{{ques.favorite_count}}</h3>
-          <h2>热度</h2>
+          <h3>热度</h3>
           <h3>{{ques.view_count}}</h3>
         </a-col>
       </a-row>
@@ -66,6 +65,7 @@ import {
   HeartOutlined,
 } from "@ant-design/icons-vue";
 import {postRequest} from "@/http/request";
+
 export default {
   components: {
     HeartFilled,
@@ -81,16 +81,15 @@ export default {
   methods: {
     onFavorite(){
       console.log("a");
-      /***********WAITING API**************/
-      // this.ques.favorited=!this.ques.favorited;
-      // if (this.ques.favorited)
-      //   this.ques.favorite_count++;
-      // else this.ques.favorite_count--;
-      // postRequest("/favorite", {qid:this.ques.qid,favorite:this.ques.favorited},(e)=>{
-      //   console.log(e);
-      // },{errorCallback:(e)=>{
-      //     console.log(e);
-      //   }});
+      this.ques.collected=!this.ques.collected;
+      if (this.ques.collected)
+        this.ques.favorite_count++;
+      else this.ques.favorite_count--;
+      postRequest("/favorite", {qid:this.ques.qid,favorite:this.ques.collected},(e)=>{
+        console.log(e);
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
     },
   }
 };

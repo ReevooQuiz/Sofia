@@ -1,16 +1,16 @@
 <template>
   <a-card hoverable>
     <a-comment  @click="toUser">
-      <template #author><a>{{name}}</a></template>
+      <template #author><a>{{user.name}}</a></template>
       <template #avatar>
         <a-avatar
-            :src="icon"
-            :alt="name"
+            :src="user.icon"
+            :alt="user.nickname"
         />
       </template>
       <template #content>
         <p>
-          {{profile}}
+          {{user.profile}}
         </p>
       </template>
     </a-comment>
@@ -23,14 +23,11 @@ export default {
   props: ['user'] ,
   data(){
     return {
-      name:this.user.name,
-      icon:this.user.icon,
-      profile:this.user.profile
     };
   },
   methods:{
     toUser(){
-      console.log("toUser");
+      console.log("toUser");//******************TODO*****************
     }
   }
 }

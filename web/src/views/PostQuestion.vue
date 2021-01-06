@@ -2,10 +2,11 @@
   <a-row>
     <a-col :span="18" :offset="2">
       <a-row>
-        <a-col :span="18">
+        <a-col :span="14">
+          请输入标题
           <a-textarea v-model:value="title" placeholder="请输入标题" showCount :maxlength="100" />
         </a-col>
-        <a-col :span="5" :offset="1">
+        <a-col :span="9" :offset="1">
           请输入您想标注的标签
           <a-textarea v-model:value="labelString" placeholder="格式：label1#label2#" showCount :maxlength="100" />
         </a-col>
@@ -37,6 +38,7 @@
 
 <script>
 import {postRequest} from "@/http/request";
+import {message} from "ant-design-vue";
 
 export default {
   data(){
@@ -63,11 +65,14 @@ export default {
             labels:this.labels,
             category:this.category,
           },(e)=>{
-        console.log(e);
-        /**************TODO*****************/
-      },{errorCallback:(e)=>{
-          console.log(e);
-        }});
+        //console.log(e);
+            if (e.code==0){
+              message.success("发布成功");
+              this.$router.push({ path:'/question' , query: { questionId: e.result.qid } });
+            }
+          },{errorCallback:(e)=>{
+              console.log(e);
+            }});
     }
   },
 }

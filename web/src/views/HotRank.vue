@@ -8,7 +8,7 @@
       <br/>
       <a-table
           :columns="columns"
-          :data-source="data"
+          :data-source="hotRankData"
           :row-selection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
           :pagination="false"
           size="middle"
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import { postRequest,getRequest } from "@/http/request.js";
 const columns=[
   {
     dataIndex: 'index',
@@ -53,56 +54,14 @@ const columns=[
     slots: {  title: 'customTitle' },
     width:70
   },{
-    dataIndex: 'name',
-    key: 'name',
+    dataIndex: 'title',
+    key: 'title',
     ellipsis:true,
   },{
-    dataIndex: 'heat',
-    key: 'heat',
+    dataIndex: 'view_count',
+    key: 'view_count',
     width:70
   },
-];
-const data=[{
-  index:1,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:2,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:3,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:4,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:5,
-  name:"wg23rgeeafsssssssgeqwhrnjetkry,tu.lkjehwrgeb",
-  heat:"2346"
-},{
-  index:6,
-  name:"wg23rgeerkdjehsktdulyktjhrstykfjtretjsytstjhrsjheratjb",
-  heat:"2346"
-},{
-  index:7,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:8,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:9,
-  name:"wg23rgeeb",
-  heat:"2346"
-},{
-  index:10,
-  name:"wg23rgeeb",
-  heat:"2346"
-}
 ];
 const apealData=[{
   author:"akangakang",
@@ -124,12 +83,28 @@ export default {
   },
   data(){
     return {
-      data,
       apealData,
       columns,
       selectedRowKeys: [],
       loading:false,
+      hotRankData:[]
     };
+  },
+  created() {
+    //**************TODO check admin***************
+    getRequest("/hotlist",
+        (response)=>{
+          this.hotRankData=response.result;
+          let i=0;
+          for (;i<10;){
+            if (i>=this.hotRankData.length)
+              break;
+            this.hotRankData[i].index=++i;
+          }
+        }, {
+          errorCallback:(e)=>{console.log(e)},
+          params:{}
+        });
   },
   computed: {
     hasSelected() {

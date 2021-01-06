@@ -1,38 +1,35 @@
 <template>
   <div class="cardForSearch">
     <a-card hoverable :title="info.title" size="small" style="border-radius :5px">
-      <a-descriptions title="关键字" size="small">
-        <a-descriptions-item v-for="(item) in info.keyWords" v-bind:key="item.index">{{item}}</a-descriptions-item>
-      </a-descriptions>
       <a-divider />
       <a-descriptions title="属性" size="small">
-        <a-descriptions-item v-for="(item) in info.attributes" v-bind:key="item.index">
+        <a-descriptions-item v-for="(item) in info.attr" v-bind:key="item.name">
           <a-tag id="tagBack" color="#eeeeee">
             <a-row justify="space-between">
               <a-col :span="10">
-                <font color="black">{{item[0]}}</font>
+                <font color="black">{{item.name}}</font>
               </a-col>
               <a-col :span="14">
-                <a-tag color="#a3dbd8" id="tagFront"><font color="black">{{item[1]}}</font></a-tag>
+                <a-tag color="#a3dbd8" id="tagFront"><font color="black">{{item.value}}</font></a-tag>
               </a-col>
             </a-row>
           </a-tag>
         </a-descriptions-item>
       </a-descriptions>
       <a-divider />
-      <a-descriptions title="标签" size="small">
-        <a-descriptions-item v-for="(item) in info.tags" v-bind:key="item.index">
-          <a-tag color="#a3dbd8">
-            {{item}}
+<!--      <a-descriptions title="标签" size="small">-->
+<!--        <a-descriptions-item v-for="(item) in info.tags" v-bind:key="item.index">-->
+<!--          <a-tag color="#a3dbd8">-->
+<!--            {{item}}-->
 
-          </a-tag>
-        </a-descriptions-item>
-      </a-descriptions>
+<!--          </a-tag>-->
+<!--        </a-descriptions-item>-->
+<!--      </a-descriptions>-->
     </a-card>
     <br />
   </div>
 </template>
-       
+
 
 
 <script >
@@ -41,24 +38,12 @@ export default {
   props: ["info"],
   data() {
     return {
-      likes: 0,
-      dislikes: 0,
-      action: null,
-
-      moment
     };
   },
+  created() {
+    console.log(this.info);
+  },
   methods: {
-    like() {
-      this.likes = 1;
-      this.dislikes = 0;
-      this.action = "liked";
-    },
-    dislike() {
-      this.likes = 0;
-      this.dislikes = 1;
-      this.action = "disliked";
-    }
   }
 };
 </script>
@@ -88,13 +73,13 @@ export default {
   color: #000;
 }
 #tagBack{
-   width: 30px;   
+   width: 30px;
 overflow: hidden;
 text-overflow:ellipsis;
 white-space: nowrap;
 }
 #tagBack{
-   width: 100px; 
+   width: 100px;
 overflow: hidden;
 text-overflow:ellipsis;
 white-space: nowrap;
