@@ -27,4 +27,5 @@ type UsersService interface {
 	VerificationCode(register bool, email string) (res ResVerificationCode, err error)
 	Verify(email string, code int64) (res ResVerify, err error)
 	WordBan(token string, req ReqWordBan) (res ResWordBan, err error)
+	WordsBanned(token string, page int64) (res ResWordsBanned, err error)
 }

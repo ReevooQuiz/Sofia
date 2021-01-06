@@ -1321,3 +1321,53 @@ func TestServiceWordBan(t *testing.T) {
 		})
 	}
 }
+
+func TestServiceWordsBanned(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.ADMIN},
+		{Uid: 2, Role: entity.DISABLE},
+	}
+	banWords := []entity.BanWords{
+		{Word: "test"},
+	}
+	token0, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	token1, _ := util.SignToken(users[1].Uid, users[1].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindBanWordsPageable(gomock.Any(), dao.Pageable{Number: 0, Size: 10}).Return(banWords, nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResWordsBanned
+	}{
+		{"Normal", args{token: token0, page: 0}, service.ResWordsBanned{Code: 0}},
+		{"NotAdmin", args{token: token1, page: 0}, service.ResWordsBanned{Code: 1}},
+		{"WrongToken", args{page: 0}, service.ResWordsBanned{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.WordsBanned(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}

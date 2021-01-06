@@ -173,6 +173,11 @@ type ResWordBan struct {
 	Code int8 `json:"code"`
 }
 
+type ResWordsBanned struct {
+	Code   int8     `json:"code"`
+	Result []string `json:"result"`
+}
+
 type ResultBanned struct {
 	Uid      string `json:"uid"`
 	Name     string `json:"name"`
@@ -1865,5 +1870,42 @@ func (u *UsersServiceImpl) WordBan(token string, req ReqWordBan) (res ResWordBan
 		return res, u.usersDao.Rollback(&ctx)
 	}
 	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
+}
+
+func (u *UsersServiceImpl) WordsBanned(token string, page int64) (res ResWordsBanned, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if user.Role != entity.ADMIN {
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var banWords []entity.BanWords
+	banWords, err = u.usersDao.FindBanWordsPageable(ctx, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	res.Result = []string{}
+	for _, banWord := range banWords {
+		res.Result = append(res.Result, banWord.Word)
+	}
 	return res, u.usersDao.Commit(&ctx)
 }
