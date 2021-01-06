@@ -246,8 +246,7 @@ apiRoutes.get("/notifications", function (req, res) {
             // data: {
 
             code: 0,
-            result: {
-                list: [
+            result:  [
                     {
                         type: 0,
                         time: "2015-08-05T08:40:51.620Z",
@@ -255,7 +254,6 @@ apiRoutes.get("/notifications", function (req, res) {
                         title: "What is a bird?",
                         new_answer_count: 2
                     },
-
                     {
                         type: 1,
                         time: "2015-08-05T08:40:51.620Z",
@@ -316,7 +314,7 @@ apiRoutes.get("/notifications", function (req, res) {
                 ]
             }
 
-        })
+        )
     );
 
     setTimeout(() => {
@@ -511,6 +509,26 @@ apiRoutes.get("/followers", function (req, res) {
                     nickname: "nickname of akang",
                     profile: "个人简介个人简介个人简介个人简介个人简介个人简介个人简介个人简介"
                 }]
+        })
+    );
+
+    setTimeout(() => {
+        res.json(jsonResponse);
+    }, 200);
+});
+apiRoutes.get("/wordBan", function (req, res) {
+    let jsonResponse = {};
+    res.vary(
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method"
+    );
+
+    Object.assign(
+        jsonResponse,
+        Mock.mock({
+            // data: {
+            code: 0,
         })
     );
 

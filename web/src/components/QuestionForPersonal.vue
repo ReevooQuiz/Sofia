@@ -30,7 +30,7 @@
                 <right-circle-outlined />
               </div>
             </template>
-            <div v-for="(item) in ques.pictureUrls" v-bind:key="item.index">
+            <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
           </a-carousel>

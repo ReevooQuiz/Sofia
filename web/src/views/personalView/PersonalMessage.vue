@@ -28,7 +28,7 @@
                   <template #content>
                     <span>
                       你的问题
-                      <a>『{{item.title}}』</a>
+                      <a>『{{item.question_title}}』</a>
                       新增了 {{item.new_answer_count}} 个回答
                     </span>
                   </template>
@@ -57,7 +57,7 @@
                     </a-tooltip>
                   </template>
                 </a-comment>
-                <a-comment v-if="item.type===2">
+                <a-comment v-if="item.type===3">
                   <template #author>
                     <a>问题 : {{item.question_title}}</a>
                   </template>
@@ -69,7 +69,7 @@
                     </span>
                      <br/>
                     <span>
-                      新增了 {{new_comment_count}} 个评论
+                      新增了 {{item.new_comment_count}} 个评论
                     </span>
                   </template>
                   <template #datetime>
@@ -78,7 +78,7 @@
                     </a-tooltip>
                   </template>
                 </a-comment>
-                <a-comment v-if="item.type===3">
+                <a-comment v-if="item.type===4">
                   <template #author>
                     <a>问题 : {{item.question_title}}</a>
                   </template>
@@ -99,7 +99,28 @@
                     </a-tooltip>
                   </template>
                 </a-comment>
-                <a-comment v-if="item.type===4">
+                <a-comment v-if="item.type===2">
+                  <template #author>
+                    <a>问题 : {{item.question_title}}</a>
+                  </template>
+                  <template #content>
+                    <span>你的回答</span>
+                    <br/>
+                    <span>
+                      <a>『{{item.answer_head}}』</a>
+                    </span>
+                     <br/>
+                    <span>
+                      新增了 {{item.new_approval_count}} 个赞同
+                    </span>
+                  </template>
+                  <template #datetime>
+                    <a-tooltip :title="moment(item.time).format('YYYY-MM-DD HH:mm:ss')">
+                      <span>{{ moment(item.time).fromNow() }}</span>
+                    </a-tooltip>
+                  </template>
+                </a-comment>
+                <a-comment v-if="item.type===5">
                   <template #content>
                     <span>
                       你
@@ -112,6 +133,7 @@
                     </a-tooltip>
                   </template>
                 </a-comment>
+                
               </div>
             </a-list-item>
           </template>
@@ -223,9 +245,9 @@ export default {
   mounted() {
     this.getData(res => {
       console.log("!");
-      console.log(res.result.list);
+      console.log(res.result);
       this.loading = false;
-      this.messageData = res.result.list;
+      this.messageData = res.result;
       this.pageNum = this.pageNum + 1;
     });
   },
@@ -244,7 +266,7 @@ export default {
 
     onLoadMore() {
       this.getData(res => {
-        this.messageData = this.messageData.concat(res.result.list);
+        this.messageData = this.messageData.concat(res.result);
         this.loadingMore = false;
         this.pageNum = this.pageNum + 1;
         this.$nextTick(() => {
