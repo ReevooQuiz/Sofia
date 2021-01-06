@@ -30,7 +30,7 @@
                   <right-circle-outlined />
                 </div>
               </template>
-              <div v-for="(item) in ans.answer.pictureUrls" v-bind:key="item.index">
+              <div v-for="(item) in ans.answer.picture_urls" v-bind:key="item.index">
                 <img :src="item" style="width:100%" />
               </div>
             </a-carousel>

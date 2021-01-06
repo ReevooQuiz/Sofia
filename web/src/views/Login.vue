@@ -7,6 +7,7 @@
             <a-col>
               <span id="login-font">登 录</span>
               <br />
+              <br />
               <a-form :model="formInline" @submit="handleSubmit" @submit.native.prevent>
                 <a-form-item class="login-input">
                   <a-input v-model:value="formInline.name" placeholder="请输入用户名">
@@ -22,7 +23,11 @@
                     </template>
                   </a-input>
                 </a-form-item>
-
+                <a-tag color="#272c31" @click="goToLoginG">
+                  <GithubOutlined />使用Github登录
+                </a-tag>
+                <br />
+                <br />
                 <a-form-item>
                   <a-button @click="goToRegister">注册</a-button>
 
@@ -48,15 +53,20 @@
 <script>
 import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
-import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
+import {
+  UserOutlined,
+  LockOutlined,
+  GithubOutlined
+} from "@ant-design/icons-vue";
 import { Button } from "ant-design-vue";
-import { postRequest } from "@/http/request.js";
+import { postRequest, getRequest } from "@/http/request.js";
 import { message } from "ant-design-vue";
 export default {
   components: {
     "a-button": Button,
     UserOutlined,
-    LockOutlined
+    LockOutlined,
+    GithubOutlined
   },
   data() {
     return {
@@ -78,17 +88,15 @@ export default {
     },
     handleLogin(response) {
       // 问题： 应该返回头像信息
-      console.log(response)
+      console.log(response);
       if (response.code == 0) {
-        
         message.success("登录成功");
 
-       console.log(response.result);
+        console.log(response.result);
         sessionStorage.setItem("user", JSON.stringify(response.result));
         // this.$store.commit('modify',"改变值！")
-    //  this.$store.state.loginStatus=true;
-      this.$router.back();
-      
+        //  this.$store.state.loginStatus=true;
+        this.$router.back();
       }
       // else{
       //     this.$dialog.alert('您的账户已被禁用，请联系管理员解禁。').then(
@@ -99,6 +107,13 @@ export default {
     },
     goToRegister() {
       this.$router.push({ path: "/register" });
+    },
+    goToLoginG() {
+      getRequest("/oauth/github", this.handleLogin, {
+        errorCallback: error => {
+          console.log(error);
+        }
+      });
     }
   }
 };
@@ -111,7 +126,7 @@ export default {
 }
 
 #login-block {
-  top: 30%;
+  top: 26%;
   position: fixed;
   left: 33%;
   text-align: center;

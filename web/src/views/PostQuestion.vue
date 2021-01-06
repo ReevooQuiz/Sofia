@@ -55,7 +55,7 @@ export default {
       let start=0,end=0;
       while (start<this.labelString.length){
         end=this.labelString.indexOf("#",start);
-        labels.concat(this.labelString.slice(start,end));
+        this.labels=this.labels.concat(this.labelString.slice(start,end));
         start=end+1;
       }
       postRequest("/questions",

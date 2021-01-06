@@ -57,8 +57,8 @@
                 </a-form-item>
                 <a-form-item required label="性别" name="gender">
                   <a-radio-group v-model:value="ruleForm.gender">
-                    <a-radio value="0">男</a-radio>
-                    <a-radio value="1">女</a-radio>
+                    <a-radio value=0>男</a-radio>
+                    <a-radio value=1>女</a-radio>
                   </a-radio-group>
                 </a-form-item>
                 <a-form-item required has-feedback label="密码" name="pass">
@@ -74,8 +74,7 @@
               <a-button style="margin-left: 50px" @click="resetForm">重置</a-button>
             </a-form-item>
           </a-form>
-          <!-- </a-col>
-          </a-row>-->
+      
         </div>
       </a-col>
     </a-row>
@@ -114,13 +113,13 @@ export default {
         return Promise.resolve();
       }
     };
-    // let checkIcon = async (rule, value, callback) => {
-    //   if (this.ruleForm.icon === "") {
-    //     return Promise.reject("请上传头像");
-    //   } else {
-    //     return Promise.resolve();
-    //   }
-    // };
+    let checkIcon = async (rule, value, callback) => {
+      if (this.done=== false) {
+        return Promise.reject("请上传头像");
+      } else {
+        return Promise.resolve();
+      }
+    };
     let checkNickName = async (rule, value, callback) => {
       if (value === "") {
         return Promise.reject("请输入昵称");
@@ -152,6 +151,11 @@ export default {
       if (value === "") {
         return Promise.reject("请输入密码");
       } else {
+
+        if(value.length<6)
+        {
+          return Promise.reject("密码至少6位");
+        }
         if (this.ruleForm.checkPass !== "") {
           this.$refs.ruleForm.validateField("checkPass");
         }
@@ -183,8 +187,8 @@ export default {
         email: [{ validator: checkEmail, trigger: "change" }],
         name: [{ validator: checkName, trigger: "change" }],
         nickname: [{ validator: checkNickName, trigger: "change" }],
-        gender: [{ validator: checkGender, trigger: "change" }]
-        // icon: [{ validator: checkIcon }]
+        gender: [{ validator: checkGender, trigger: "change" }],
+        icon: [{ validator: checkIcon, trigger: "change"  }]
       },
       layout: {
         labelCol: { span: 8 },
@@ -193,7 +197,8 @@ export default {
       },
       fileList: [],
       loading: false,
-      imageUrl: ""
+      imageUrl: "",
+      done:false
     };
   },
 
@@ -226,6 +231,9 @@ export default {
       console.log(JSON.stringify(errors));
     },
     resetForm() {
+      this.imageUrl="",
+      this.fileList=[],
+      this.done=false;
       this.$refs.ruleForm.resetFields();
     },
     handleChange(info) {
@@ -234,6 +242,7 @@ export default {
         return;
       }
       if (info.file.status === "done") {
+        this.done=true;
         // Get this url from response in real world.
         getBase64(info.file.originFileObj, imageUrl => {
           this.imageUrl = imageUrl;
@@ -248,6 +257,7 @@ export default {
       }
     },
     beforeUpload(file) {
+      
       const isJpgOrPng =
         file.type === "image/jpeg" || file.type === "image/png";
       if (!isJpgOrPng) {

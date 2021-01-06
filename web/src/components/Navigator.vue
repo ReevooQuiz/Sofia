@@ -31,8 +31,9 @@
             <UserOutlined />
           </template>
         </a-avatar>
+        <a-button >{{logButton}}</a-button>
         <a-button
-          v-if="this.logStatus"
+          v-if="this.loginStatus"
           type="primary"
           shape="round"
           size="small"
@@ -93,6 +94,17 @@ export default {
       this.$router.push({ path: "/" });
     }
   },
+  computed:{
+            // userType:function(){
+            //     return this.$store.state.user.type;
+            // },
+            logButton:function () {
+                if(sessionStorage.getItem("user")){
+                    return 1;
+                }
+                else return 0;
+            },
+        },
   // computed: {
   //   user: function() {
   //     return this.$store.state.loginStatus;

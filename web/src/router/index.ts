@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
-
+import { getRequest_checkSession} from "@/http/request.js";
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
@@ -22,12 +22,14 @@ const routes: Array<RouteRecordRaw> = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
+    meta: { requireAuth: true, roles: 0 },
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/BanLift.vue")
   },
   {
     path: "/question",
     name: "Question",
+
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/QuestionDetail.vue")
   },
@@ -35,19 +37,20 @@ const routes: Array<RouteRecordRaw> = [
     path: "/hotRank",
     name: "HotRank",
     component: () =>
-        import(/* webpackChunkName: "about" */ "../views/HotRank.vue")
+      import(/* webpackChunkName: "about" */ "../views/HotRank.vue")
   },
   {
     path: "/recommend",
     name: "Recommend",
     component: () =>
-        import(/* webpackChunkName: "about" */ "../views/Recommend.vue")
+      import(/* webpackChunkName: "about" */ "../views/Recommend.vue")
   },
   {
     path: "/postQuestion",
     name: "PostQuestion",
+    meta: { requireAuth: true },
     component: () =>
-        import(/* webpackChunkName: "about" */ "../views/PostQuestion.vue")
+      import(/* webpackChunkName: "about" */ "../views/PostQuestion.vue")
   },
   {
     path: "/personal",
@@ -55,12 +58,14 @@ const routes: Array<RouteRecordRaw> = [
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
+    meta: { requireAuth: true },
     component: () =>
       import(/* webpackChunkName: "about" */ "../views//personalView/Personal.vue")
   },
   {
     path: "/personalFollowing",
     name: "PersonalFollowing",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -70,6 +75,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/personalFollower",
     name: "PersonalFollower",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -79,6 +85,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/personalQuestion",
     name: "PersonalQuestion",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -88,6 +95,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/personalAnswer",
     name: "PersonalAnswer",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -97,6 +105,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/personalMessage",
     name: "PersonalMessage",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -106,6 +115,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/personalSet",
     name: "PersonalSet",
+    meta: { requireAuth: true },
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
@@ -137,5 +147,76 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 });
+
+// let checksession_callback =(response)=>{
+//   if(response.code===1)
+//   {
+//     sessionStorage.removeItem("user");
+    
+//   }
+// }
+// 路由守卫 
+router.beforeEach((to, from, next) => {
+
+  const flag = sessionStorage.getItem('user')
+  let role_check = 4
+
+  if (flag) {
+    role_check = JSON.parse(flag).role;
+  }
+  console.log(role_check)
+
+
+  if (to.meta.requireAuth == true) { // 需要登录权限进入的路由
+    if (!flag) {     // 获取不到登录信息
+      next({
+        path: '/login'
+      })
+    } else {
+      // 获取到登录信息，进行下一步
+
+      // 先checksession
+      getRequest_checkSession((res)=>{
+        if(res.code===1)
+        {
+          sessionStorage.removeItem("user");    
+          next({
+            path: '/login'
+          })
+        }
+        else if(res.code===2){
+          console.log("check session time out")
+        }
+
+      }    
+      )
+
+
+
+      if (to.meta.roles===0) {
+        if (role_check !== 0) { 
+          sessionStorage.removeItem("user");    
+          next({
+            path: '/login'
+          })
+        } else { 
+          return next();
+        }
+      } else {       
+        return next();
+      }
+
+      return next();
+    }
+  } else {       // 不需要登录权限的路由直接进行下一步
+    return next();
+  }
+
+
+
+}
+
+
+)
 
 export default router;

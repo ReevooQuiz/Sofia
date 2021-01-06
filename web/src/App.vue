@@ -40,6 +40,10 @@ export default {
   min-height: 683px;
   background-color: #edeeed;
 }
+body {
+  height: 100%;
+  background-color: #edeeed;
+}
 
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
