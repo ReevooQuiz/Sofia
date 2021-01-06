@@ -7,15 +7,6 @@ on:
     branches: [ master, develop, feature-skfe, feature-zhc ]
 
 jobs:
-  users-service:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup Go environment
-      uses: actions/setup-go@v2.1.2
-    - name: Run Go testing
-      working-directory: backend/users-service
-      run: go test ./...
   qa-service:
     runs-on: ubuntu-latest
     steps:
@@ -24,4 +15,13 @@ jobs:
       uses: actions/setup-go@v2.1.2
     - name: Run Go testing
       working-directory: backend/qa-service
+      run: go test ./...
+  users-service:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Go environment
+      uses: actions/setup-go@v2.1.2
+    - name: Run Go testing
+      working-directory: backend/users-service
       run: go test ./...
