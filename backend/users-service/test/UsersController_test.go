@@ -229,15 +229,14 @@ func TestControllerFollow(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersService := mock.NewMockUsersService(mockCtrl)
 	gomock.InOrder(
-		mockUsersService.EXPECT().Follow(gomock.Any(), gomock.Any(), gomock.Any()).Return(service.ResFollow{}, nil),
+		mockUsersService.EXPECT().Follow(gomock.Any(), gomock.Any()).Return(service.ResFollow{}, nil),
 	)
 	var u controller.UsersController
 	u.SetUsersService(mockUsersService)
 	mux.HandleFunc("/follow", u.Follow)
 	type args struct {
-		token  string
-		uid    int64
-		follow bool
+		token string
+		req   service.ReqFollow
 	}
 	tests := []struct {
 		name       string
@@ -249,13 +248,8 @@ func TestControllerFollow(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var follow string
-			if tt.args.follow {
-				follow = "true"
-			} else {
-				follow = "false"
-			}
-			r, _ := http.NewRequest("PUT", "/follow?uid="+strconv.FormatInt(tt.args.uid, 10)+"&follow="+follow, bytes.NewReader([]byte{}))
+			requestBody, _ := json.Marshal(tt.args.req)
+			r, _ := http.NewRequest("PUT", "/follow", bytes.NewReader(requestBody))
 			r.Header.Set("Authorization", tt.args.token)
 			r.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
