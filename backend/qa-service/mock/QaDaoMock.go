@@ -140,17 +140,43 @@ func (mr *MockQaDaoMockRecorder) CheckQuestionOwner(arg0, arg1, arg2 interface{}
 }
 
 // Commit mocks base method
-func (m *MockQaDao) Commit(arg0 *dao.TransactionContext) error {
+func (m *MockQaDao) Commit(arg0 *dao.TransactionContext) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "Commit", arg0)
 }
 
 // Commit indicates an expected call of Commit
 func (mr *MockQaDaoMockRecorder) Commit(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockQaDao)(nil).Commit), arg0)
+}
+
+// DeleteAnswer mocks base method
+func (m *MockQaDao) DeleteAnswer(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnswer", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteAnswer indicates an expected call of DeleteAnswer
+func (mr *MockQaDaoMockRecorder) DeleteAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnswer", reflect.TypeOf((*MockQaDao)(nil).DeleteAnswer), arg0, arg1)
+}
+
+// DeleteQuestion mocks base method
+func (m *MockQaDao) DeleteQuestion(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQuestion", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteQuestion indicates an expected call of DeleteQuestion
+func (mr *MockQaDaoMockRecorder) DeleteQuestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuestion", reflect.TypeOf((*MockQaDao)(nil).DeleteQuestion), arg0, arg1)
 }
 
 // Destruct mocks base method
@@ -427,11 +453,9 @@ func (mr *MockQaDaoMockRecorder) ModifyQuestion(arg0, arg1, arg2, arg3, arg4, ar
 }
 
 // Rollback mocks base method
-func (m *MockQaDao) Rollback(arg0 *dao.TransactionContext) error {
+func (m *MockQaDao) Rollback(arg0 *dao.TransactionContext) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rollback", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "Rollback", arg0)
 }
 
 // Rollback indicates an expected call of Rollback

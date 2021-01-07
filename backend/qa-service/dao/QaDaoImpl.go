@@ -42,14 +42,20 @@ type AnswerActionInfo struct {
 	Approvable bool
 }
 
-func (q *QaDaoImpl) Commit(t *TransactionContext) (err error) {
+func (q *QaDaoImpl) Commit(t *TransactionContext) {
 	t.session.Close()
-	return t.sqlTx.Commit()
+	e := t.sqlTx.Commit()
+	if e != nil {
+		log.Warn(e)
+	}
 }
 
-func (q *QaDaoImpl) Rollback(t *TransactionContext) (err error) {
+func (q *QaDaoImpl) Rollback(t *TransactionContext) {
 	t.session.Close()
-	return t.sqlTx.Rollback()
+	e := t.sqlTx.Rollback()
+	if e != nil {
+		log.Warn(e)
+	}
 }
 
 func init() {
@@ -663,4 +669,20 @@ func (q *QaDaoImpl) AddCriticism(ctx TransactionContext, uid int64, aid int64, c
 		return
 	}
 	return ctid, nil
+}
+
+func (q *QaDaoImpl) DeleteQuestion(ctx TransactionContext, qid int64) (err error) {
+	_, err = ctx.sqlTx.Exec("delete from questions where qid=?", qid)
+	if err != nil {
+		return
+	}
+	return ctx.session.DB("sofia").C("question_details").RemoveId(qid)
+}
+
+func (q *QaDaoImpl) DeleteAnswer(ctx TransactionContext, aid int64) (err error) {
+	_, err = ctx.sqlTx.Exec("delete from answers where aid=?", aid)
+	if err != nil {
+		return
+	}
+	return ctx.session.DB("sofia").C("answer_details").RemoveId(aid)
 }

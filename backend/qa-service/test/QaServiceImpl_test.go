@@ -2284,3 +2284,72 @@ func TestServiceAddCriticism(t *testing.T) {
 		a.Equal(map[string]int8{"type": HasKeywords}, res)
 	})
 }
+
+func TestServiceDeleteQuestion(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+	var (
+		qid int64  = 345
+		uid int64 = 23
+		role int8 = service.USER
+	)
+	req := service.ReqQuestionsDelete{Qid: "345"}
+	question := []entity.Questions{{Qid: 345, Raiser: uid}}
+	err := errors.New("xx")
+
+	token := "token"
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), qid).Return(question, nil)
+		mockQaDao.EXPECT().DeleteQuestion(gomock.Any(), qid).Return(nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, _ := q.DeleteQuestion(token, req)
+		a.Equal(int8(service.Succeeded), code)
+	})
+
+	t.Run("Failed Parse", func(t *testing.T) {
+		newReq := service.ReqQuestionsDelete{Qid: "2342uih"}
+		code, _ := q.DeleteQuestion(token, newReq)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.DeleteQuestion(token, req)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Failed Find Question By Id", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), qid).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.DeleteQuestion(token, req)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Find Question By Id not Found", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), qid).Return([]entity.Questions{}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.DeleteQuestion(token, req)
+		a.Equal(int8(service.Succeeded), code)
+	})
+
+	t.Run("Failed to Delete Question", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), qid).Return(question, nil)
+		mockQaDao.EXPECT().DeleteQuestion(gomock.Any(), qid).Return(err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.DeleteQuestion(token, req)
+		a.Equal(int8(service.Failed), code)
+	})
+}

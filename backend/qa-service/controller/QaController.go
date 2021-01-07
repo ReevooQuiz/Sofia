@@ -109,6 +109,24 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
+	if r.Method == "DELETE" {
+		var req service.ReqQuestionsDelete
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.DeleteQuestion(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
 }
 
 func (q *QaController) QuestionDetail(w http.ResponseWriter, r *http.Request) {
@@ -187,6 +205,24 @@ func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			token := r.Header.Get("Authorization")
 			code, result := q.qaService.ModifyAnswer(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.Method == "DELETE" {
+		var req service.ReqAnswersDelete
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.DeleteAnswer(token, req)
 			response.Code = code
 			response.Result = result
 			object, _ := json.Marshal(response)

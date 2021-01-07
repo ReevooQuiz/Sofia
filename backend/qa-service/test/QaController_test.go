@@ -249,6 +249,67 @@ func TestControllerAnswers(t *testing.T) {
 			a.Equal(want, res)
 		})
 	}
+
+	/******************************************* DELETE *********************************************/
+	t.Log("Testing DEL")
+	delTests := []struct {
+		name       string
+		token      string
+		aid int64
+		req        service.ReqAnswersDelete
+		mock       bool
+		mockToken  string
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			name:       "Normal",
+			token:      "token",
+			aid:        345,
+			req:        service.ReqAnswersDelete{Aid: "345"},
+			mock:       true,
+			mockToken:  "token",
+			mockCode:   service.Succeeded,
+			mockResult: "mock result",
+			wantCode:   service.Succeeded,
+			wantResult: "mock result",
+		},
+		{
+			name:      "Expired",
+			token:     "token",
+			aid:       345,
+			req:       service.ReqAnswersDelete{Aid: "345"},
+			mock:      true,
+			mockToken: "token",
+			mockCode:  service.Expired,
+			wantCode:  service.Expired,
+		},
+	}
+	for _, tt := range delTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().DeleteAnswer(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("DELETE", "/answers", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != http.StatusOK {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			if res != want {
+				t.Errorf("Actual: %v, expect: %v.", res, want)
+			}
+		})
+	}
 }
 
 func TestControllerQuestions(t *testing.T) {
@@ -465,6 +526,67 @@ func TestControllerQuestions(t *testing.T) {
 			}
 			body, _ := json.Marshal(tt.req)
 			r, _ := http.NewRequest("PUT", "/questions", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != http.StatusOK {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			if res != want {
+				t.Errorf("Actual: %v, expect: %v.", res, want)
+			}
+		})
+	}
+
+	/******************************************* DELETE *********************************************/
+	t.Log("Testing DEL")
+	delTests := []struct {
+		name       string
+		token      string
+		qid int64
+		req        service.ReqQuestionsDelete
+		mock       bool
+		mockToken  string
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			name:       "Normal",
+			token:      "token",
+			qid:        345,
+			req:        service.ReqQuestionsDelete{Qid: "345"},
+			mock:       true,
+			mockToken:  "token",
+			mockCode:   service.Succeeded,
+			mockResult: "mock result",
+			wantCode:   service.Succeeded,
+			wantResult: "mock result",
+		},
+		{
+			name:      "Expired",
+			token:     "token",
+			qid:       345,
+			req:       service.ReqQuestionsDelete{Qid: "345"},
+			mock:      true,
+			mockToken: "token",
+			mockCode:  service.Expired,
+			wantCode:  service.Expired,
+		},
+	}
+	for _, tt := range delTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().DeleteQuestion(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("DELETE", "/questions", bytes.NewReader(body))
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)

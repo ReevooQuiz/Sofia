@@ -110,6 +110,36 @@ func (mr *MockQaServiceMockRecorder) AnswerDetail(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnswerDetail", reflect.TypeOf((*MockQaService)(nil).AnswerDetail), arg0, arg1)
 }
 
+// DeleteAnswer mocks base method
+func (m *MockQaService) DeleteAnswer(arg0 string, arg1 service.ReqAnswersDelete) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnswer", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// DeleteAnswer indicates an expected call of DeleteAnswer
+func (mr *MockQaServiceMockRecorder) DeleteAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnswer", reflect.TypeOf((*MockQaService)(nil).DeleteAnswer), arg0, arg1)
+}
+
+// DeleteQuestion mocks base method
+func (m *MockQaService) DeleteQuestion(arg0 string, arg1 service.ReqQuestionsDelete) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQuestion", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// DeleteQuestion indicates an expected call of DeleteQuestion
+func (mr *MockQaServiceMockRecorder) DeleteQuestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuestion", reflect.TypeOf((*MockQaService)(nil).DeleteQuestion), arg0, arg1)
+}
+
 // Destruct mocks base method
 func (m *MockQaService) Destruct() {
 	m.ctrl.T.Helper()

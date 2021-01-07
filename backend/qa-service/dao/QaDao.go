@@ -8,8 +8,8 @@ type QaDao interface {
 	Init() (err error)
 	Destruct()
 	Begin(read bool) (ctx TransactionContext, err error)
-	Commit(ctx *TransactionContext) (err error)
-	Rollback(ctx *TransactionContext) (err error)
+	Commit(ctx *TransactionContext)
+	Rollback(ctx *TransactionContext)
 
 	FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails)
 	FindAnswerDetails(ctx TransactionContext, answers []entity.Answers) (answerDetails []entity.AnswerDetails)
@@ -18,6 +18,9 @@ type QaDao interface {
 	FindAnswerById(ctx TransactionContext, aid int64) (answer []entity.Answers, err error)
 	SaveQuestionSkeleton(ctx TransactionContext, question entity.Questions) (err error)
 	SaveAnswerSkeleton(ctx TransactionContext, answer entity.Answers) (err error)
+
+	DeleteQuestion(ctx TransactionContext, qid int64) (err error)
+	DeleteAnswer(ctx TransactionContext, aid int64) (err error)
 
 	IncQuestionCount(ctx TransactionContext, uid int64) (err error)
 	IncUserAnswerCount(ctx TransactionContext, uid int64) (err error)

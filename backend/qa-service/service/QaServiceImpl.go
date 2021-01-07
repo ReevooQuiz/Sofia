@@ -56,6 +56,10 @@ type ReqQuestionsPut struct {
 	Labels   []string `json:"labels"`
 }
 
+type ReqQuestionsDelete struct {
+	Qid string `json:"qid"`
+}
+
 type ReqAnswersPost struct {
 	Qid     string `json:"qid"`
 	Content string `json:"content"`
@@ -64,6 +68,10 @@ type ReqAnswersPost struct {
 type ReqAnswersPut struct {
 	Aid     string `json:"aid"`
 	Content string `json:"content"`
+}
+
+type ReqAnswersDelete struct {
+	Aid string `json:"aid"`
 }
 
 type ReqCommentsPost struct {
@@ -457,10 +465,7 @@ func (q *QaServiceImpl) AddQuestion(token string, req ReqQuestionsPost) (int8, i
 	ctx, err := q.qaDao.Begin(false)
 	words, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
@@ -468,35 +473,22 @@ func (q *QaServiceImpl) AddQuestion(token string, req ReqQuestionsPost) (int8, i
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if titleKeywords || hasKeyword {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	qid, err := q.qaDao.AddQuestion(ctx, uid, title, content, category, labels, pictureUrl, head)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	err = q.qaDao.IncQuestionCount(ctx, uid)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, map[string]int8{"type": UnknownError}
-	}
+	q.qaDao.Commit(&ctx)
 	return Succeeded, map[string]string{"qid": strconv.FormatInt(qid, 10)}
 }
 
@@ -536,28 +528,19 @@ func (q *QaServiceImpl) ModifyQuestion(token string, req ReqQuestionsPut) (int8,
 	if role != ADMIN {
 		owner, err := q.qaDao.CheckQuestionOwner(ctx, qid, uid)
 		if err != nil {
-			e := q.qaDao.Rollback(&ctx)
-			if e != nil {
-				log.Warn(e)
-			}
+			q.qaDao.Rollback(&ctx)
 			log.Warn(err)
 			return Failed, map[string]int8{"type": UnknownError}
 		}
 		if !owner {
-			err = q.qaDao.Rollback(&ctx)
-			if err != nil {
-				log.Warn(err)
-			}
+			q.qaDao.Rollback(&ctx)
 			return Failed, map[string]int8{"type": UnknownError}
 		}
 	}
 	// get banned words
 	words, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
@@ -565,26 +548,16 @@ func (q *QaServiceImpl) ModifyQuestion(token string, req ReqQuestionsPut) (int8,
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if titleKeywords || hasKeyword {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	err = q.qaDao.ModifyQuestion(ctx, qid, title, content, category, labels, pictureUrl, head)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, map[string]int8{"type": UnknownError}
-	}
+	q.qaDao.Commit(&ctx)
 	return Succeeded, nil
 }
 
@@ -612,73 +585,48 @@ func (q *QaServiceImpl) AddAnswer(token string, req ReqAnswersPost) (int8, inter
 	ctx, err := q.qaDao.Begin(false)
 	words, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if hasKeyword {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	aid, err := q.qaDao.AddAnswer(ctx, uid, qid, content, pictureUrl, head)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	err = q.qaDao.IncUserAnswerCount(ctx, uid)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	question, err := q.qaDao.FindQuestionById(ctx, qid)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	if len(question) < 1 {
 		log.Warn("AddAnswer: qid = ", qid, ", not found")
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	question[0].AnswerCount++
 	err = q.qaDao.SaveQuestionSkeleton(ctx, question[0])
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, map[string]int8{"type": UnknownError}
-	}
+	q.qaDao.Commit(&ctx)
 	return Succeeded, map[string]string{"aid": strconv.FormatInt(aid, 10)}
 }
 
@@ -706,59 +654,43 @@ func (q *QaServiceImpl) ModifyAnswer(token string, req ReqAnswersPut) (int8, int
 	ctx, err := q.qaDao.Begin(false)
 	answer, err := q.qaDao.FindAnswerById(ctx, aid)
 	if err != nil {
-		_ = q.qaDao.Rollback(&ctx)
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	if len(answer) < 1 {
 		log.Warn("ModifyAnswer: aid = ", aid, ", not found")
-		_ = q.qaDao.Rollback(&ctx)
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	if role != ADMIN {
 		owner := answer[0].Answerer == uid
 		if !owner {
-			err = q.qaDao.Rollback(&ctx)
-			if err != nil {
-				log.Warn(err)
-			}
+			q.qaDao.Rollback(&ctx)
 			return Failed, map[string]int8{"type": UnknownError}
 		}
 	}
 	// get banned words
 	words, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
 	if hasKeyword {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, map[string]int8{"type": HasKeyword}
 	}
 	err = q.qaDao.ModifyAnswer(ctx, aid, content, pictureUrl, head)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, map[string]int8{"type": UnknownError}
-	}
+	q.qaDao.Commit(&ctx)
 	return Succeeded, nil
 }
 
@@ -776,20 +708,14 @@ func (q *QaServiceImpl) MainPage(token string, category string, page int64) (int
 	ctx, err := q.qaDao.Begin(true)
 	questions, err := q.qaDao.MainPage(ctx, uid, category, page)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
 	questionDetails := q.qaDao.FindQuestionDetails(ctx, questions)
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -797,17 +723,10 @@ func (q *QaServiceImpl) MainPage(token string, category string, page int64) (int
 	var result interface{}
 	result, err = q.QuestionListResponse(uid, role, questions, questionDetails, &keywords)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
-	err = q.qaDao.Rollback(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, nil
-	}
+	q.qaDao.Rollback(&ctx)
 	return Succeeded, result
 }
 
@@ -824,27 +743,18 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	}
 	question, err := q.qaDao.FindQuestionById(ctx, qid)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
 	if len(question) < 1 {
 		log.Warn("QuestionDetail: qid = ", qid, ", not found")
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -877,18 +787,12 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	var userInfos []rpc.UserInfo
 	userInfos, err = q.usersRPC.GetUserInfos(uids)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
 	question[0].ViewCount++
 	_ = q.qaDao.SaveQuestionSkeleton(ctx, question[0])
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-	}
+	q.qaDao.Commit(&ctx)
 	res.Owner.Uid = strconv.FormatInt(uids[0], 10)
 	res.Owner.Name = userInfos[0].Name
 	res.Owner.Icon = userInfos[0].Icon
@@ -906,20 +810,14 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 	ctx, err := q.qaDao.Begin(true)
 	answers, err := q.qaDao.FindQuestionAnswers(ctx, qid, page, sort)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
 	answerDetails := q.qaDao.FindAnswerDetails(ctx, answers)
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -927,17 +825,10 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 	// construct response
 	result, err = q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
-	err = q.qaDao.Rollback(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, nil
-	}
+	q.qaDao.Rollback(&ctx)
 	return Succeeded, result
 }
 
@@ -954,28 +845,19 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	}
 	answer, err := q.qaDao.FindAnswerById(ctx, aid)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
 	if len(answer) < 1 {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
 	detail := q.qaDao.FindAnswerDetails(ctx, answer)
 	ans := answer[0]
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -995,19 +877,13 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	var userInfos []rpc.UserInfo
 	userInfos, err = q.usersRPC.GetUserInfos(uids)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
 	actionInfos, err := q.qaDao.GetAnswerActionInfos(ctx, uid, []int64{ans.Qid}, []int64{aid})
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -1015,10 +891,7 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	res.Approved = actionInfos[0].Approved
 	res.Approvable = actionInfos[0].Approvable
 
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-	}
+	q.qaDao.Commit(&ctx)
 	res.Owner.Uid = strconv.FormatInt(uids[0], 10)
 	res.Owner.Name = userInfos[0].Name
 	res.Owner.Icon = userInfos[0].Icon
@@ -1036,10 +909,7 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 	ctx, err := q.qaDao.Begin(true)
 	comments, err := q.qaDao.GetComments(ctx, aid, page)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -1047,27 +917,17 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 	// fetch keywords
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
 	var result interface{}
 	// construct response
 	result, err = q.CommentListResponse(comments, details, &keywords)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
-	err = q.qaDao.Rollback(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, nil
-	}
+	q.qaDao.Rollback(&ctx)
 	return Succeeded, result
 }
 
@@ -1081,10 +941,7 @@ func (q *QaServiceImpl) GetCriticisms(token string, aid int64, page int64) (int8
 	ctx, err := q.qaDao.Begin(true)
 	criticisms, err := q.qaDao.GetCriticisms(ctx, aid, page)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
@@ -1092,27 +949,17 @@ func (q *QaServiceImpl) GetCriticisms(token string, aid int64, page int64) (int8
 	// fetch keywords
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
 	var result interface{}
 	// construct response
 	result, err = q.CriticismListResponse(criticisms, details, &keywords)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		return Failed, nil
 	}
-	err = q.qaDao.Rollback(&ctx)
-	if err != nil {
-		log.Warn(err)
-		return Failed, nil
-	}
+	q.qaDao.Rollback(&ctx)
 	return Succeeded, result
 }
 
@@ -1143,10 +990,7 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 	}
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
@@ -1158,27 +1002,18 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 		}
 	}
 	if banned {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": HasKeywords}
 	}
 	// serve
 	cmid, err := q.qaDao.AddComment(ctx, uid, aid, content)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
-	if err != nil {
-		log.Warn(err)
-	}
+	q.qaDao.Commit(&ctx)
 	return Succeeded, map[string]string{"cmid": strconv.FormatInt(cmid, 10)}
 }
 
@@ -1209,10 +1044,7 @@ func (q *QaServiceImpl) AddCriticism(token string, req ReqCriticismsPost) (int8,
 	}
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
@@ -1224,26 +1056,101 @@ func (q *QaServiceImpl) AddCriticism(token string, req ReqCriticismsPost) (int8,
 		}
 	}
 	if banned {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": HasKeywords}
 	}
 	// serve
 	ctid, err := q.qaDao.AddCriticism(ctx, uid, aid, content)
 	if err != nil {
-		e := q.qaDao.Rollback(&ctx)
-		if e != nil {
-			log.Warn(e)
-		}
+		q.qaDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
-	err = q.qaDao.Commit(&ctx)
+	q.qaDao.Commit(&ctx)
+	return Succeeded, map[string]string{"ctid": strconv.FormatInt(ctid, 10)}
+}
+
+func (q *QaServiceImpl) DeleteQuestion(token string, req ReqQuestionsDelete) (int8, interface{}) {
+	// parse
+	qid, err := strconv.ParseInt(req.Qid, 10, 64)
+	if err != nil {
+		return Failed, nil
+	}
+	// check token
+	suc, uid, role := q.usersRPC.ParseToken(token)
+	if !suc {
+		return Expired, nil
+	}
+	// serve
+	ctx, err := q.qaDao.Begin(false)
 	if err != nil {
 		log.Warn(err)
+		return Failed, nil
 	}
-	return Succeeded, map[string]string{"ctid": strconv.FormatInt(ctid, 10)}
+	question, err := q.qaDao.FindQuestionById(ctx, qid)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, nil
+	}
+	if len(question) < 1 {
+		q.qaDao.Rollback(&ctx)
+		return Succeeded, nil
+	}
+	qs := question[0]
+	if qs.Raiser != uid && role != ADMIN {
+		q.qaDao.Rollback(&ctx)
+		return Failed, nil
+	}
+	err = q.qaDao.DeleteQuestion(ctx, qid)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, nil
+	}
+	q.qaDao.Commit(&ctx)
+	return Succeeded, nil
+}
+
+func (q *QaServiceImpl) DeleteAnswer(token string, req ReqAnswersDelete) (int8, interface{}) {
+	// parse
+	aid, err := strconv.ParseInt(req.Aid, 10, 64)
+	if err != nil {
+		return Failed, nil
+	}
+	// check token
+	suc, uid, role := q.usersRPC.ParseToken(token)
+	if !suc {
+		return Expired, nil
+	}
+	// serve
+	ctx, err := q.qaDao.Begin(false)
+	if err != nil {
+		log.Warn(err)
+		return Failed, nil
+	}
+	answer, err := q.qaDao.FindAnswerById(ctx, aid)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, nil
+	}
+	if len(answer) < 1 {
+		q.qaDao.Rollback(&ctx)
+		return Succeeded, nil
+	}
+	ans := answer[0]
+	if ans.Answerer != uid && role != ADMIN {
+		q.qaDao.Rollback(&ctx)
+		return Failed, nil
+	}
+	err = q.qaDao.DeleteAnswer(ctx, aid)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, nil
+	}
+	q.qaDao.Commit(&ctx)
+	return Succeeded, nil
 }
