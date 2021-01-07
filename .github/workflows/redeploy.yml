@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  docker:
+  docker-qa-service:
     name: Publish - Docker Hub
     runs-on: ubuntu-latest
     env:
@@ -16,20 +16,35 @@ jobs:
         uses: actions/setup-go@v2.1.2
       - name: Build with Gobuild
         run: go build -o qa-service backend/qa-service
-        run: go build -o users-service backend/users-service
       - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USER }}
              -p ${{ secrets.DOCKER_PASS }}
       - name: Build Docker image
         run: docker build -t qa-service:latest -t qa-service:${GITHUB_SHA::8} .
-        run: docker build -t users-service:latest -t users-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
         run: docker push qa-service
+  docker-users-service:
+    name: Publish - Docker Hub
+    runs-on: ubuntu-latest
+    env:
+      REPO: ${{ secrets.DOCKER_REPO }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v2.1.2
+      - name: Build with Gobuild
+        run: go build -o users-service backend/users-service
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USER }}
+             -p ${{ secrets.DOCKER_PASS }}
+      - name: Build Docker image
+        run: docker build -t users-service:latest -t users-service:${GITHUB_SHA::8} .
+      - name: Publish Docker image
         run: docker push users-service
   redeploy:
     name: Redeploy webhook call
     runs-on: ubuntu-18.04
-    needs: [docker]
+    needs: [ docker-qa-service, docker-users-service ]
     steps:
       - name: Deploy docker container webhook
         uses: joelwmale/webhook-action@master
