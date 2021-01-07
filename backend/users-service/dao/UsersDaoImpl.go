@@ -208,6 +208,30 @@ func (u *UsersDaoImpl) FindFavoriteItemByFidAndQid(ctx TransactionContext, fid i
 	return favoriteItem, err
 }
 
+func (u *UsersDaoImpl) FindFavoriteItemsByFidPageable(ctx TransactionContext, fid int64, pageable Pageable) (favoriteItems []entity.FavoriteItems, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from favorite_items where fid = ? limit ?, ?")
+	if err != nil {
+		return favoriteItems, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query(fid, pageable.Number*pageable.Size, pageable.Size)
+	if err != nil {
+		return favoriteItems, err
+	}
+	favoriteItems = []entity.FavoriteItems{}
+	for res.Next() {
+		var favoriteItem entity.FavoriteItems
+		err = res.Scan(&favoriteItem.Fid, &favoriteItem.Qid)
+		if err != nil {
+			return favoriteItems, err
+		}
+		favoriteItems = append(favoriteItems, favoriteItem)
+	}
+	return favoriteItems, err
+}
+
 func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ? and follower = ?")

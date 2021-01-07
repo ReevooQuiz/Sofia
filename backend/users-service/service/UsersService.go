@@ -12,6 +12,7 @@ type UsersService interface {
 	Banned(token string, page int64) (res ResBanned, err error)
 	CheckSession(token string) (res ResCheckSession, err error)
 	CheckToken(token string) (res ResCheckToken, err error)
+	Collection(token string, page int64) (res ResCollection, err error)
 	Favorite(token string, req ReqFavorite) (res ResFavorite, err error)
 	Follow(token string, req ReqFollow) (res ResFollow, err error)
 	Followed(token string, uid int64) (res ResFollowed, err error)
