@@ -529,11 +529,11 @@ func (q *QaDaoImpl) GetCriticisms(ctx TransactionContext, aid int64, page int64)
 	return
 }
 
-func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error) {
+func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, category string, page int64) (questions []entity.Questions, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select " + questionFields + " from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q order by time desc limit ?,?",
-		uid, page*PageSize, PageSize)
+		"select " + questionFields + " from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q where ?='all' or category=? order by time desc limit ?,?",
+		uid, category, category, page * PageSize, PageSize)
 	if err != nil {
 		return
 	}

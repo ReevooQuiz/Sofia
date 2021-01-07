@@ -59,11 +59,11 @@ func TestServiceQuestionListResponse(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	tests := []struct {
 		name            string
-		uid int64
-		role int8
+		uid             int64
+		role            int8
 		questions       []entity.Questions
 		questionDetails []entity.QuestionDetails
-		keywords []string
+		keywords        []string
 		mock            bool
 		mockIds         []int64
 		mockError       error
@@ -92,7 +92,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				"pictureUrl",
 				"What is gradient?",
 			}},
-			[]string {"xxx"},
+			[]string{"xxx"},
 			true,
 			[]int64{5},
 			nil,
@@ -291,40 +291,40 @@ func TestServiceAddQuestion(t *testing.T) {
 	longContent := string(make([]byte, service.QuestionContentLengthMax+1))
 
 	tests := []struct {
-		name             string
-		token            string
-		mockToken        bool
-		mockSuc          bool
-		mockUid          int64
-		mockRole         int8
-		mockBannedWords  bool
-		mockBannedResult []string
-		mockBannedErr    error
-		mockAddQuestion  bool
-		mockQid          int64
-		mockAddErr       error
+		name                 string
+		token                string
+		mockToken            bool
+		mockSuc              bool
+		mockUid              int64
+		mockRole             int8
+		mockBannedWords      bool
+		mockBannedResult     []string
+		mockBannedErr        error
+		mockAddQuestion      bool
+		mockQid              int64
+		mockAddErr           error
 		mockIncQuestionCount bool
-		incQuestionCountErr error
-		req              service.ReqQuestionsPost
-		expectedCode     int8
-		expectedResult   interface{}
-		rollback         bool
-		commit           bool
+		incQuestionCountErr  error
+		req                  service.ReqQuestionsPost
+		expectedCode         int8
+		expectedResult       interface{}
+		rollback             bool
+		commit               bool
 	}{
 		{
-			name:             "Normal",
-			token:            "token",
-			mockToken:        true,
-			mockSuc:          true,
-			mockUid:          1,
-			mockRole:         service.ADMIN,
-			mockBannedWords:  true,
-			mockBannedResult: BannedWords,
-			mockBannedErr:    nil,
-			mockAddQuestion:  true,
+			name:                 "Normal",
+			token:                "token",
+			mockToken:            true,
+			mockSuc:              true,
+			mockUid:              1,
+			mockRole:             service.ADMIN,
+			mockBannedWords:      true,
+			mockBannedResult:     BannedWords,
+			mockBannedErr:        nil,
+			mockAddQuestion:      true,
 			mockIncQuestionCount: true,
-			mockAddErr:       nil,
-			mockQid:          456,
+			mockAddErr:           nil,
+			mockQid:              456,
 			req: service.ReqQuestionsPost{
 				Title:    "title",
 				Content:  "content",
@@ -366,7 +366,7 @@ func TestServiceAddQuestion(t *testing.T) {
 			mockBannedWords: false,
 			mockAddQuestion: false,
 			req: service.ReqQuestionsPost{
-				Title:    string(make([]byte, service.QuestionTitleLengthMax + 1)),
+				Title:    string(make([]byte, service.QuestionTitleLengthMax+1)),
 				Content:  "this is the content",
 				Category: "life",
 				Labels:   []string{},
@@ -505,9 +505,9 @@ func TestServiceAddQuestion(t *testing.T) {
 			commit:         false,
 		},
 		{
-			name: "Failed to IncQuestionCount",
-			token: "token",
-			mockToken: true,
+			name:             "Failed to IncQuestionCount",
+			token:            "token",
+			mockToken:        true,
 			mockSuc:          true,
 			mockUid:          0,
 			mockRole:         service.ADMIN,
@@ -524,11 +524,11 @@ func TestServiceAddQuestion(t *testing.T) {
 				Labels:   []string{},
 			},
 			mockIncQuestionCount: true,
-			incQuestionCountErr: errors.New("err"),
-			expectedCode:   service.Failed,
-			expectedResult: map[string]int8{"type": UnknownError},
-			rollback:       true,
-			commit:         false,
+			incQuestionCountErr:  errors.New("err"),
+			expectedCode:         service.Failed,
+			expectedResult:       map[string]int8{"type": UnknownError},
+			rollback:             true,
+			commit:               false,
 		},
 	}
 	for _, tt := range tests {
@@ -682,7 +682,7 @@ func TestServiceModifyQuestion(t *testing.T) {
 			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
 				Qid:      "456",
-				Title:    string(make([]byte, service.QuestionTitleLengthMax + 1)),
+				Title:    string(make([]byte, service.QuestionTitleLengthMax+1)),
 				Content:  "content",
 				Category: "life",
 				Labels:   []string{"main"},
@@ -970,20 +970,21 @@ func TestServiceMainPage(t *testing.T) {
 	tests := []struct {
 		name               string
 		token              string
+		category           string
 		page               int64
-		mockParseToken bool
+		mockParseToken     bool
 		parseTokenSuc      bool
 		parseTokenUid      int64
 		parseTokenRole     int8
-		mockMainPage bool
+		mockMainPage       bool
 		mainPageResult     []entity.Questions
 		mainPageErr        error
-		mockFindDetails bool
+		mockFindDetails    bool
 		findDetailsResult  []entity.QuestionDetails
 		mockGetBannedWords bool
-		getBannedWordsRes []string
-		getBannedWordsErr error
-		mockGetUserInfos bool
+		getBannedWordsRes  []string
+		getBannedWordsErr  error
+		mockGetUserInfos   bool
 		getUserInfosUids   []int64
 		getUserInfosResult []rpc.UserInfo
 		getUserInfosErr    error
@@ -993,6 +994,7 @@ func TestServiceMainPage(t *testing.T) {
 		{
 			name:               "Normal",
 			token:              "token",
+			category:           "life",
 			page:               1,
 			mockParseToken:     true,
 			parseTokenSuc:      true,
@@ -1004,8 +1006,8 @@ func TestServiceMainPage(t *testing.T) {
 			mockFindDetails:    true,
 			findDetailsResult:  DetailsResult,
 			mockGetBannedWords: true,
-			getBannedWordsRes: []string{},
-			getBannedWordsErr: nil,
+			getBannedWordsRes:  []string{},
+			getBannedWordsErr:  nil,
 			mockGetUserInfos:   true,
 			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: UserInfosResult,
@@ -1035,6 +1037,7 @@ func TestServiceMainPage(t *testing.T) {
 		{
 			name:             "Failed Token",
 			token:            "token",
+			category:         "life",
 			page:             1,
 			mockParseToken:   true,
 			parseTokenSuc:    false,
@@ -1049,6 +1052,7 @@ func TestServiceMainPage(t *testing.T) {
 		{
 			name:             "Negative Page",
 			token:            "token",
+			category:         "life",
 			page:             -1,
 			mockParseToken:   true,
 			parseTokenSuc:    true,
@@ -1063,6 +1067,7 @@ func TestServiceMainPage(t *testing.T) {
 		{
 			name:             "Failed to Get Main Page",
 			token:            "token",
+			category:         "life",
 			page:             1,
 			mockParseToken:   true,
 			parseTokenSuc:    true,
@@ -1077,27 +1082,9 @@ func TestServiceMainPage(t *testing.T) {
 			expectedResult:   nil,
 		},
 		{
-			name:"Failed to Get Banned Words",
-			token:"token",
-			page: 1,
-			mockParseToken: true,
-			parseTokenSuc:      true,
-			parseTokenUid:      1,
-			parseTokenRole:     service.USER,
-			mockMainPage:       true,
-			mainPageResult:     MainPageResult,
-			mainPageErr:        nil,
-			mockFindDetails:    true,
-			findDetailsResult:  DetailsResult,
-			mockGetBannedWords: true,
-			getBannedWordsRes:  []string{},
-			getBannedWordsErr: errors.New("error"),
-			expectedCode: service.Failed,
-			expectedResult: nil,
-		},
-		{
-			name:               "Failed to Get User Infos",
+			name:               "Failed to Get Banned Words",
 			token:              "token",
+			category:           "life",
 			page:               1,
 			mockParseToken:     true,
 			parseTokenSuc:      true,
@@ -1110,7 +1097,27 @@ func TestServiceMainPage(t *testing.T) {
 			findDetailsResult:  DetailsResult,
 			mockGetBannedWords: true,
 			getBannedWordsRes:  []string{},
-			getBannedWordsErr: nil,
+			getBannedWordsErr:  errors.New("error"),
+			expectedCode:       service.Failed,
+			expectedResult:     nil,
+		},
+		{
+			name:               "Failed to Get User Infos",
+			token:              "token",
+			category:           "life",
+			page:               1,
+			mockParseToken:     true,
+			parseTokenSuc:      true,
+			parseTokenUid:      1,
+			parseTokenRole:     service.USER,
+			mockMainPage:       true,
+			mainPageResult:     MainPageResult,
+			mainPageErr:        nil,
+			mockFindDetails:    true,
+			findDetailsResult:  DetailsResult,
+			mockGetBannedWords: true,
+			getBannedWordsRes:  []string{},
+			getBannedWordsErr:  nil,
 			mockGetUserInfos:   true,
 			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: nil,
@@ -1126,7 +1133,7 @@ func TestServiceMainPage(t *testing.T) {
 				mockUsersRPC.EXPECT().ParseToken(tt.token).Return(tt.parseTokenSuc, tt.parseTokenUid, tt.parseTokenRole)
 			}
 			if tt.mockMainPage {
-				mockQaDao.EXPECT().MainPage(gomock.Any(), tt.parseTokenUid, tt.page).Return(tt.mainPageResult, tt.mainPageErr)
+				mockQaDao.EXPECT().MainPage(gomock.Any(), tt.parseTokenUid, tt.category, tt.page).Return(tt.mainPageResult, tt.mainPageErr)
 			}
 			if tt.mockFindDetails {
 				mockQaDao.EXPECT().FindQuestionDetails(gomock.Any(), tt.mainPageResult).Return(tt.findDetailsResult)
@@ -1137,7 +1144,7 @@ func TestServiceMainPage(t *testing.T) {
 			if tt.mockGetUserInfos {
 				mockUsersRPC.EXPECT().GetUserInfos(tt.getUserInfosUids).Return(tt.getUserInfosResult, tt.getUserInfosErr)
 			}
-			code, result := q.MainPage(tt.token, tt.page)
+			code, result := q.MainPage(tt.token, tt.category, tt.page)
 			a.Equal(tt.expectedCode, code)
 			a.Equal(tt.expectedResult, result)
 		})
@@ -1182,128 +1189,128 @@ func TestServiceQuestionDetail(t *testing.T) {
 		"icon data",
 	}}
 	tests := []struct {
-		name                 string
-		token                string
-		qid                  int64
-		parseTokenSuc        bool
-		parseTokenUid        int64
-		parseTokenRole       int8
-		mockFindQuestion     bool
-		findQuestionQuestion []entity.Questions
-		findQuestionErr      error
-		mockGetBannedWords bool
-		getBannedWordsRes []string
-		getBannedWordsErr error
-		mockFindDetails      bool
-		findDetailsDetails   []entity.QuestionDetails
-		mockGetUserInfos     bool
-		getUserInfosRes      []rpc.UserInfo
-		getUserInfosErr      error
+		name                     string
+		token                    string
+		qid                      int64
+		parseTokenSuc            bool
+		parseTokenUid            int64
+		parseTokenRole           int8
+		mockFindQuestion         bool
+		findQuestionQuestion     []entity.Questions
+		findQuestionErr          error
+		mockGetBannedWords       bool
+		getBannedWordsRes        []string
+		getBannedWordsErr        error
+		mockFindDetails          bool
+		findDetailsDetails       []entity.QuestionDetails
+		mockGetUserInfos         bool
+		getUserInfosRes          []rpc.UserInfo
+		getUserInfosErr          error
 		mockSaveQuestionSkeleton bool
-		commit               bool
-		rollback             bool
-		wantCode             int8
-		wantResult           interface{}
+		commit                   bool
+		rollback                 bool
+		wantCode                 int8
+		wantResult               interface{}
 	}{
 		{
-			name:             "Normal",
-			token:            "token",
-			qid:              234,
-			parseTokenSuc:    true,
-			parseTokenUid:    56,
-			parseTokenRole:   service.USER,
-			mockFindQuestion: true,
-			findQuestionQuestion: question,
-			mockGetBannedWords: true,
-			getBannedWordsRes: []string{},
-			getBannedWordsErr: nil,
-			mockFindDetails: true,
-			findDetailsDetails: details,
-			mockGetUserInfos: true,
-			getUserInfosRes: userInfos,
+			name:                     "Normal",
+			token:                    "token",
+			qid:                      234,
+			parseTokenSuc:            true,
+			parseTokenUid:            56,
+			parseTokenRole:           service.USER,
+			mockFindQuestion:         true,
+			findQuestionQuestion:     question,
+			mockGetBannedWords:       true,
+			getBannedWordsRes:        []string{},
+			getBannedWordsErr:        nil,
+			mockFindDetails:          true,
+			findDetailsDetails:       details,
+			mockGetUserInfos:         true,
+			getUserInfosRes:          userInfos,
 			mockSaveQuestionSkeleton: true,
-			commit:     true,
-			wantCode:   service.Succeeded,
-			wantResult: service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "", Content: "content", Time: "0"},
+			commit:                   true,
+			wantCode:                 service.Succeeded,
+			wantResult:               service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "", Content: "content", Time: "0"},
 		},
 		{
-			name:             "Normal2",
-			token:            "token",
-			qid:              234,
-			parseTokenSuc:    true,
-			parseTokenUid:    56,
-			parseTokenRole:   service.USER,
-			mockFindQuestion: true,
-			findQuestionQuestion: questionWithAccepted,
-			mockGetBannedWords: true,
-			getBannedWordsRes: []string{},
-			getBannedWordsErr: nil,
-			mockFindDetails: true,
-			findDetailsDetails: details,
-			mockGetUserInfos: true,
-			getUserInfosRes: userInfos,
+			name:                     "Normal2",
+			token:                    "token",
+			qid:                      234,
+			parseTokenSuc:            true,
+			parseTokenUid:            56,
+			parseTokenRole:           service.USER,
+			mockFindQuestion:         true,
+			findQuestionQuestion:     questionWithAccepted,
+			mockGetBannedWords:       true,
+			getBannedWordsRes:        []string{},
+			getBannedWordsErr:        nil,
+			mockFindDetails:          true,
+			findDetailsDetails:       details,
+			mockGetUserInfos:         true,
+			getUserInfosRes:          userInfos,
 			mockSaveQuestionSkeleton: true,
-			commit:     true,
-			wantCode:   service.Succeeded,
-			wantResult: service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "567", Content: "content", Time: "0"},
+			commit:                   true,
+			wantCode:                 service.Succeeded,
+			wantResult:               service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "567", Content: "content", Time: "0"},
 		},
 		{
-			name: "Token expired",
+			name:          "Token expired",
 			parseTokenSuc: false,
-			wantCode: service.Expired,
+			wantCode:      service.Expired,
 		},
 		{
-			name: "Failed to Find Question by Id",
-			parseTokenSuc: true,
-			parseTokenUid: 46,
-			parseTokenRole: service.USER,
-			mockFindQuestion: true,
+			name:                 "Failed to Find Question by Id",
+			parseTokenSuc:        true,
+			parseTokenUid:        46,
+			parseTokenRole:       service.USER,
+			mockFindQuestion:     true,
 			findQuestionQuestion: nil,
-			findQuestionErr: errors.New("xxx"),
-			rollback: true,
-			wantCode: service.Failed,
-			wantResult: nil,
+			findQuestionErr:      errors.New("xxx"),
+			rollback:             true,
+			wantCode:             service.Failed,
+			wantResult:           nil,
 		},
 		{
-			name: "Find Question not Found",
-			parseTokenSuc: true,
-			parseTokenUid: 345,
-			parseTokenRole: service.USER,
-			mockFindQuestion: true,
+			name:                 "Find Question not Found",
+			parseTokenSuc:        true,
+			parseTokenUid:        345,
+			parseTokenRole:       service.USER,
+			mockFindQuestion:     true,
 			findQuestionQuestion: []entity.Questions{},
-			rollback: true,
-			wantCode: service.Failed,
-			wantResult: nil,
+			rollback:             true,
+			wantCode:             service.Failed,
+			wantResult:           nil,
 		},
 		{
-			name: "Failed to Get Banned Words",
-			parseTokenSuc: true,
-			parseTokenUid: 345,
-			parseTokenRole: service.USER,
-			mockFindQuestion: true,
+			name:                 "Failed to Get Banned Words",
+			parseTokenSuc:        true,
+			parseTokenUid:        345,
+			parseTokenRole:       service.USER,
+			mockFindQuestion:     true,
 			findQuestionQuestion: question,
-			mockGetBannedWords: true,
-			getBannedWordsErr: errors.New("xxx"),
-			rollback: true,
-			wantCode: service.Failed,
-			wantResult: nil,
+			mockGetBannedWords:   true,
+			getBannedWordsErr:    errors.New("xxx"),
+			rollback:             true,
+			wantCode:             service.Failed,
+			wantResult:           nil,
 		},
 		{
-			name: "Failed to Get User Infos",
-			parseTokenSuc: true,
-			parseTokenUid: 345,
-			parseTokenRole: service.USER,
-			mockFindQuestion: true,
+			name:                 "Failed to Get User Infos",
+			parseTokenSuc:        true,
+			parseTokenUid:        345,
+			parseTokenRole:       service.USER,
+			mockFindQuestion:     true,
 			findQuestionQuestion: question,
-			mockGetBannedWords: true,
-			getBannedWordsRes: []string{"river"},
-			mockFindDetails: true,
-			findDetailsDetails: details,
-			mockGetUserInfos: true,
-			getUserInfosErr: errors.New("xx"),
-			rollback: true,
-			wantCode: service.Failed,
-			wantResult: nil,
+			mockGetBannedWords:   true,
+			getBannedWordsRes:    []string{"river"},
+			mockFindDetails:      true,
+			findDetailsDetails:   details,
+			mockGetUserInfos:     true,
+			getUserInfosErr:      errors.New("xx"),
+			rollback:             true,
+			wantCode:             service.Failed,
+			wantResult:           nil,
 		},
 	}
 	for _, tt := range tests {
@@ -1349,14 +1356,14 @@ func TestServiceAnswerListResponse(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
-	answers := []entity.Answers {{Aid: 56, Answerer: 7, Qid: 234}}
-	answerDetails := []entity.AnswerDetails {{Aid: 56, Content: "content", PictureUrl: "pic url", Head: "Head"}}
+	answers := []entity.Answers{{Aid: 56, Answerer: 7, Qid: 234}}
+	answerDetails := []entity.AnswerDetails{{Aid: 56, Content: "content", PictureUrl: "pic url", Head: "Head"}}
 	keywords := []string{"key"}
 	userInfoResult := []rpc.UserInfo{{Name: "sk", Nickname: "nick", Icon: "icon"}}
 	var ctx dao.TransactionContext
 	var (
-		uid int64 = 5
-		role int8 = service.USER
+		uid  int64 = 5
+		role int8  = service.USER
 	)
 
 	t.Run("Normal", func(t *testing.T) {
@@ -1437,7 +1444,7 @@ func TestServiceAddAnswer(t *testing.T) {
 	})
 
 	t.Run("Long Content", func(t *testing.T) {
-		long := string(make([]byte, service.AnswerContentLengthMax + 1))
+		long := string(make([]byte, service.AnswerContentLengthMax+1))
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		nreq := req
 		nreq.Content = long
@@ -1542,13 +1549,13 @@ func TestServiceModifyAnswer(t *testing.T) {
 
 	token := "token"
 	req := service.ReqAnswersPut{
-		Aid: "346",
+		Aid:     "346",
 		Content: "content",
 	}
 	var aid int64 = 346
 	var uid int64 = 76
 	var role int8 = service.USER
-	answer := []entity.Answers {{Aid: 345, Answerer: 76, Qid: 123}}
+	answer := []entity.Answers{{Aid: 345, Answerer: 76, Qid: 123}}
 	banned := []string{"tiger"}
 	unknownFailure := map[string]int8{"type": UnknownError}
 
@@ -1579,7 +1586,7 @@ func TestServiceModifyAnswer(t *testing.T) {
 
 	t.Run("Long Content", func(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
-		long := string(make([]byte, service.QuestionContentLengthMax + 1))
+		long := string(make([]byte, service.QuestionContentLengthMax+1))
 		nreq := req
 		nreq.Content = long
 		code, result := q.ModifyAnswer(token, nreq)
@@ -1606,7 +1613,7 @@ func TestServiceModifyAnswer(t *testing.T) {
 	})
 
 	t.Run("Not Owner", func(t *testing.T) {
-		newAnswer := []entity.Answers {{Aid: 345, Answerer: 77, Qid: 123}}
+		newAnswer := []entity.Answers{{Aid: 345, Answerer: 77, Qid: 123}}
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(newAnswer, nil)
 		mockQaDao.EXPECT().Rollback(gomock.Any())
@@ -1661,14 +1668,14 @@ func TestServiceListAnswers(t *testing.T) {
 
 	token := "token"
 	var (
-		qid int64 = 234
+		qid  int64 = 234
 		page int64 = 2
-		sort int8 = 1
-		uid int64 = 76
-		role int8 = service.USER
+		sort int8  = 1
+		uid  int64 = 76
+		role int8  = service.USER
 	)
-	answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
-	details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+	answers := []entity.Answers{{Aid: 345, Answerer: 36, Qid: 234}}
+	details := []entity.AnswerDetails{{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
 	userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
 	actionInfos := []dao.AnswerActionInfo{{Liked: false, Approved: false, Approvable: true}}
 	bannedWords := []string{"xxx"}
@@ -1752,13 +1759,13 @@ func TestServiceAnswerDetail(t *testing.T) {
 
 	token := "token"
 	var (
-		aid int64 = 345
-		uid int64 = 76
-		role int8 = service.USER
+		aid  int64 = 345
+		uid  int64 = 76
+		role int8  = service.USER
 	)
-	answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
-	details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
-	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	answers := []entity.Answers{{Aid: 345, Answerer: 36, Qid: 234}}
+	details := []entity.AnswerDetails{{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+	userInfos := []rpc.UserInfo{{Name: "name", Nickname: "nick", Icon: "icon"}}
 	actionInfos := []dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: false}}
 	bannedWords := []string{"xxx"}
 	err := errors.New("xxx")
@@ -1864,7 +1871,7 @@ func TestServiceCommentListResponse(t *testing.T) {
 	keywords := []string{"test"}
 	uids := []int64{11}
 	err := errors.New("xxx")
-	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nickname", Icon: "icon"}}
+	userInfos := []rpc.UserInfo{{Name: "name", Nickname: "nickname", Icon: "icon"}}
 
 	t.Run("Normal", func(t *testing.T) {
 		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
@@ -1898,15 +1905,15 @@ func TestServiceGetComments(t *testing.T) {
 
 	token := "token"
 	var (
-		aid int64 = 345
+		aid  int64 = 345
 		page int64 = 5
-		uid int64 = 76
-		role int8 = service.USER
+		uid  int64 = 76
+		role int8  = service.USER
 	)
 	comments := []entity.Comments{{Cmid: 98, Uid: 9, Aid: aid}}
 	details := []entity.CommentDetails{{Cmid: 98, Content: "ha ha ha"}}
 	uids := []int64{9}
-	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	userInfos := []rpc.UserInfo{{Name: "name", Nickname: "nick", Icon: "icon"}}
 	bannedWords := []string{"xxx"}
 	err := errors.New("xxx")
 
@@ -1982,9 +1989,9 @@ func TestServiceAddComment(t *testing.T) {
 
 	token := "token"
 	var (
-		aid int64 = 345
-		uid int64 = 76
-		role int8 = service.USER
+		aid  int64 = 345
+		uid  int64 = 76
+		role int8  = service.USER
 		cmid int64 = 234
 	)
 	req := service.ReqCommentsPost{
@@ -2025,7 +2032,7 @@ func TestServiceAddComment(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		newReq := service.ReqCommentsPost{
 			Aid:     "345",
-			Content: string(make([]byte, service.CommentLengthMax + 1)),
+			Content: string(make([]byte, service.CommentLengthMax+1)),
 		}
 		code, result := q.AddComment(token, newReq)
 		a.Equal(int8(service.Failed), code)
@@ -2081,7 +2088,7 @@ func TestServiceCriticismListResponse(t *testing.T) {
 	keywords := []string{"test"}
 	uids := []int64{11}
 	err := errors.New("xxx")
-	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nickname", Icon: "icon"}}
+	userInfos := []rpc.UserInfo{{Name: "name", Nickname: "nickname", Icon: "icon"}}
 
 	t.Run("Normal", func(t *testing.T) {
 		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
@@ -2115,15 +2122,15 @@ func TestServiceGetCriticisms(t *testing.T) {
 
 	token := "token"
 	var (
-		aid int64 = 345
+		aid  int64 = 345
 		page int64 = 5
-		uid int64 = 76
-		role int8 = service.USER
+		uid  int64 = 76
+		role int8  = service.USER
 	)
 	criticisms := []entity.Criticisms{{Ctid: 98, Uid: 9, Aid: aid}}
 	details := []entity.CriticismDetails{{Ctid: 98, Content: "ha ha ha"}}
 	uids := []int64{9}
-	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	userInfos := []rpc.UserInfo{{Name: "name", Nickname: "nick", Icon: "icon"}}
 	bannedWords := []string{"xxx"}
 	err := errors.New("xxx")
 
@@ -2199,9 +2206,9 @@ func TestServiceAddCriticism(t *testing.T) {
 
 	token := "token"
 	var (
-		aid int64 = 345
-		uid int64 = 76
-		role int8 = service.USER
+		aid  int64 = 345
+		uid  int64 = 76
+		role int8  = service.USER
 		ctid int64 = 234
 	)
 	req := service.ReqCriticismsPost{
@@ -2242,7 +2249,7 @@ func TestServiceAddCriticism(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		newReq := service.ReqCriticismsPost{
 			Aid:     "345",
-			Content: string(make([]byte, service.CriticismLengthMax + 1)),
+			Content: string(make([]byte, service.CriticismLengthMax+1)),
 		}
 		code, result := q.AddCriticism(token, newReq)
 		a.Equal(int8(service.Failed), code)

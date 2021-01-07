@@ -182,18 +182,18 @@ func (mr *MockQaServiceMockRecorder) ListAnswers(arg0, arg1, arg2, arg3 interfac
 }
 
 // MainPage mocks base method
-func (m *MockQaService) MainPage(arg0 string, arg1 int64) (int8, interface{}) {
+func (m *MockQaService) MainPage(arg0, arg1 string, arg2 int64) (int8, interface{}) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MainPage", arg0, arg1)
+	ret := m.ctrl.Call(m, "MainPage", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int8)
 	ret1, _ := ret[1].(interface{})
 	return ret0, ret1
 }
 
 // MainPage indicates an expected call of MainPage
-func (mr *MockQaServiceMockRecorder) MainPage(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockQaServiceMockRecorder) MainPage(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaService)(nil).MainPage), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaService)(nil).MainPage), arg0, arg1, arg2)
 }
 
 // ModifyAnswer mocks base method

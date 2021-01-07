@@ -369,18 +369,18 @@ func (mr *MockQaDaoMockRecorder) Init() *gomock.Call {
 }
 
 // MainPage mocks base method
-func (m *MockQaDao) MainPage(arg0 dao.TransactionContext, arg1, arg2 int64) ([]entity.Questions, error) {
+func (m *MockQaDao) MainPage(arg0 dao.TransactionContext, arg1 int64, arg2 string, arg3 int64) ([]entity.Questions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MainPage", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "MainPage", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]entity.Questions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // MainPage indicates an expected call of MainPage
-func (mr *MockQaDaoMockRecorder) MainPage(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockQaDaoMockRecorder) MainPage(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaDao)(nil).MainPage), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaDao)(nil).MainPage), arg0, arg1, arg2, arg3)
 }
 
 // MakeLabels mocks base method

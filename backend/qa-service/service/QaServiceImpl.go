@@ -762,7 +762,7 @@ func (q *QaServiceImpl) ModifyAnswer(token string, req ReqAnswersPut) (int8, int
 	return Succeeded, nil
 }
 
-func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
+func (q *QaServiceImpl) MainPage(token string, category string, page int64) (int8, interface{}) {
 	// check token
 	suc, uid, role := q.usersRPC.ParseToken(token)
 	if !suc {
@@ -774,7 +774,7 @@ func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
 	}
 	// serve
 	ctx, err := q.qaDao.Begin(true)
-	questions, err := q.qaDao.MainPage(ctx, uid, page)
+	questions, err := q.qaDao.MainPage(ctx, uid, category, page)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {

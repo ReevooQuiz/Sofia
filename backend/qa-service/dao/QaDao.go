@@ -35,7 +35,7 @@ type QaDao interface {
 	AddAnswer(ctx TransactionContext, uid int64, qid int64, content string, pictureUrl string, head string) (aid int64, err error)
 	ModifyAnswer(ctx TransactionContext, aid int64, content string, pictureUrl string, head string) (err error)
 
-	MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error)
+	MainPage(ctx TransactionContext, uid int64, category string, page int64) (questions []entity.Questions, err error)
 	FindQuestionAnswers(ctx TransactionContext, qid int64, page int64, sort int8) (answers []entity.Answers, err error)
 
 	GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error)

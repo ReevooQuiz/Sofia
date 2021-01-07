@@ -56,9 +56,10 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			var page int64
 			page, err = strconv.ParseInt(r.FormValue("page"), 10, 32)
+			category := r.FormValue("category")
 			token := r.Header.Get("Authorization")
 			if err == nil {
-				code, result := q.qaService.MainPage(token, page)
+				code, result := q.qaService.MainPage(token, category, page)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)

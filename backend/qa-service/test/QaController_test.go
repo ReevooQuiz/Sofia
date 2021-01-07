@@ -67,20 +67,20 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* GET *********************************************/
 	t.Log("Testing GET")
 	getTests := []struct {
-		name string
-		token string
-		qid string
-		page string
-		sort string
-		mockListAnswers bool
-		mockQid int64
-		mockPage int64
-		mockSort int8
-		listAnswersCode int8
+		name              string
+		token             string
+		qid               string
+		page              string
+		sort              string
+		mockListAnswers   bool
+		mockQid           int64
+		mockPage          int64
+		mockSort          int8
+		listAnswersCode   int8
 		listAnswersResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode          int8
+		wantResult        interface{}
+	}{
 		{
 			"Normal",
 			"token",
@@ -118,7 +118,7 @@ func TestControllerAnswers(t *testing.T) {
 			if tt.mockListAnswers {
 				mockQaService.EXPECT().ListAnswers(tt.token, tt.mockQid, tt.mockPage, tt.mockSort).Return(tt.listAnswersCode, tt.listAnswersResult)
 			}
-			r, _ := http.NewRequest("GET", "/answers?qid=" + tt.qid + "&page=" + tt.page + "&sort=" + tt.sort, nil)
+			r, _ := http.NewRequest("GET", "/answers?qid="+tt.qid+"&page="+tt.page+"&sort="+tt.sort, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -135,15 +135,15 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* POST *********************************************/
 	t.Log("Testing POST")
 	postTests := []struct {
-		name string
-		token string
-		req service.ReqAnswersPost
-		mockAddAnswer bool
-		addAnswerCode int8
+		name            string
+		token           string
+		req             service.ReqAnswersPost
+		mockAddAnswer   bool
+		addAnswerCode   int8
 		addAnswerResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode        int8
+		wantResult      interface{}
+	}{
 		{
 			name:  "Normal",
 			token: "token",
@@ -158,17 +158,17 @@ func TestControllerAnswers(t *testing.T) {
 			wantResult:      "result",
 		},
 		{
-			name: "Failed to modify",
+			name:  "Failed to modify",
 			token: "token",
 			req: service.ReqAnswersPost{
-				Qid: "234",
+				Qid:     "234",
 				Content: "content",
 			},
-			mockAddAnswer: true,
-			addAnswerCode: service.Failed,
+			mockAddAnswer:   true,
+			addAnswerCode:   service.Failed,
 			addAnswerResult: nil,
-			wantCode: service.Failed,
-			wantResult: nil,
+			wantCode:        service.Failed,
+			wantResult:      nil,
 		},
 	}
 	for _, tt := range postTests {
@@ -194,40 +194,40 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* PUT *********************************************/
 	t.Log("Testing PUT")
 	putTests := []struct {
-		name string
-		token string
-		req service.ReqAnswersPut
-		mockModifyAnswer bool
-		modifyAnswerCode int8
+		name               string
+		token              string
+		req                service.ReqAnswersPut
+		mockModifyAnswer   bool
+		modifyAnswerCode   int8
 		modifyAnswerResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode           int8
+		wantResult         interface{}
+	}{
 		{
-			name: "Normal",
+			name:  "Normal",
 			token: "token",
-			req: service.ReqAnswersPut {
-				Aid: "2346",
+			req: service.ReqAnswersPut{
+				Aid:     "2346",
 				Content: "new content",
 			},
-			mockModifyAnswer: true,
-			modifyAnswerCode: service.Succeeded,
+			mockModifyAnswer:   true,
+			modifyAnswerCode:   service.Succeeded,
 			modifyAnswerResult: nil,
-			wantCode: service.Succeeded,
-			wantResult: nil,
+			wantCode:           service.Succeeded,
+			wantResult:         nil,
 		},
 		{
-			name: "Failed to modify",
+			name:  "Failed to modify",
 			token: "token",
-			req: service.ReqAnswersPut {
-				Aid: "2346",
+			req: service.ReqAnswersPut{
+				Aid:     "2346",
 				Content: "new content",
 			},
-			mockModifyAnswer: true,
-			modifyAnswerCode: service.Failed,
+			mockModifyAnswer:   true,
+			modifyAnswerCode:   service.Failed,
 			modifyAnswerResult: nil,
-			wantCode: service.Failed,
-			wantResult: nil,
+			wantCode:           service.Failed,
+			wantResult:         nil,
 		},
 	}
 	for _, tt := range putTests {
@@ -268,6 +268,7 @@ func TestControllerQuestions(t *testing.T) {
 		name       string
 		page       string
 		token      string
+		category   string
 		mock       bool
 		mockPage   int64
 		mockToken  string
@@ -280,6 +281,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Normal",
 			"0",
 			"token",
+			"life",
 			true,
 			0,
 			"token",
@@ -292,6 +294,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Invalid page",
 			"234h45",
 			"token",
+			"life",
 			false,
 			0,
 			"",
@@ -304,6 +307,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Expired",
 			"0",
 			"token",
+			"life",
 			true,
 			0,
 			"token",
@@ -316,14 +320,14 @@ func TestControllerQuestions(t *testing.T) {
 	for _, tt := range getTests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.mock {
-				mockQaService.EXPECT().MainPage(tt.mockToken, tt.mockPage).Return(tt.mockCode, tt.mockResult)
+				mockQaService.EXPECT().MainPage(tt.mockToken, tt.category, tt.mockPage).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/questions?page="+tt.page, nil)
+			r, _ := http.NewRequest("GET", "/questions?page="+tt.page+"&category="+tt.category, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != http.StatusOK {
-				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+				t.Errorf("Actual: %v, expect : %v.", w.Result().StatusCode, http.StatusOK)
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
@@ -423,7 +427,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Normal",
 			"token",
 			service.ReqQuestionsPut{
-				Qid: "234234",
+				Qid:      "234234",
 				Title:    "title",
 				Content:  "content",
 				Category: "category",
@@ -440,7 +444,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Expired",
 			"token",
 			service.ReqQuestionsPut{
-				Qid:"3434",
+				Qid:      "3434",
 				Title:    "title",
 				Content:  "content",
 				Category: "category",
@@ -492,16 +496,16 @@ func TestControllerAnswerDetail(t *testing.T) {
 	mux.HandleFunc("/answer", q.AnswerDetail)
 
 	tests := []struct {
-		name string
-		aid string
-		token string
-		mock bool
-		mockAid int64
-		mockCode int8
+		name       string
+		aid        string
+		token      string
+		mock       bool
+		mockAid    int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"234",
@@ -530,7 +534,7 @@ func TestControllerAnswerDetail(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().AnswerDetail(tt.token, tt.mockAid).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/answer?aid=" + tt.aid, nil)
+			r, _ := http.NewRequest("GET", "/answer?aid="+tt.aid, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -558,16 +562,16 @@ func TestControllerQuestionDetail(t *testing.T) {
 	mux.HandleFunc("/question", q.QuestionDetail)
 
 	tests := []struct {
-		name string
-		qid string
-		token string
-		mock bool
-		mockQid int64
-		mockCode int8
+		name       string
+		qid        string
+		token      string
+		mock       bool
+		mockQid    int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"234",
@@ -596,7 +600,7 @@ func TestControllerQuestionDetail(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().QuestionDetail(tt.token, tt.mockQid)
 			}
-			r, _ := http.NewRequest("GET", "/question?qid=" + tt.qid, nil)
+			r, _ := http.NewRequest("GET", "/question?qid="+tt.qid, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -625,18 +629,18 @@ func TestControllerComments(t *testing.T) {
 
 	/******************************************* GET *********************************************/
 	getTests := []struct {
-		name string
-		token string
-		aid string
-		page string
-		mock bool
-		mockAid int64
-		mockPage int64
-		mockCode int8
+		name       string
+		token      string
+		aid        string
+		page       string
+		mock       bool
+		mockAid    int64
+		mockPage   int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"token",
@@ -670,7 +674,7 @@ func TestControllerComments(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().GetComments(tt.token, tt.mockAid, tt.mockPage).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/comments?aid=" + tt.aid + "&page=" + tt.page, nil)
+			r, _ := http.NewRequest("GET", "/comments?aid="+tt.aid+"&page="+tt.page, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -699,8 +703,8 @@ func TestControllerComments(t *testing.T) {
 			"Normal",
 			"token",
 			service.ReqCommentsPost{
-				Aid:    "3456",
-				Content:  "content",
+				Aid:     "3456",
+				Content: "content",
 			},
 			true,
 			service.Succeeded,
@@ -744,18 +748,18 @@ func TestControllerCriticisms(t *testing.T) {
 
 	/******************************************* GET *********************************************/
 	getTests := []struct {
-		name string
-		token string
-		aid string
-		page string
-		mock bool
-		mockAid int64
-		mockPage int64
-		mockCode int8
+		name       string
+		token      string
+		aid        string
+		page       string
+		mock       bool
+		mockAid    int64
+		mockPage   int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"token",
@@ -789,7 +793,7 @@ func TestControllerCriticisms(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().GetCriticisms(tt.token, tt.mockAid, tt.mockPage).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/criticisms?aid=" + tt.aid + "&page=" + tt.page, nil)
+			r, _ := http.NewRequest("GET", "/criticisms?aid="+tt.aid+"&page="+tt.page, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -818,8 +822,8 @@ func TestControllerCriticisms(t *testing.T) {
 			"Normal",
 			"token",
 			service.ReqCriticismsPost{
-				Aid:    "3456",
-				Content:  "content",
+				Aid:     "3456",
+				Content: "content",
 			},
 			true,
 			service.Succeeded,
