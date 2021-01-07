@@ -135,6 +135,21 @@ func (mr *MockUsersDaoMockRecorder) FindApproveAnswerByUidAndAid(arg0, arg1, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindApproveAnswerByUidAndAid", reflect.TypeOf((*MockUsersDao)(nil).FindApproveAnswerByUidAndAid), arg0, arg1, arg2)
 }
 
+// FindBanWords mocks base method
+func (m *MockUsersDao) FindBanWords(arg0 dao.TransactionContext) ([]entity.BanWords, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindBanWords", arg0)
+	ret0, _ := ret[0].([]entity.BanWords)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindBanWords indicates an expected call of FindBanWords
+func (mr *MockUsersDaoMockRecorder) FindBanWords(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindBanWords", reflect.TypeOf((*MockUsersDao)(nil).FindBanWords), arg0)
+}
+
 // FindBanWordsPageable mocks base method
 func (m *MockUsersDao) FindBanWordsPageable(arg0 dao.TransactionContext, arg1 dao.Pageable) ([]entity.BanWords, error) {
 	m.ctrl.T.Helper()
