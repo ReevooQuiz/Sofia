@@ -4,7 +4,7 @@ import router from "@/router/index.ts";
 const server = axios.create({
     // baseURL: "http://localhost:4000/",
     // baseURL: "https://private-74c97e-reevooapi.apiary-mock.com",
-    baseURL:"http://rv-s.cn",
+    baseURL:"https://121.4.194.85",
     timeout: 5000,
 });
 
