@@ -49,6 +49,7 @@ func (s *SearchController) Destruct() {
 
 func (s *SearchController) SearchQuestions(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -76,6 +77,7 @@ func (s *SearchController) SearchQuestions(w http.ResponseWriter, r *http.Reques
 
 func (s *SearchController) SearchAnswers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -103,6 +105,7 @@ func (s *SearchController) SearchAnswers(w http.ResponseWriter, r *http.Request)
 
 func (s *SearchController) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -130,6 +133,7 @@ func (s *SearchController) SearchUsers(w http.ResponseWriter, r *http.Request) {
 
 func (s *SearchController) HotList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	if r.Method == "GET" {
 		token := r.Header.Get("Authorization")
@@ -144,6 +148,7 @@ func (s *SearchController) HotList(w http.ResponseWriter, r *http.Request) {
 
 func (s *SearchController) Search(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
