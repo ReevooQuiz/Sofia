@@ -94,7 +94,9 @@ export default {
       if (response.code == 0) {
         this.$store.commit("changeLogStatus",true);
         message.success("登录成功");
-
+        if (response.result.role==0)
+            this.$store.commit("changeAdmin",true);
+        else  this.$store.commit("changeAdmin",false);
         console.log(response.result);
         this.$store.commit("changeIcon",response.result.icon);
         sessionStorage.setItem("user", JSON.stringify(response.result));
@@ -130,7 +132,7 @@ export default {
             }
             else if (response.data.code === 2) {
                 console.log("time out ,go to refresh token")
-  
+
 
             }
             else {
