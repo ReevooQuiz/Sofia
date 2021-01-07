@@ -19,8 +19,8 @@
         </a-sub-menu>
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
         <!-- <a-menu-item key="explore">探索</a-menu-item> -->
-        <a-menu-item key="ban">
-          <router-link v-if="admin" to="/ban">封禁</router-link></a-menu-item>
+        <a-menu-item  v-if="admin" key="ban">
+          <router-link to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
           <router-link to="/personalSet">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">
@@ -73,15 +73,14 @@ export default {
   },
   data() {
     return {
-      current: ["home"],
-      admin:false
+      current: ["home"]
     };
   },
   created() {
     if (sessionStorage.getItem("user") !== null) {
       this.$store.commit("changeLogStatus",true);
       if (JSON.parse(sessionStorage.getItem("user")).role==0)
-        this.admin=true;
+        this.$store.commit("changeAdmin",true);
     } else {
     }
     // const store = useStore();
@@ -103,7 +102,7 @@ export default {
       }
       this.$store.commit("changeLogStatus",false);
       this.$store.commit("changeIcon","");
-      // this.$store.state.loginStatus=false;
+        this.$store.commit("changeAdmin",false);
       message.success("成功登出");
       this.$router.push({ path: "/" });
     }
@@ -117,6 +116,9 @@ export default {
     },
     avatar:function () {
       return this.$store.state.navIcon;
+    },
+    admin:function(){
+        return this.$store.state.admin;
     }
   }
 };

@@ -5,7 +5,8 @@ export interface State {
     navIcon: string,
     navTarget: string,
     count: number,
-    logStatus:boolean
+    logStatus:boolean,
+    admin:boolean
 }
 
 export const key: InjectionKey<Store<State>> = Symbol()
@@ -16,6 +17,7 @@ export const store = createStore<State>({
         navTarget:"home",
         count: 0,
         logStatus:false,
+        admin:false
     },
     mutations: {
         changeTarget(state,newTarget){
@@ -26,6 +28,9 @@ export const store = createStore<State>({
         },
         changeLogStatus(state,newStatus){
             state.logStatus=newStatus;
+        },
+        changeAdmin(state,newAdmin){
+            state.admin=newAdmin;
         }
     }
 })

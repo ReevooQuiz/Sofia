@@ -81,7 +81,7 @@
 <script >
 import moment from "moment";
 import { HeartFilled, HeartOutlined,FireOutlined ,FileTextOutlined} from "@ant-design/icons-vue";
-import { postRequest,putRequest } from "@/http/request";
+import { postRequest ,putRequest } from "@/http/request";
 
 export default {
   components: {

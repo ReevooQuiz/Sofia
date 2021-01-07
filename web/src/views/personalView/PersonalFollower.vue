@@ -11,12 +11,12 @@
         <a-row justify="center"><br />
           <a-col :span="7"><br />
             <a-input-search
-            
+
               placeholder="输入用户名或昵称"
               v-model:value="value"
                style=" border-radius: 25px;box-shadow: 3px 3px 3px #dcdfdf"
               @search="onSearch"
-              
+
             />
           </a-col>
           <a-col :span="2" :offset="1">
@@ -28,7 +28,7 @@
             <a-list :grid="{ gutter: 16, column: 4 }" :data-source="this.showData">
               <template #renderItem="{ item }">
                 <a-list-item>
-                  <div class="follower-block">
+                  <div class="follower-block1">
                     <!-- <a-row >
                     <a-col>-->
                     <a-row justify="center">
@@ -40,7 +40,7 @@
                           alt="example"
                           :src="item.icon"
                           style="height: 60px; border-radius: 50% ;box-shadow: 3px 3px 3px #dcdfdf"
-                          
+
                         />
                         <br />
                         <!-- <br /> -->
@@ -50,8 +50,6 @@
                         <br />
                         <br />
                         <span class="follower-profile" @click="gotoPerson(item.uid)">{{item.profile}}</span>
-                        
-                       
                       </a-col>
                       <!-- <a-col :span="2" :offset="1"></a-col> -->
                     </a-row>
@@ -131,7 +129,7 @@ body {
   background-color: #edeeed;
 }
 
-.follower-block {
+.follower-block1 {
   text-align: center;
   background-color: #ffffff;
   width: 100%;

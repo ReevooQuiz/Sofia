@@ -13,7 +13,8 @@ declare module '@vue/runtime-core' {
     navIcon: string,
     navTarget: string,
     count: number,
-    logStatus:boolean
+    logStatus:boolean,
+    admin:boolean
   }
 
   // provide typings for `this.$store`
