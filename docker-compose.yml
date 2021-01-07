@@ -2,35 +2,37 @@ version: '3.2'
 
 services:
   qa-service:
-    image: sofia2020/qa-service:latest
+    image: sofia2021/qa-service:latest
     hostname: qa-service
     restart: always
     volumes:
-      - ./credentials.env:/credentials.env
+      - ../credentials.env:/credentials.env
     ports:
       - "9093:9093"
-    logging:
-      driver: syslog
-      options:
-        tag: qa-service
     labels:
       - "traefik.http.routers.redirect-finalbackend.rule=Path(`/{short:[A-Za-z0-9]{6}}`)"
     networks:
       - sofia
 
   users-service:
-    image: sofia2020/users-service:2.4
+    image: sofia2021/users-service:latest
     container_name: users-service
     hostname: users-service
     restart: always
     volumes:
-      - ./credentials.env:/credentials.env
+      - ../credentials.env:/credentials.env
     ports:
       - "9092:9092"
-    logging:
-      driver: syslog
-      options:
-        tag: users-service
+    networks:
+      - sofia
+
+  hanlp:
+    image: samurais/hanlp-api:1.0.0
+    container_name: hanlp
+    hostname: hanlp
+    restart: always
+    ports:
+      - "3002:3000"
     networks:
       - sofia
 
