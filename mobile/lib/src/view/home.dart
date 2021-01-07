@@ -29,7 +29,6 @@ class _HomeState extends StateMVC<Home> {
     _isVisible = true;
     _hideButtonController = new ScrollController();
     _hideButtonController.addListener(() {
-      print("listener");
       if (_hideButtonController.position.userScrollDirection ==
           ScrollDirection.reverse) {
         setState(() {
@@ -61,40 +60,27 @@ class _HomeState extends StateMVC<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      bottomNavigationBar: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
-          height: _isVisible ? 60 : 0.0,
-          child: BottomNavigationBar(
-            items: <BottomNavigationBarItem>[
-              _homeCon.hot,
-              _homeCon.category,
-              _homeCon.timeline,
-              _homeCon.me
-            ],
-            currentIndex: _index,
-            selectedItemColor: Theme.of(context).primaryColor,
-            unselectedItemColor: Colors.grey[400],
-            onTap: _onItemTapped,
-            showUnselectedLabels: false,
-          )),
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            AnimatedContainer(
-              height: _isVisible ? 56.0 : 0.0,
-              duration: Duration(milliseconds: 200),
-              child: AppBar(
-                title: Text(
-                  widget.title,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-            _show(),
-          ],
-        ),
-      ),
-    );
+        bottomNavigationBar: AnimatedContainer(
+            duration: Duration(milliseconds: 500),
+            height: _isVisible ? 60 : 0.0,
+            curve: Curves.easeInOut,
+            child: BottomNavigationBar(
+              items: <BottomNavigationBarItem>[
+                _homeCon.hot,
+                _homeCon.category,
+                _homeCon.timeline,
+                _homeCon.me
+              ],
+              currentIndex: _index,
+              selectedItemColor: Theme.of(context).primaryColor,
+              unselectedItemColor: Colors.grey[400],
+              onTap: _onItemTapped,
+              showUnselectedLabels: false,
+            )),
+        body: 
+              _show()
+            ,
+        );
   }
 
   Widget _show() {
@@ -102,7 +88,7 @@ class _HomeState extends StateMVC<Home> {
 
     switch (_index) {
       case 0:
-        display = MainEntry();
+        display = MainEntry(controller:_hideButtonController,title:widget.title);
         break;
       case 1:
         display = Category();

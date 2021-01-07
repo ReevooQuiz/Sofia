@@ -23,4 +23,5 @@ class HomeCon extends ControllerMVC {
       BottomNavigationBarItem(icon: Icon(Icons.menu), label: "关注");
   BottomNavigationBarItem get me =>
       BottomNavigationBarItem(icon: Icon(Icons.person_rounded), label: "我的");
+  
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -8,6 +10,7 @@ import 'package:mobile/src/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile/src/resources/api_provider.dart';
 import 'package:mobile/src/view.dart';
+import 'package:retry/retry.dart';
 import 'package:simple_auth/simple_auth.dart' as simpleAuth;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -17,7 +20,7 @@ class AccountCon extends ControllerMVC {
   final _signInFormKey = GlobalKey<FormState>();
   final _forgetFormKey = GlobalKey<FormState>();
   final _changeFormKey = GlobalKey<FormState>();
-  static bool loginState = false;
+  static bool loginState = true;
   bool _codeSent = false;
   String _code;
   User _user;
@@ -84,79 +87,72 @@ class AccountCon extends ControllerMVC {
 
   Widget get login => RaisedButton(
         textColor: Colors.white,
-        onPressed: () {
+        onPressed: () async {
           // Validate will return true if the form is valid, or false if
           // the form is invalid.
           if (_loginFormKey.currentState.validate()) {
-            _user = User("-1", "<<invalid>>");
+            _user = User("-1", LoginType.Unknown);
             _loginFormKey.currentState.save();
             showDialog(
               context: stateMVC.context,
               barrierDismissible: false,
               builder: (context) => AlertDialog(
                 content: CircularProgressIndicator(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 122,vertical: 20),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 122, vertical: 20),
               ),
             );
-            fetchAccount(LoginForm(_user.name, _user.password), http.Client())
-                .then((value) {
+            final client = http.Client();
+            fetchAccount(LoginForm(_user.name, _user.password), client).then(
+                (value) {
               Navigator.pop(stateMVC.context);
-              switch (value.type) {
-                case "mismatch":
-                  {
-                                        showDialog(
-                      context: stateMVC.context,
-                      builder: (context) => AlertDialog(
-                        content: Text("用户名或密码错误"),
+              _user = value;
+              loginState = true;
+              Navigator.pop(stateMVC.context);
+              Navigator.push(
+                  stateMVC.context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) => Home(title: "Sofia")));
+            }).catchError((error) {
+              String errorText = "发生了未知错误";
+              if (error.runtimeType == User) {
+                switch (error.type) {
+                  case LoginType.Mismatch:
+                    errorText = "用户名或密码错误";
+                    break;
+                  case LoginType.Banned:
+                    errorText = "你的账号已被禁用";
+                    break;
+                  case LoginType.Inactive:
+                    errorText = "请激活您的邮箱";
+                    break;
+                  default:
+                    break;
+                }
+              } else if (error is SocketException || error is TimeoutException)
+                throw error;
+              errorText = "发生了错误：$error";
+              showDialog(
+                  context: stateMVC.context,
+                  builder: (context) => AlertDialog(
+                        content: Text(errorText),
                         actions: [
                           TextButton(
                               onPressed: () => Navigator.pop(context),
                               child: Text("确定"))
                         ],
-                      ),
-                    ).then((value) {
-                      Navigator.pop(stateMVC.context);
-                    });
-                  }
-                  break;
-                case "banned":
-                  {
-                                        showDialog(
-                      context: stateMVC.context,
-                      builder: (context) => AlertDialog(
-                        content: Text("你的账号已被禁用"),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text("确定"))
-                        ],
-                      ),
-                    ).then((value) {
-                      Navigator.pop(stateMVC.context);
-                    });
-                  }
-                  break;
-                default:
-                  {
-                    _user = value;
-                    
-                      loginState = true;
-                      Navigator.pop(stateMVC.context);
-                      Navigator.push(
-                          stateMVC.context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  Home(title: "Sofia")));
-                  }
-              }
-            });
+                      ));
+            },
+                test: (error) =>
+                    !(error is SocketException) &&
+                    !(error is TimeoutException)).timeout(Duration(seconds: 3));
           }
         },
         child: Text('登录'),
       );
   Widget get signIn => OutlinedButton(
         onPressed: () {
-          _user = User("-1", "<<invalid>>");
+          _user = User("-1", LoginType.Unknown);
           Navigator.push(stateMVC.context,
               MaterialPageRoute(builder: (BuildContext context) => SignIn()));
         },
@@ -191,7 +187,7 @@ class AccountCon extends ControllerMVC {
 
   Widget get forgetPassword => FlatButton(
       onPressed: () {
-        _user = User("-1", "<<invalid>>");
+        _user = User("-1", LoginType.Unknown);
         Navigator.push(
             stateMVC.context,
             MaterialPageRoute(
@@ -247,7 +243,7 @@ class AccountCon extends ControllerMVC {
       ));
 
   Future<User> fetchAccount(LoginForm form, http.Client client) async {
-    return ApiProvider(http.Client()).login(form.toJson());
+    return ApiProvider(client).login(form, stateMVC.context);
   }
 
   bool validPassword(String confirmPassword) {

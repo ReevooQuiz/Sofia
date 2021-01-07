@@ -9,6 +9,6 @@ class TimeLine extends StatefulWidget {
 class TimeLineState extends StateMVC<TimeLine> {
   @override
   Widget build(BuildContext context) {
-    return Text("关注");
+    return SliverToBoxAdapter(child:Text("关注"));
   }
 }

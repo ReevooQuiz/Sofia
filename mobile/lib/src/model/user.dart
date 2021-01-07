@@ -1,12 +1,14 @@
+enum LoginType { Banned, Mismatch, Inactive, Unknown, Normal }
+
 class User {
   final String id;
-  final String type;
+  final LoginType type;
   String _name;
   String _nickName;
   String _password;
   String _email;
+  String _icon;
   int _gender;
-
   set name(String name) {
     this._name = name;
   }
@@ -16,6 +18,7 @@ class User {
   String get nickName => _nickName;
   String get email => _email;
   int get gender => _gender;
+  String get icon => _icon;
   set password(String pass) {
     this._password = pass;
   }
@@ -32,14 +35,28 @@ class User {
     this._nickName = name;
   }
 
+  set icon(String icon) {
+    this._icon = icon;
+  }
+
   User(this.id, this.type);
+  //used when log in
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(json['ID'].toString(), json['type']);
+    User user = User(json['uid'].toString(), LoginType.values[json['role']]);
+    user.icon = json['icon'];
+    user.name = json['name'];
+    user.nickName = json['nickname'];
+    return user;
+  }
+  //used in question & answer displays, only contain avatar&name
+  factory User.fromUid(Map<String, dynamic> json) {
+    User user = User(json['uid'], LoginType.Unknown);
+    user.icon = json['icon'];
+    user.name = json['name'];
+    user.nickName = json['nickname'];
+    return user;
   }
   factory User.fromError(int code) {
-    if (code == 1) {
-      return User("<<<invalid>>>", "mismatch");
-    } else
-      return User("<<<invalid>>>", "banned");
+    return User("<<<invalid>>>", LoginType.values[code]);
   }
 }

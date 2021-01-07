@@ -21,10 +21,11 @@ class QuestionPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     const ShapeBorder border = ContinuousRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(8)));
+        borderRadius: BorderRadius.all(Radius.circular(10)));
     return SafeArea(
+      top: false,
         child: Padding(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.fromLTRB(8,0,8,8),
       child: Card(
         clipBehavior: Clip.antiAlias,
         shape: border,
@@ -45,7 +46,8 @@ class QuestionPreviewCard extends StatelessWidget {
                 children: [
                   imageUrl != null
                       ? SizedBox(
-                          height: 100,
+                          height: 150,
+                          width: 300,
                           child: Stack(
                             children: [
                               Positioned.fill(
@@ -69,7 +71,17 @@ class QuestionPreviewCard extends StatelessWidget {
                                           .copyWith(color: Colors.white),
                                     ),
                                   )),
-                              Padding(
+                              
+                            ]
+                          ),
+                        )
+                      : Text(
+                          title,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline5
+                              .copyWith(color: Colors.white),
+                        ),Padding(
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 16, 16, 0),
                                 child: DefaultTextStyle(
@@ -83,16 +95,6 @@ class QuestionPreviewCard extends StatelessWidget {
                                   ),
                                 ),
                               )
-                            ],
-                          ),
-                        )
-                      : Text(
-                          title,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headline5
-                              .copyWith(color: Colors.white),
-                        )
                 ],
               ),
               Align(
