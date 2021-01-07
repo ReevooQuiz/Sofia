@@ -24,7 +24,7 @@ jobs:
         working-directory: backend/qa-service
         run: docker build -t qa-service:latest -t qa-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
-        run: docker push qa-service:latest
+        run: docker push qa-service
   docker-users-service:
     name: Publish - Docker Hub
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         working-directory: backend/users-service
         run: docker build -t users-service:latest -t users-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
-        run: docker push users-service:latest
+        run: docker push users-service
   redeploy:
     name: Redeploy webhook call
     runs-on: ubuntu-18.04

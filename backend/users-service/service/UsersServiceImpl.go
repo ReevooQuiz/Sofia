@@ -34,6 +34,11 @@ type ReqBan struct {
 	Ban bool   `json:"ban"`
 }
 
+type ReqFollow struct {
+	Uid    string `json:"uid"`
+	Follow bool   `json:"follow"`
+}
+
 type ReqInfoList struct {
 	Uids []int64 `json:"uids"`
 }
@@ -201,6 +206,7 @@ type ResultBanned struct {
 type ResultFollowed struct {
 	Icon     string `json:"icon"`
 	Name     string `json:"name"`
+	Uid      string `json:"uid"`
 	Nickname string `json:"nickname"`
 	Profile  string `json:"profile"`
 }
@@ -208,6 +214,7 @@ type ResultFollowed struct {
 type ResultFollowers struct {
 	Icon     string `json:"icon"`
 	Name     string `json:"name"`
+	Uid      string `json:"uid"`
 	Nickname string `json:"nickname"`
 	Profile  string `json:"profile"`
 }
@@ -273,6 +280,7 @@ type ResultPublicInfoGet struct {
 	FollowingCount int64    `json:"following_count"`
 	LikeCount      int64    `json:"like_count"`
 	ApprovalCount  int64    `json:"approval_count"`
+	Follow         bool     `json:"follow"`
 }
 
 type ResultPublicInfoPut struct {
@@ -485,7 +493,7 @@ func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err erro
 	return res, err
 }
 
-func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res ResFollow, err error) {
+func (u *UsersServiceImpl) Follow(token string, req ReqFollow) (res ResFollow, err error) {
 	var ctx dao.TransactionContext
 	ctx, err = u.usersDao.Begin(false)
 	if err != nil {
@@ -503,11 +511,18 @@ func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res Res
 		res.Code = 2
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var uid int64
+	uid, err = strconv.ParseInt(req.Uid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	if uid == user.Uid {
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
-	if follow {
+	if req.Follow {
 		var follow entity.Follows
 		follow.Uid = uid
 		follow.Follower = user.Uid
@@ -533,7 +548,7 @@ func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res Res
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
-	if follow {
+	if req.Follow {
 		user.FollowingCount++
 	} else {
 		user.FollowingCount--
@@ -550,7 +565,7 @@ func (u *UsersServiceImpl) Follow(token string, uid int64, follow bool) (res Res
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
-	if follow {
+	if req.Follow {
 		user.FollowerCount++
 	} else {
 		user.FollowerCount--
@@ -605,7 +620,7 @@ func (u *UsersServiceImpl) Followed(token string, uid int64) (res ResFollowed, e
 			res.Code = 1
 			return res, u.usersDao.Rollback(&ctx)
 		}
-		res.Result = append(res.Result, ResultFollowed{userDetail.Icon, user.Name, user.Nickname, user.Profile})
+		res.Result = append(res.Result, ResultFollowed{userDetail.Icon, user.Name, strconv.FormatInt(user.Uid, 10), user.Nickname, user.Profile})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
@@ -651,7 +666,7 @@ func (u *UsersServiceImpl) Followers(token string, uid int64) (res ResFollowers,
 			res.Code = 1
 			return res, u.usersDao.Rollback(&ctx)
 		}
-		res.Result = append(res.Result, ResultFollowers{userDetail.Icon, user.Name, user.Nickname, user.Profile})
+		res.Result = append(res.Result, ResultFollowers{userDetail.Icon, user.Name, strconv.FormatInt(user.Uid, 10), user.Nickname, user.Profile})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
@@ -1412,8 +1427,9 @@ func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublic
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var myUid int64
 	var successful bool
-	successful, _, _, err = util.ParseToken(token)
+	successful, myUid, _, err = util.ParseToken(token)
 	if err != nil || !successful {
 		if err != nil {
 			log.Info(err)
@@ -1442,6 +1458,7 @@ func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublic
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	_, err = u.usersDao.FindFollowByUidAndFollower(ctx, user.Uid, myUid)
 	res.Code = 0
 	res.Result.Name = user.Name
 	res.Result.Nickname = user.Nickname
@@ -1461,6 +1478,7 @@ func (u *UsersServiceImpl) PublicInfoGet(token string, uid int64) (res ResPublic
 	res.Result.FollowingCount = user.FollowingCount
 	res.Result.LikeCount = user.LikeCount
 	res.Result.ApprovalCount = user.ApprovalCount
+	res.Result.Follow = err == nil
 	return res, u.usersDao.Commit(&ctx)
 }
 
