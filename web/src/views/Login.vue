@@ -51,6 +51,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
 import {
@@ -61,6 +62,7 @@ import {
 import { Button } from "ant-design-vue";
 import { postRequest, getRequest } from "@/http/request.js";
 import { message } from "ant-design-vue";
+import Axios from 'axios';
 export default {
   components: {
     "a-button": Button,
@@ -111,11 +113,36 @@ export default {
       this.$router.push({ path: "/register" });
     },
     goToLoginG() {
-      getRequest("/oauth/github", this.handleLogin, {
-        errorCallback: error => {
-          console.log(error);
-        }
-      });
+
+      axios
+        .get("http://github.com/login/oauth/authorize?client_id=51f0dde36e2f4fcee97c&redirect_uri=http://rv-s.cn:9092/oauth/github",
+            {}
+        )
+        .catch(function (error) {
+            console.log(error);
+        })
+        .then(response => {
+            console.log(response);
+
+
+            if (response.data.code === 1) {
+                console.log("code failed")
+            }
+            else if (response.data.code === 2) {
+                console.log("time out ,go to refresh token")
+  
+
+            }
+            else {
+                this.handleLogin(response.data);
+            }
+
+        });
+      // getRequest("/oauth/github", this.handleLogin, {
+      //   errorCallback: error => {
+      //     console.log(error);
+      //   }
+      // });
     }
   }
 };

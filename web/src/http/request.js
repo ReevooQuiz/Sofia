@@ -3,7 +3,8 @@ import router from "@/router/index.ts";
 
 const server = axios.create({
     // baseURL: "http://localhost:4000/",
-    baseURL: "https://private-74c97e-reevooapi.apiary-mock.com",
+    // baseURL: "https://private-74c97e-reevooapi.apiary-mock.com",
+    baseURL:"http://rv-s.cn",
     timeout: 5000,
 });
 

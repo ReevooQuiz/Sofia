@@ -5,35 +5,41 @@
       <MenuFoldOutlined v-else />
     </a-button>
     <a-menu
-      :default-selected-keys="['6']"
+      :default-selected-keys="['1']"
       mode="inline"
       :inline-collapsed="collapsed"
-    >
-     <a-menu-item key="1"  >
+    ><a-menu-item key="1">
+        <SettingOutlined />
+        <span>  <router-link to="/personalSet"> 设置 </router-link></span>
+
+      </a-menu-item>
+     <a-menu-item key="2"  >
        <router-link to="/personalFollowing">
        <HeartOutlined />关注
        </router-link>
-
       </a-menu-item>
-      <a-menu-item key="2"><router-link to="/personalFollower">
+      <a-menu-item key="3"><router-link to="/personalFollower">
       <SmileOutlined />粉丝
       </router-link>
       </a-menu-item>
-      <a-menu-item key="3"><router-link to="/personalQuestion">
+      <a-menu-item key="4"><router-link to="/personalQuestion">
         <PicLeftOutlined />问题
       </router-link>
       </a-menu-item>
-      <a-menu-item key="4"> <router-link to="/personalAnswer">
+      <a-menu-item key="5"> <router-link to="/personalAnswer">
         <BulbOutlined />回答
       </router-link>
       </a-menu-item>
-      <a-menu-item key="5">  <router-link to="/personalMessage">
+      <a-menu-item key="6">  <router-link to="/personalMessage">
       <MailOutlined />消息
       </router-link>
       </a-menu-item>
-      <a-menu-item key="6"> <router-link to="/personalSet">
-        <SettingOutlined />设置
-      </router-link>
+
+
+      <a-menu-item key="7">
+       <StarOutlined />
+        <span>  <router-link to="/personalCollection"> 收藏 </router-link></span>
+
       </a-menu-item>
 
     </a-menu>
@@ -53,7 +59,8 @@ import {
   SmileOutlined,
   BulbOutlined,
   PicLeftOutlined,
-  SettingOutlined
+  SettingOutlined,
+  StarOutlined
 
 } from '@ant-design/icons-vue';
 import { Menu } from 'ant-design-vue';
@@ -63,6 +70,7 @@ const SubMenu = {
   components: {
     PieChartOutlined,
     MailOutlined,
+
 
   },
 
@@ -88,7 +96,8 @@ export default {
    SmileOutlined,
    BulbOutlined,
    PicLeftOutlined,
-   SettingOutlined
+   SettingOutlined,
+   StarOutlined
 
 
   },

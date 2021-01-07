@@ -28,7 +28,7 @@
             <a-list :grid="{ gutter: 16, column: 4 }" :data-source="this.showData">
               <template #renderItem="{ item }">
                 <a-list-item>
-                  <div class="follower-block">
+                  <div class="follower-block1">
                     <!-- <a-row >
                     <a-col>-->
                     <a-row justify="center">
@@ -130,7 +130,7 @@ body {
   background-color: #edeeed;
 }
 
-.follower-block {
+.follower-block1 {
   text-align: center;
   background-color: #ffffff;
   width: 100%;

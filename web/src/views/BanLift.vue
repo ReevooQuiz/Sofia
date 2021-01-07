@@ -62,8 +62,7 @@
                     <a-button
                       v-if="item.ban===false"
                       type="primary"
-                      style="background-color:#fbbdbd;border-color: #ecc7d4;
-"
+                      style="background-color:#fbbdbd;border-color: #ecc7d4;"
                       @click="ban2(item.word)"
                     >封禁</a-button>
                   </a-col>

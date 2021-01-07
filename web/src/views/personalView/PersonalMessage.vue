@@ -18,7 +18,7 @@
               :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
             >
               <a-spin v-if="loadingMore" />
-              <a-button v-else @click="onLoadMore">加载更多</a-button>
+              <a-button v-else-if="!loading" @click="onLoadMore">加载更多</a-button>
             </div>
           </template>
           <template #renderItem="{ item, index }">
