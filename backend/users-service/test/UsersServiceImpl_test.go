@@ -282,6 +282,68 @@ func TestServiceCheckToken(t *testing.T) {
 	}
 }
 
+func TestServiceCollection(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	userDetails := []entity.UserDetails{
+		{Uid: 1},
+	}
+	favorites := []entity.Favorites{
+		{Fid: 1, Uid: 1, Title: "Default"},
+	}
+	favoriteItems := []entity.FavoriteItems{
+		{Fid: 1, Qid: 1},
+	}
+	questions := []entity.Questions{
+		{Qid: 1, Raiser: 1, FavoriteCount: 1},
+	}
+	questionDetails := []entity.QuestionDetails{
+		{Qid: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().FindFavoriteItemsByFidPageable(gomock.Any(), favorites[0].Fid, dao.Pageable{Size: 10}).Return(favoriteItems, nil),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), favoriteItems[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().FindQuestionDetailByQid(gomock.Any(), favoriteItems[0].Qid).Return(questionDetails[0], nil),
+		mockUsersDao.EXPECT().FindUserByUid(gomock.Any(), questions[0].Raiser).Return(users[0], nil),
+		mockUsersDao.EXPECT().FindUserDetailByUid(gomock.Any(), users[0].Uid).Return(userDetails[0], nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(true).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		page  int64
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResCollection
+	}{
+		{"Normal", args{token: token, page: 0}, service.ResCollection{Code: 0}},
+		{"WrongToken", args{page: 0}, service.ResCollection{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Collection(tt.args.token, tt.args.page); res.Code != tt.wantRes.Code {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceFavorite(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)

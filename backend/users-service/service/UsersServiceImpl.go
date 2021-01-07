@@ -119,6 +119,11 @@ type ResCheckToken struct {
 	Role       int8  `json:"role"`
 }
 
+type ResCollection struct {
+	Code   int8               `json:"code"`
+	Result []ResultCollection `json:"result"`
+}
+
 type ResFavorite struct {
 	Code int8 `json:"code"`
 }
@@ -215,6 +220,20 @@ type ResWordsBanned struct {
 }
 
 type ResultBanned struct {
+	Uid      string `json:"uid"`
+	Name     string `json:"name"`
+	Nickname string `json:"nickname"`
+	Icon     string `json:"icon"`
+}
+
+type ResultCollection struct {
+	Qid           string                 `json:"qid"`
+	QuestionTitle string                 `json:"question_title"`
+	Raiser        ResultCollectionRaiser `json:"raiser"`
+	QuestionHead  string                 `json:"question_head"`
+}
+
+type ResultCollectionRaiser struct {
 	Uid      string `json:"uid"`
 	Name     string `json:"name"`
 	Nickname string `json:"nickname"`
@@ -581,6 +600,74 @@ func (u *UsersServiceImpl) CheckSession(token string) (res ResCheckSession, err 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
 	res.Successful, res.Uid, res.Role, err = util.ParseToken(token)
 	return res, err
+}
+
+func (u *UsersServiceImpl) Collection(token string, page int64) (res ResCollection, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(true)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var uid int64
+	var successful bool
+	successful, uid, _, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var favorite entity.Favorites
+	favorite, err = u.usersDao.FindFavoriteByUidAndTitle(ctx, uid, "Default")
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var favoriteItems []entity.FavoriteItems
+	favoriteItems, err = u.usersDao.FindFavoriteItemsByFidPageable(ctx, favorite.Fid, dao.Pageable{Number: page, Size: 10})
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Result = []ResultCollection{}
+	for _, favoriteItem := range favoriteItems {
+		var question entity.Questions
+		question, err = u.usersDao.FindQuestionByQid(ctx, favoriteItem.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var questionDetail entity.QuestionDetails
+		questionDetail, err = u.usersDao.FindQuestionDetailByQid(ctx, favoriteItem.Qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var user entity.Users
+		user, err = u.usersDao.FindUserByUid(ctx, question.Raiser)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		var userDetail entity.UserDetails
+		userDetail, err = u.usersDao.FindUserDetailByUid(ctx, user.Uid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		res.Result = append(res.Result, ResultCollection{strconv.FormatInt(favoriteItem.Qid, 10), questionDetail.Title, ResultCollectionRaiser{strconv.FormatInt(user.Uid, 10), user.Name, user.Nickname, userDetail.Icon}, fmt.Sprintf("%.20s", questionDetail.Content)})
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Favorite(token string, req ReqFavorite) (res ResFavorite, err error) {

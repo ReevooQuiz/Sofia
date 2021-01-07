@@ -210,6 +210,21 @@ func (mr *MockUsersDaoMockRecorder) FindFavoriteItemByFidAndQid(arg0, arg1, arg2
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFavoriteItemByFidAndQid", reflect.TypeOf((*MockUsersDao)(nil).FindFavoriteItemByFidAndQid), arg0, arg1, arg2)
 }
 
+// FindFavoriteItemsByFidPageable mocks base method
+func (m *MockUsersDao) FindFavoriteItemsByFidPageable(arg0 dao.TransactionContext, arg1 int64, arg2 dao.Pageable) ([]entity.FavoriteItems, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindFavoriteItemsByFidPageable", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]entity.FavoriteItems)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindFavoriteItemsByFidPageable indicates an expected call of FindFavoriteItemsByFidPageable
+func (mr *MockUsersDaoMockRecorder) FindFavoriteItemsByFidPageable(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindFavoriteItemsByFidPageable", reflect.TypeOf((*MockUsersDao)(nil).FindFavoriteItemsByFidPageable), arg0, arg1, arg2)
+}
+
 // FindFollowByUidAndFollower mocks base method
 func (m *MockUsersDao) FindFollowByUidAndFollower(arg0 dao.TransactionContext, arg1, arg2 int64) (entity.Follows, error) {
 	m.ctrl.T.Helper()
