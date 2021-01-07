@@ -64,6 +64,7 @@ func (u *UsersController) Destruct() {
 }
 
 func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqApprove
 	var res service.ResApprove
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -83,6 +84,7 @@ func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqBan
 	var res service.ResBan
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -102,6 +104,7 @@ func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResBanned
 	err := r.ParseForm()
 	if err != nil {
@@ -131,6 +134,7 @@ func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	res, err := u.usersService.CheckSession(r.Header.Get("Authorization"))
 	if err != nil {
 		log.Info(err)
@@ -140,6 +144,7 @@ func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCheckToken
 	err := r.ParseForm()
 	if err != nil {
@@ -158,6 +163,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Collection(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCollection
 	err := r.ParseForm()
 	if err != nil {
@@ -187,6 +193,7 @@ func (u *UsersController) Collection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Favorite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqFavorite
 	var res service.ResFavorite
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -206,6 +213,7 @@ func (u *UsersController) Favorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqFollow
 	var res service.ResFollow
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -225,6 +233,7 @@ func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Followed(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResFollowed
 	err := r.ParseForm()
 	if err != nil {
@@ -252,6 +261,7 @@ func (u *UsersController) Followed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Followers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResFollowers
 	err := r.ParseForm()
 	if err != nil {
@@ -279,6 +289,7 @@ func (u *UsersController) Followers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqInfoList
 	var res service.ResInfoList
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -298,6 +309,7 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqLike
 	var res service.ResLike
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -317,6 +329,7 @@ func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqLogin
 	var res service.ResLogin
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -337,6 +350,7 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResNotifications
 	err := r.ParseForm()
 	if err != nil {
@@ -366,6 +380,7 @@ func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResOAuthGithub
 	err := r.ParseForm()
 	if err != nil {
@@ -385,6 +400,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqPasswd
 	var res service.ResPasswd
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -405,6 +421,7 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "GET" {
 		var res service.ResPublicInfoGet
 		err := r.ParseForm()
@@ -453,6 +470,7 @@ func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqRefreshToken
 	var res service.ResRefreshToken
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -473,6 +491,7 @@ func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqRegister
 	var res service.ResRegister
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -493,6 +512,7 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResUserAnswers
 	err := r.ParseForm()
 	if err != nil {
@@ -531,6 +551,7 @@ func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResUserQuestions
 	err := r.ParseForm()
 	if err != nil {
@@ -569,6 +590,7 @@ func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResVerificationCode
 	err := r.ParseForm()
 	if err != nil {
@@ -587,6 +609,7 @@ func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Reques
 }
 
 func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResVerify
 	err := r.ParseForm()
 	if err != nil {
@@ -614,6 +637,7 @@ func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqWordBan
 	var res service.ResWordBan
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -633,6 +657,7 @@ func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) WordsBanned(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResWordsBanned
 	err := r.ParseForm()
 	if err != nil {
