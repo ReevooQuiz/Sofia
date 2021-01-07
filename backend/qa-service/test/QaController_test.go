@@ -32,7 +32,7 @@ func TestControllerInit(t *testing.T) {
 			httpServerExitDone := &sync.WaitGroup{}
 			httpServerExitDone.Add(1)
 			server := q.Init(httpServerExitDone, mockQaService)
-			time.Sleep(500 * time.Microsecond)
+			time.Sleep(200 * time.Microsecond)
 			if err := server.Shutdown(context.Background()); err != nil {
 				t.Error(err)
 			}
@@ -67,20 +67,20 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* GET *********************************************/
 	t.Log("Testing GET")
 	getTests := []struct {
-		name string
-		token string
-		qid string
-		page string
-		sort string
-		mockListAnswers bool
-		mockQid int64
-		mockPage int64
-		mockSort int8
-		listAnswersCode int8
+		name              string
+		token             string
+		qid               string
+		page              string
+		sort              string
+		mockListAnswers   bool
+		mockQid           int64
+		mockPage          int64
+		mockSort          int8
+		listAnswersCode   int8
 		listAnswersResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode          int8
+		wantResult        interface{}
+	}{
 		{
 			"Normal",
 			"token",
@@ -118,7 +118,7 @@ func TestControllerAnswers(t *testing.T) {
 			if tt.mockListAnswers {
 				mockQaService.EXPECT().ListAnswers(tt.token, tt.mockQid, tt.mockPage, tt.mockSort).Return(tt.listAnswersCode, tt.listAnswersResult)
 			}
-			r, _ := http.NewRequest("GET", "/answers?qid=" + tt.qid + "&page=" + tt.page + "&sort=" + tt.sort, nil)
+			r, _ := http.NewRequest("GET", "/answers?qid="+tt.qid+"&page="+tt.page+"&sort="+tt.sort, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -135,15 +135,15 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* POST *********************************************/
 	t.Log("Testing POST")
 	postTests := []struct {
-		name string
-		token string
-		req service.ReqAnswersPost
-		mockAddAnswer bool
-		addAnswerCode int8
+		name            string
+		token           string
+		req             service.ReqAnswersPost
+		mockAddAnswer   bool
+		addAnswerCode   int8
 		addAnswerResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode        int8
+		wantResult      interface{}
+	}{
 		{
 			name:  "Normal",
 			token: "token",
@@ -158,17 +158,17 @@ func TestControllerAnswers(t *testing.T) {
 			wantResult:      "result",
 		},
 		{
-			name: "Failed to modify",
+			name:  "Failed to modify",
 			token: "token",
 			req: service.ReqAnswersPost{
-				Qid: "234",
+				Qid:     "234",
 				Content: "content",
 			},
-			mockAddAnswer: true,
-			addAnswerCode: service.Failed,
+			mockAddAnswer:   true,
+			addAnswerCode:   service.Failed,
 			addAnswerResult: nil,
-			wantCode: service.Failed,
-			wantResult: nil,
+			wantCode:        service.Failed,
+			wantResult:      nil,
 		},
 	}
 	for _, tt := range postTests {
@@ -194,40 +194,40 @@ func TestControllerAnswers(t *testing.T) {
 	/******************************************* PUT *********************************************/
 	t.Log("Testing PUT")
 	putTests := []struct {
-		name string
-		token string
-		req service.ReqAnswersPut
-		mockModifyAnswer bool
-		modifyAnswerCode int8
+		name               string
+		token              string
+		req                service.ReqAnswersPut
+		mockModifyAnswer   bool
+		modifyAnswerCode   int8
 		modifyAnswerResult interface{}
-		wantCode int8
-		wantResult interface{}
-	} {
+		wantCode           int8
+		wantResult         interface{}
+	}{
 		{
-			name: "Normal",
+			name:  "Normal",
 			token: "token",
-			req: service.ReqAnswersPut {
-				Aid: "2346",
+			req: service.ReqAnswersPut{
+				Aid:     "2346",
 				Content: "new content",
 			},
-			mockModifyAnswer: true,
-			modifyAnswerCode: service.Succeeded,
+			mockModifyAnswer:   true,
+			modifyAnswerCode:   service.Succeeded,
 			modifyAnswerResult: nil,
-			wantCode: service.Succeeded,
-			wantResult: nil,
+			wantCode:           service.Succeeded,
+			wantResult:         nil,
 		},
 		{
-			name: "Failed to modify",
+			name:  "Failed to modify",
 			token: "token",
-			req: service.ReqAnswersPut {
-				Aid: "2346",
+			req: service.ReqAnswersPut{
+				Aid:     "2346",
 				Content: "new content",
 			},
-			mockModifyAnswer: true,
-			modifyAnswerCode: service.Failed,
+			mockModifyAnswer:   true,
+			modifyAnswerCode:   service.Failed,
 			modifyAnswerResult: nil,
-			wantCode: service.Failed,
-			wantResult: nil,
+			wantCode:           service.Failed,
+			wantResult:         nil,
 		},
 	}
 	for _, tt := range putTests {
@@ -251,6 +251,79 @@ func TestControllerAnswers(t *testing.T) {
 	}
 }
 
+func TestControllerDeleteAnswer(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/delete_answer", q.DeleteAnswer)
+
+	/******************************************* POST *********************************************/
+	t.Log("Testing POST")
+	delTests := []struct {
+		name       string
+		token      string
+		aid        int64
+		req        service.ReqAnswersDelete
+		mock       bool
+		mockToken  string
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			name:       "Normal",
+			token:      "token",
+			aid:        345,
+			req:        service.ReqAnswersDelete{Aid: "345"},
+			mock:       true,
+			mockToken:  "token",
+			mockCode:   service.Succeeded,
+			mockResult: "mock result",
+			wantCode:   service.Succeeded,
+			wantResult: "mock result",
+		},
+		{
+			name:      "Expired",
+			token:     "token",
+			aid:       345,
+			req:       service.ReqAnswersDelete{Aid: "345"},
+			mock:      true,
+			mockToken: "token",
+			mockCode:  service.Expired,
+			wantCode:  service.Expired,
+		},
+	}
+	for _, tt := range delTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().DeleteAnswer(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("POST", "/delete_answer", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != http.StatusOK {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			if res != want {
+				t.Errorf("Actual: %v, expect: %v.", res, want)
+			}
+		})
+	}
+}
+
 func TestControllerQuestions(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
@@ -268,6 +341,7 @@ func TestControllerQuestions(t *testing.T) {
 		name       string
 		page       string
 		token      string
+		category   string
 		mock       bool
 		mockPage   int64
 		mockToken  string
@@ -280,6 +354,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Normal",
 			"0",
 			"token",
+			"life",
 			true,
 			0,
 			"token",
@@ -292,6 +367,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Invalid page",
 			"234h45",
 			"token",
+			"life",
 			false,
 			0,
 			"",
@@ -304,6 +380,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Expired",
 			"0",
 			"token",
+			"life",
 			true,
 			0,
 			"token",
@@ -316,14 +393,14 @@ func TestControllerQuestions(t *testing.T) {
 	for _, tt := range getTests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.mock {
-				mockQaService.EXPECT().MainPage(tt.mockToken, tt.mockPage).Return(tt.mockCode, tt.mockResult)
+				mockQaService.EXPECT().MainPage(tt.mockToken, tt.category, tt.mockPage).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/questions?page="+tt.page, nil)
+			r, _ := http.NewRequest("GET", "/questions?page="+tt.page+"&category="+tt.category, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
 			if w.Result().StatusCode != http.StatusOK {
-				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+				t.Errorf("Actual: %v, expect : %v.", w.Result().StatusCode, http.StatusOK)
 			}
 			responseBody := make([]byte, w.Body.Len())
 			_, _ = w.Body.Read(responseBody)
@@ -423,7 +500,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Normal",
 			"token",
 			service.ReqQuestionsPut{
-				Qid: "234234",
+				Qid:      "234234",
 				Title:    "title",
 				Content:  "content",
 				Category: "category",
@@ -440,7 +517,7 @@ func TestControllerQuestions(t *testing.T) {
 			"Expired",
 			"token",
 			service.ReqQuestionsPut{
-				Qid:"3434",
+				Qid:      "3434",
 				Title:    "title",
 				Content:  "content",
 				Category: "category",
@@ -479,6 +556,79 @@ func TestControllerQuestions(t *testing.T) {
 	}
 }
 
+func TestControllerDisableQuestion(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/disable_question", q.DisableQuestion)
+
+	/******************************************* POST *********************************************/
+	t.Log("Testing POST")
+	delTests := []struct {
+		name       string
+		token      string
+		qid        int64
+		req        service.ReqQuestionsDelete
+		mock       bool
+		mockToken  string
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			name:       "Normal",
+			token:      "token",
+			qid:        345,
+			req:        service.ReqQuestionsDelete{Qid: "345"},
+			mock:       true,
+			mockToken:  "token",
+			mockCode:   service.Succeeded,
+			mockResult: "mock result",
+			wantCode:   service.Succeeded,
+			wantResult: "mock result",
+		},
+		{
+			name:      "Expired",
+			token:     "token",
+			qid:       345,
+			req:       service.ReqQuestionsDelete{Qid: "345"},
+			mock:      true,
+			mockToken: "token",
+			mockCode:  service.Expired,
+			wantCode:  service.Expired,
+		},
+	}
+	for _, tt := range delTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().DeleteQuestion(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("POST", "/disable_question", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != http.StatusOK {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, http.StatusOK)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			if res != want {
+				t.Errorf("Actual: %v, expect: %v.", res, want)
+			}
+		})
+	}
+}
+
 func TestControllerAnswerDetail(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
@@ -492,16 +642,16 @@ func TestControllerAnswerDetail(t *testing.T) {
 	mux.HandleFunc("/answer", q.AnswerDetail)
 
 	tests := []struct {
-		name string
-		aid string
-		token string
-		mock bool
-		mockAid int64
-		mockCode int8
+		name       string
+		aid        string
+		token      string
+		mock       bool
+		mockAid    int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"234",
@@ -530,7 +680,7 @@ func TestControllerAnswerDetail(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().AnswerDetail(tt.token, tt.mockAid).Return(tt.mockCode, tt.mockResult)
 			}
-			r, _ := http.NewRequest("GET", "/answer?aid=" + tt.aid, nil)
+			r, _ := http.NewRequest("GET", "/answer?aid="+tt.aid, nil)
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -558,16 +708,16 @@ func TestControllerQuestionDetail(t *testing.T) {
 	mux.HandleFunc("/question", q.QuestionDetail)
 
 	tests := []struct {
-		name string
-		qid string
-		token string
-		mock bool
-		mockQid int64
-		mockCode int8
+		name       string
+		qid        string
+		token      string
+		mock       bool
+		mockQid    int64
+		mockCode   int8
 		mockResult interface{}
-		wantCode int8
+		wantCode   int8
 		wantResult interface{}
-	} {
+	}{
 		{
 			"Normal",
 			"234",
@@ -596,7 +746,245 @@ func TestControllerQuestionDetail(t *testing.T) {
 			if tt.mock {
 				mockQaService.EXPECT().QuestionDetail(tt.token, tt.mockQid)
 			}
-			r, _ := http.NewRequest("GET", "/question?qid=" + tt.qid, nil)
+			r, _ := http.NewRequest("GET", "/question?qid="+tt.qid, nil)
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+}
+
+func TestControllerComments(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+	a := assert.New(t)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/comments", q.Comments)
+
+	/******************************************* GET *********************************************/
+	getTests := []struct {
+		name       string
+		token      string
+		aid        string
+		page       string
+		mock       bool
+		mockAid    int64
+		mockPage   int64
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			"Normal",
+			"token",
+			"234",
+			"5",
+			true,
+			234,
+			5,
+			service.Succeeded,
+			"result",
+			service.Succeeded,
+			"result",
+		},
+		{
+			"Wrong Parameters",
+			"token",
+			"234df",
+			"5",
+			false,
+			234,
+			5,
+			service.Failed,
+			nil,
+			service.Failed,
+			nil,
+		},
+	}
+
+	for _, tt := range getTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().GetComments(tt.token, tt.mockAid, tt.mockPage).Return(tt.mockCode, tt.mockResult)
+			}
+			r, _ := http.NewRequest("GET", "/comments?aid="+tt.aid+"&page="+tt.page, nil)
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+
+	/******************************************* POST *********************************************/
+	postTests := []struct {
+		name       string
+		token      string
+		req        service.ReqCommentsPost
+		mock       bool
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			"Normal",
+			"token",
+			service.ReqCommentsPost{
+				Aid:     "3456",
+				Content: "content",
+			},
+			true,
+			service.Succeeded,
+			"mock result",
+			service.Succeeded,
+			"mock result",
+		},
+	}
+	for _, tt := range postTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().AddComment(tt.token, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("POST", "/comments", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+}
+
+func TestControllerCriticisms(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+	a := assert.New(t)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/criticisms", q.Criticisms)
+
+	/******************************************* GET *********************************************/
+	getTests := []struct {
+		name       string
+		token      string
+		aid        string
+		page       string
+		mock       bool
+		mockAid    int64
+		mockPage   int64
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			"Normal",
+			"token",
+			"234",
+			"5",
+			true,
+			234,
+			5,
+			service.Succeeded,
+			"result",
+			service.Succeeded,
+			"result",
+		},
+		{
+			"Wrong Parameters",
+			"token",
+			"234df",
+			"5",
+			false,
+			234,
+			5,
+			service.Failed,
+			nil,
+			service.Failed,
+			nil,
+		},
+	}
+
+	for _, tt := range getTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().GetCriticisms(tt.token, tt.mockAid, tt.mockPage).Return(tt.mockCode, tt.mockResult)
+			}
+			r, _ := http.NewRequest("GET", "/criticisms?aid="+tt.aid+"&page="+tt.page, nil)
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+
+	/******************************************* POST *********************************************/
+	postTests := []struct {
+		name       string
+		token      string
+		req        service.ReqCriticismsPost
+		mock       bool
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			"Normal",
+			"token",
+			service.ReqCriticismsPost{
+				Aid:     "3456",
+				Content: "content",
+			},
+			true,
+			service.Succeeded,
+			"mock result",
+			service.Succeeded,
+			"mock result",
+		},
+	}
+	for _, tt := range postTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().AddCriticism(tt.token, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("POST", "/criticisms", bytes.NewReader(body))
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)

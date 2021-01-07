@@ -25,3 +25,12 @@ jobs:
     - name: Run Go testing
       working-directory: backend/users-service
       run: go test ./...
+  search-service:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Go environment
+      uses: actions/setup-go@v2.1.2
+    - name: Run Go testing
+      working-directory: backend/search-service
+      run: go test ./...

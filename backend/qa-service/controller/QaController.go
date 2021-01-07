@@ -33,6 +33,10 @@ func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) 
 	http.HandleFunc("/question", q.QuestionDetail)
 	http.HandleFunc("/answers", q.Answers)
 	http.HandleFunc("/answer", q.AnswerDetail)
+	http.HandleFunc("/comments", q.Comments)
+	http.HandleFunc("/criticisms", q.Criticisms)
+	http.HandleFunc("/disable_question", q.DisableQuestion)
+	http.HandleFunc("/delete_answer", q.DeleteAnswer)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -47,6 +51,8 @@ func (q *QaController) Destruct() {
 }
 
 func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -54,9 +60,10 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			var page int64
 			page, err = strconv.ParseInt(r.FormValue("page"), 10, 32)
+			category := r.FormValue("category")
 			token := r.Header.Get("Authorization")
 			if err == nil {
-				code, result := q.qaService.MainPage(token, page)
+				code, result := q.qaService.MainPage(token, category, page)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -108,7 +115,34 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (q *QaController) DisableQuestion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var response ServerResponse
+	var err error
+	if r.Method == "POST" {
+		var req service.ReqQuestionsDelete
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.DeleteQuestion(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+}
+
 func (q *QaController) QuestionDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -135,6 +169,8 @@ func (q *QaController) QuestionDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -199,6 +235,8 @@ func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) AnswerDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -215,6 +253,123 @@ func (q *QaController) AnswerDetail(w http.ResponseWriter, r *http.Request) {
 				_, _ = w.Write(object)
 				return
 			}
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+}
+
+func (q *QaController) Comments(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var response ServerResponse
+	var err error
+	if r.Method == "GET" {
+		err = r.ParseForm()
+		if err == nil {
+			aid, aidErr := strconv.ParseInt(r.FormValue("aid"), 10, 64)
+			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 64)
+			token := r.Header.Get("Authorization")
+			if aidErr == nil && pageErr == nil {
+				code, result := q.qaService.GetComments(token, aid, page)
+				response.Code = code
+				response.Result = result
+				object, _ := json.Marshal(response)
+				_, _ = w.Write(object)
+				return
+			}
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.Method == "POST" {
+		var req service.ReqCommentsPost
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.AddComment(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+}
+
+func (q *QaController) Criticisms(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var response ServerResponse
+	var err error
+	if r.Method == "GET" {
+		err = r.ParseForm()
+		if err == nil {
+			aid, aidErr := strconv.ParseInt(r.FormValue("aid"), 10, 64)
+			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 64)
+			token := r.Header.Get("Authorization")
+			if aidErr == nil && pageErr == nil {
+				code, result := q.qaService.GetCriticisms(token, aid, page)
+				response.Code = code
+				response.Result = result
+				object, _ := json.Marshal(response)
+				_, _ = w.Write(object)
+				return
+			}
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.Method == "POST" {
+		var req service.ReqCriticismsPost
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.AddCriticism(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+}
+
+func (q *QaController) DeleteAnswer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	var response ServerResponse
+	var err error
+	if r.Method == "POST" {
+		var req service.ReqAnswersDelete
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.DeleteAnswer(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
 		}
 		log.Info(err)
 		response.Code = 1

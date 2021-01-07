@@ -1,13 +1,8 @@
 package entity
 
-import (
-	"gopkg.in/mgo.v2/bson"
-)
-
 type Comments struct {
-	Cmid    bson.ObjectId `bson:"_id"`
-	Uid     bson.ObjectId `bson:"uid"`
-	Aid     bson.ObjectId `bson:"aid"`
-	Content string        `bson:"content"`
-	Time    int64     `bson:"time"`
+	Cmid int64 `json:"cmid"`
+	Uid  int64 `json:"uid"`
+	Aid  int64 `json:"aid"`
+	Time int64 `json:"time"`
 }
