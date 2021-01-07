@@ -140,6 +140,30 @@ func (u *UsersDaoImpl) FindApproveAnswerByUidAndAid(ctx TransactionContext, uid 
 	return approveAnswer, err
 }
 
+func (u *UsersDaoImpl) FindBanWords(ctx TransactionContext) (banWords []entity.BanWords, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from ban_words")
+	if err != nil {
+		return banWords, err
+	}
+	defer stmt.Close()
+	var res *sql.Rows
+	res, err = stmt.Query()
+	if err != nil {
+		return banWords, err
+	}
+	banWords = []entity.BanWords{}
+	for res.Next() {
+		var banWord entity.BanWords
+		err = res.Scan(&banWord.Word)
+		if err != nil {
+			return banWords, err
+		}
+		banWords = append(banWords, banWord)
+	}
+	return banWords, err
+}
+
 func (u *UsersDaoImpl) FindBanWordsPageable(ctx TransactionContext, pageable Pageable) (banWords []entity.BanWords, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from ban_words limit ?, ?")
@@ -389,7 +413,7 @@ func (u *UsersDaoImpl) FindQuestionByQid(ctx TransactionContext, qid int64) (que
 		return question, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(qid).Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned)
+	err = stmt.QueryRow(qid).Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned, &question.Closed)
 	return question, err
 }
 
@@ -419,7 +443,7 @@ func (u *UsersDaoImpl) FindQuestionsByRaiserOrderByTimeDescPageable(ctx Transact
 	}
 	for res.Next() {
 		var question entity.Questions
-		err = res.Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned)
+		err = res.Scan(&question.Qid, &question.Raiser, &question.Category, &question.AcceptedAnswer, &question.AnswerCount, &question.ViewCount, &question.FavoriteCount, &question.Time, &question.Scanned, &question.Closed)
 		if err != nil {
 			return questions, err
 		}
@@ -705,12 +729,12 @@ func (u *UsersDaoImpl) UpdateAnswerByAid(ctx TransactionContext, answer entity.A
 
 func (u *UsersDaoImpl) UpdateQuestionByQid(ctx TransactionContext, question entity.Questions) (err error) {
 	var stmt *sql.Stmt
-	stmt, err = ctx.sqlTx.Prepare("update questions set raiser = ?, category = ?, accepted_answer = ?, answer_count = ?, view_count = ?, favorite_count = ?, time = ?, scanned = ? where qid = ?")
+	stmt, err = ctx.sqlTx.Prepare("update questions set raiser = ?, category = ?, accepted_answer = ?, answer_count = ?, view_count = ?, favorite_count = ?, time = ?, scanned = ?, closed = ? where qid = ?")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(question.Raiser, question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Time, question.Scanned, question.Qid)
+	_, err = stmt.Exec(question.Raiser, question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Time, question.Scanned, question.Closed, question.Qid)
 	return err
 }
 

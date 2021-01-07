@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -368,6 +369,8 @@ type ResultUserAnswersQuestion struct {
 
 type ResultUserQuestions struct {
 	Qid           string    `json:"qid"`
+	HasKeywords   bool      `json:"has_keywords"`
+	Closed        bool      `json:"closed"`
 	Title         string    `json:"title"`
 	Time          time.Time `json:"time"`
 	AnswerCount   int64     `json:"answer_count"`
@@ -2079,6 +2082,8 @@ func (u *UsersServiceImpl) UserQuestions(token string, uid int64, page int64) (r
 		res.Code = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var banWords []entity.BanWords
+	banWords, err = u.usersDao.FindBanWords(ctx)
 	res.Result = []ResultUserQuestions{}
 	for _, question := range questions {
 		var questionDetail entity.QuestionDetails
@@ -2099,7 +2104,14 @@ func (u *UsersServiceImpl) UserQuestions(token string, uid int64, page int64) (r
 		for _, label := range labels {
 			labelTitles = append(labelTitles, label.Title)
 		}
-		res.Result = append(res.Result, ResultUserQuestions{strconv.FormatInt(question.Qid, 10), questionDetail.Title, time.Unix(question.Time, 0), question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Category, labelTitles, fmt.Sprintf("%.20s", questionDetail.Content), []string{questionDetail.PictureUrl}})
+		hasKeywords := false
+		for _, banWord := range banWords {
+			if strings.Contains(questionDetail.Content, banWord.Word) {
+				hasKeywords = true
+				break
+			}
+		}
+		res.Result = append(res.Result, ResultUserQuestions{strconv.FormatInt(question.Qid, 10), hasKeywords, question.Closed == 1, questionDetail.Title, time.Unix(question.Time, 0), question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Category, labelTitles, fmt.Sprintf("%.20s", questionDetail.Content), []string{questionDetail.PictureUrl}})
 	}
 	res.Code = 0
 	return res, u.usersDao.Commit(&ctx)
