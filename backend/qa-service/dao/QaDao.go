@@ -49,6 +49,6 @@ type QaDao interface {
 	FindQuestionAnswers(ctx TransactionContext, qid int64, page int64, sort int8) (answers []entity.Answers, err error)
 
 	GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error)
-	FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails, err error)
+	FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails)
 	AddComment(ctx TransactionContext, uid int64, aid int64, content string) (cmid int64, err error)
 }

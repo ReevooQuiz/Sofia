@@ -135,7 +135,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 	}
 }
 
-func TestMatchKeywords(t *testing.T) {
+func TestServiceMatchKeywords(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -156,7 +156,7 @@ func TestMatchKeywords(t *testing.T) {
 	}
 }
 
-func TestFindTextAndPicture(t *testing.T) {
+func TestServiceFindTextAndPicture(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -222,7 +222,7 @@ func TestFindTextAndPicture(t *testing.T) {
 	}
 }
 
-func TestParseContent(t *testing.T) {
+func TestServiceParseContent(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -263,7 +263,7 @@ func TestParseContent(t *testing.T) {
 	}
 }
 
-func TestAddQuestion(t *testing.T) {
+func TestServiceAddQuestion(t *testing.T) {
 	const (
 		ConstraintsViolated = 0
 		HasKeyword          = 1
@@ -360,7 +360,7 @@ func TestAddQuestion(t *testing.T) {
 			mockBannedWords: false,
 			mockAddQuestion: false,
 			req: service.ReqQuestionsPost{
-				Title:    "123456789012345678901234567890123456789012345678901",
+				Title:    string(make([]byte, service.QuestionTitleLengthMax + 1)),
 				Content:  "this is the content",
 				Category: "life",
 				Labels:   []string{},
@@ -552,7 +552,7 @@ func TestAddQuestion(t *testing.T) {
 	}
 }
 
-func TestModifyQuestion(t *testing.T) {
+func TestServiceModifyQuestion(t *testing.T) {
 	const (
 		ConstraintsViolated = 0
 		HasKeyword          = 1
@@ -675,7 +675,7 @@ func TestModifyQuestion(t *testing.T) {
 			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
 				Qid:      "456",
-				Title:    "123456789012345678901234567890123456789012345678901",
+				Title:    string(make([]byte, service.QuestionTitleLengthMax + 1)),
 				Content:  "content",
 				Category: "life",
 				Labels:   []string{"main"},
@@ -915,7 +915,7 @@ func TestModifyQuestion(t *testing.T) {
 	}
 }
 
-func TestMainPage(t *testing.T) {
+func TestServiceMainPage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
@@ -1136,7 +1136,7 @@ func TestMainPage(t *testing.T) {
 	}
 }
 
-func TestQuestionDetail(t *testing.T) {
+func TestServiceQuestionDetail(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1329,7 +1329,7 @@ func TestQuestionDetail(t *testing.T) {
 	}
 }
 
-func TestAnswerListResponse(t *testing.T) {
+func TestServiceAnswerListResponse(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1377,7 +1377,7 @@ func TestAnswerListResponse(t *testing.T) {
 	})
 }
 
-func TestAddAnswer(t *testing.T) {
+func TestServiceAddAnswer(t *testing.T) {
 	const (
 		ConstraintsViolated = 0
 		HasKeyword          = 1
@@ -1512,7 +1512,7 @@ func TestAddAnswer(t *testing.T) {
 	})
 }
 
-func TestModifyAnswer(t *testing.T) {
+func TestServiceModifyAnswer(t *testing.T) {
 	const (
 		ConstraintsViolated = 0
 		HasKeyword          = 1
@@ -1636,7 +1636,7 @@ func TestModifyAnswer(t *testing.T) {
 	})
 }
 
-func TestListAnswers(t *testing.T) {
+func TestServiceListAnswers(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1727,7 +1727,7 @@ func TestListAnswers(t *testing.T) {
 	})
 }
 
-func TestAnswerDetail(t *testing.T) {
+func TestServiceAnswerDetail(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1830,5 +1830,222 @@ func TestAnswerDetail(t *testing.T) {
 		mockQaDao.EXPECT().Rollback(gomock.Any())
 		code, _ := q.AnswerDetail(token, aid)
 		a.Equal(int8(service.Failed), code)
+	})
+}
+
+func TestServiceCommentListResponse(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	var (
+		cmid int64 = 345
+	)
+	comments := []entity.Comments{{Cmid: cmid, Uid: 11, Aid: 97}}
+	details := []entity.CommentDetails{{Cmid: 456, Content: "ha ha ha"}}
+	keywords := []string{"test"}
+	uids := []int64{11}
+	err := errors.New("xxx")
+	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nickname", Icon: "icon"}}
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
+		result, err := q.CommentListResponse(comments, details, &keywords)
+		res := result.([]service.CommentListItem)[0]
+		a.Nil(err)
+		a.Equal("nickname", res.Nickname)
+		a.Equal("345", res.Cmid)
+		a.Equal("icon", res.Icon)
+		a.Equal("ha ha ha", res.Content)
+	})
+
+	t.Run("Failed to Get User Info", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(nil, err)
+		_, err := q.CommentListResponse(comments, details, &keywords)
+		a.NotNil(err)
+	})
+}
+
+func TestServiceGetComments(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	token := "token"
+	var (
+		aid int64 = 345
+		page int64 = 5
+		uid int64 = 76
+		role int8 = service.USER
+	)
+	comments := []entity.Comments{{Cmid: 98, Uid: 9, Aid: aid}}
+	details := []entity.CommentDetails{{Cmid: 98, Content: "ha ha ha"}}
+	uids := []int64{9}
+	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	bannedWords := []string{"xxx"}
+	err := errors.New("xxx")
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetComments(gomock.Any(), aid, page).Return(comments, nil)
+		mockQaDao.EXPECT().FindCommentDetails(gomock.Any(), comments).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.GetComments(token, aid, page)
+		a.Equal(int8(service.Succeeded), code)
+		res := result.([]service.CommentListItem)[0]
+		a.Equal("ha ha ha", res.Content)
+		a.False(res.HasKeywords)
+		a.Equal("nick", res.Nickname)
+		a.Equal("98", res.Cmid)
+		a.Equal("9", res.Uid)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.GetComments(token, aid, page)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Failed to Get Comments", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetComments(gomock.Any(), aid, page).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetComments(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetComments(gomock.Any(), aid, page).Return(comments, nil)
+		mockQaDao.EXPECT().FindCommentDetails(gomock.Any(), comments).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetComments(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetComments(gomock.Any(), aid, page).Return(comments, nil)
+		mockQaDao.EXPECT().FindCommentDetails(gomock.Any(), comments).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetComments(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+}
+
+func TestServiceAddComment(t *testing.T) {
+	const (
+		ConstraintsViolated = 0
+		HasKeywords         = 1
+		UnknownError        = 2
+	)
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	token := "token"
+	var (
+		aid int64 = 345
+		uid int64 = 76
+		role int8 = service.USER
+		cmid int64 = 234
+	)
+	req := service.ReqCommentsPost{
+		Aid:     "345",
+		Content: "ha ha ha",
+	}
+	bannedWords := []string{"xxx"}
+	err := errors.New("xxx")
+	unknownFailure := map[string]int8{"type": UnknownError}
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddComment(gomock.Any(), uid, aid, req.Content).Return(cmid, nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, result := q.AddComment(token, req)
+		res := result.(map[string]string)["cmid"]
+		a.Equal(int8(service.Succeeded), code)
+		a.Equal("234", res)
+	})
+
+	t.Run("Failed Parse", func(t *testing.T) {
+		newReq := service.ReqCommentsPost{
+			Aid:     "345sdf",
+			Content: "ha ha ha",
+		}
+		code, _ := q.AddComment(token, newReq)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.AddComment(token, req)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Long Content", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		newReq := service.ReqCommentsPost{
+			Aid:     "345",
+			Content: string(make([]byte, service.CommentLengthMax + 1)),
+		}
+		code, result := q.AddComment(token, newReq)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": ConstraintsViolated}, result)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddComment(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Failed to Add Comment", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddComment(gomock.Any(), uid, aid, req.Content).Return(int64(0), err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddComment(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Has Keywords", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return([]string{"ha"}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddComment(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": HasKeywords}, res)
 	})
 }

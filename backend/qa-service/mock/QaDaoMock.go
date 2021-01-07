@@ -180,12 +180,11 @@ func (mr *MockQaDaoMockRecorder) FindAnswerDetails(arg0, arg1 interface{}) *gomo
 }
 
 // FindCommentDetails mocks base method
-func (m *MockQaDao) FindCommentDetails(arg0 dao.TransactionContext, arg1 []entity.Comments) ([]entity.CommentDetails, error) {
+func (m *MockQaDao) FindCommentDetails(arg0 dao.TransactionContext, arg1 []entity.Comments) []entity.CommentDetails {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindCommentDetails", arg0, arg1)
 	ret0, _ := ret[0].([]entity.CommentDetails)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // FindCommentDetails indicates an expected call of FindCommentDetails
