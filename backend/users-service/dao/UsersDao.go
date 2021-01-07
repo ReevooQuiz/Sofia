@@ -14,6 +14,7 @@ type UsersDao interface {
 	FindAnswerDetailByAid(ctx TransactionContext, aid int64) (answerDetail entity.AnswerDetails, err error)
 	FindAnswersByAnswererOrderByTimeDescPageable(ctx TransactionContext, answerer int64, pageable Pageable) (answers []entity.Answers, err error)
 	FindApproveAnswerByUidAndAid(ctx TransactionContext, uid int64, aid int64) (approveAnswer entity.ApproveAnswers, err error)
+	FindBanWords(ctx TransactionContext) (banWords []entity.BanWords, err error)
 	FindBanWordsPageable(ctx TransactionContext, pageable Pageable) (banWords []entity.BanWords, err error)
 	FindCommentByCmid(ctx TransactionContext, cmid int64) (comment entity.Comments, err error)
 	FindCriticismByCtid(ctx TransactionContext, ctid int64) (criticism entity.Criticisms, err error)
