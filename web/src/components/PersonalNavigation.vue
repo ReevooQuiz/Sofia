@@ -10,39 +10,32 @@
       :inline-collapsed="collapsed"
     >
      <a-menu-item key="1"  >
-       <HeartOutlined />
-        
-        <span><router-link to="/personalFollowing"> 关注</router-link></span>
-        
-      
+       <router-link to="/personalFollowing">
+       <HeartOutlined />关注
+       </router-link>
+
       </a-menu-item>
-      <a-menu-item key="2">
-        <SmileOutlined />
-       
-        <span>   <router-link to="/personalFollower"> 粉丝 </router-link></span>
-        
+      <a-menu-item key="2"><router-link to="/personalFollower">
+      <SmileOutlined />粉丝
+      </router-link>
       </a-menu-item>
-      <a-menu-item key="3">
-        <PicLeftOutlined />
-        <span> <router-link to="/personalQuestion"> 问题 </router-link></span>
-      
+      <a-menu-item key="3"><router-link to="/personalQuestion">
+        <PicLeftOutlined />问题
+      </router-link>
       </a-menu-item>
-      <a-menu-item key="4">
-        <BulbOutlined />
-        <span>  <router-link to="/personalAnswer"> 回答 </router-link></span>
-      
+      <a-menu-item key="4"> <router-link to="/personalAnswer">
+        <BulbOutlined />回答
+      </router-link>
       </a-menu-item>
-      <a-menu-item key="5">
-        <MailOutlined />
-        <span>  <router-link to="/personalMessage"> 消息 </router-link></span>
-      
+      <a-menu-item key="5">  <router-link to="/personalMessage">
+      <MailOutlined />消息
+      </router-link>
       </a-menu-item>
-      <a-menu-item key="6">
-        <SettingOutlined />
-        <span>  <router-link to="/personalSet"> 设置 </router-link></span>
-      
+      <a-menu-item key="6"> <router-link to="/personalSet">
+        <SettingOutlined />设置
+      </router-link>
       </a-menu-item>
-     
+
     </a-menu>
   </div>
 </template>
@@ -61,7 +54,7 @@ import {
   BulbOutlined,
   PicLeftOutlined,
   SettingOutlined
- 
+
 } from '@ant-design/icons-vue';
 import { Menu } from 'ant-design-vue';
 
@@ -70,9 +63,9 @@ const SubMenu = {
   components: {
     PieChartOutlined,
     MailOutlined,
-    
+
   },
- 
+
   name: 'SubMenu',
   props: {
     menuInfo: {
@@ -96,7 +89,7 @@ export default {
    BulbOutlined,
    PicLeftOutlined,
    SettingOutlined
-    
+
 
   },
   data() {
