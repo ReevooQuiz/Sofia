@@ -186,6 +186,28 @@ func (u *UsersDaoImpl) FindCriticismByCtid(ctx TransactionContext, ctid int64) (
 	return criticism, err
 }
 
+func (u *UsersDaoImpl) FindFavoriteByUidAndTitle(ctx TransactionContext, uid int64, title string) (favorite entity.Favorites, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from favorites where uid = ? and title = ?")
+	if err != nil {
+		return favorite, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(uid, title).Scan(&favorite.Fid, &favorite.Uid, &favorite.Title)
+	return favorite, err
+}
+
+func (u *UsersDaoImpl) FindFavoriteItemByFidAndQid(ctx TransactionContext, fid int64, qid int64) (favoriteItem entity.FavoriteItems, err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("select * from favorite_items where fid = ? and qid = ?")
+	if err != nil {
+		return favoriteItem, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(fid, qid).Scan(&favoriteItem.Fid, &favoriteItem.Qid)
+	return favoriteItem, err
+}
+
 func (u *UsersDaoImpl) FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("select * from follows where uid = ? and follower = ?")
@@ -500,6 +522,17 @@ func (u *UsersDaoImpl) InsertFavorite(ctx TransactionContext, favorite entity.Fa
 	return fid, err
 }
 
+func (u *UsersDaoImpl) InsertFavoriteItem(ctx TransactionContext, favoriteItem entity.FavoriteItems) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into favorite_items values(?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(favoriteItem.Fid, favoriteItem.Qid)
+	return err
+}
+
 func (u *UsersDaoImpl) InsertFollow(ctx TransactionContext, follow entity.Follows) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into follows values(?, ?, ?)")
@@ -591,6 +624,17 @@ func (u *UsersDaoImpl) RemoveBanWordByWord(ctx TransactionContext, word string) 
 	return err
 }
 
+func (u *UsersDaoImpl) RemoveFavoriteItemByFidAndQid(ctx TransactionContext, fid int64, qid int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from favorite_items where fid = ? and qid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(fid, qid)
+	return err
+}
+
 func (u *UsersDaoImpl) RemoveFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("delete from follows where uid = ? and follower = ?")
@@ -632,6 +676,17 @@ func (u *UsersDaoImpl) UpdateAnswerByAid(ctx TransactionContext, answer entity.A
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(answer.Answerer, answer.Qid, answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Time, answer.Aid)
+	return err
+}
+
+func (u *UsersDaoImpl) UpdateQuestionByQid(ctx TransactionContext, question entity.Questions) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("update questions set raiser = ?, category = ?, accepted_answer = ?, answer_count = ?, view_count = ?, favorite_count = ?, time = ?, scanned = ? where qid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(question.Raiser, question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Time, question.Scanned, question.Qid)
 	return err
 }
 
