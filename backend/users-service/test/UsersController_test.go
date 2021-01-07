@@ -268,6 +268,52 @@ func TestControllerCheckToken(t *testing.T) {
 	}
 }
 
+func TestControllerFavorite(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersService := mock.NewMockUsersService(mockCtrl)
+	gomock.InOrder(
+		mockUsersService.EXPECT().Favorite(gomock.Any(), gomock.Any()).Return(service.ResFavorite{}, nil),
+	)
+	var u controller.UsersController
+	u.SetUsersService(mockUsersService)
+	mux.HandleFunc("/favorite", u.Favorite)
+	type args struct {
+		token string
+		req   service.ReqFavorite
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantStatus int
+		wantRes    service.ResFavorite
+	}{
+		{"Normal", args{}, http.StatusOK, service.ResFavorite{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			requestBody, _ := json.Marshal(tt.args.req)
+			r, _ := http.NewRequest("PUT", "/favorite", bytes.NewReader(requestBody))
+			r.Header.Set("Authorization", tt.args.token)
+			r.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("Actual: %v, expect: %v.", w.Result().StatusCode, tt.wantStatus)
+			}
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res service.ResFavorite
+			_ = json.Unmarshal(responseBody, &res)
+			if res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestControllerFollow(t *testing.T) {
 	t.Parallel()
 	mux := http.NewServeMux()
