@@ -51,6 +51,7 @@ func (q *QaController) Destruct() {
 }
 
 func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -114,6 +115,7 @@ func (q *QaController) Questions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) DisableQuestion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "POST" {
@@ -137,6 +139,7 @@ func (q *QaController) DisableQuestion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) QuestionDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -163,6 +166,7 @@ func (q *QaController) QuestionDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -227,6 +231,7 @@ func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) AnswerDetail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -253,6 +258,7 @@ func (q *QaController) AnswerDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) Comments(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -297,6 +303,7 @@ func (q *QaController) Comments(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) Criticisms(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "GET" {
@@ -341,6 +348,7 @@ func (q *QaController) Criticisms(w http.ResponseWriter, r *http.Request) {
 }
 
 func (q *QaController) DeleteAnswer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var response ServerResponse
 	var err error
 	if r.Method == "POST" {
