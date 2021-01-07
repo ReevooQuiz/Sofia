@@ -237,10 +237,10 @@ func (q *QaServiceImpl) QuestionListResponse(uid int64, role int8, questions []e
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
 		res[i].Closed = v.Closed
-		if uid != v.Raiser && role != ADMIN && MatchKeywords(&v.Title, keywords) {
+		if uid != v.Raiser && role != ADMIN && MatchKeywords(&questionDetails[i].Title, keywords) {
 			res[i].Title = "[标题包含敏感词，已屏蔽]"
 		} else {
-			res[i].Title = v.Title
+			res[i].Title = questionDetails[i].Title
 		}
 		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
 		res[i].AnswerCount = v.AnswerCount
@@ -766,10 +766,10 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	var res QuestionInfo
 	res.Qid = strconv.FormatInt(qs.Qid, 10)
 	res.Closed = qs.Closed
-	if uid == qs.Raiser || role == ADMIN || MatchKeywords(&qs.Title, &keywords) {
+	if uid == qs.Raiser || role == ADMIN || MatchKeywords(&detail[0].Title, &keywords) {
 		res.Title = "[标题包含敏感词，已屏蔽]"
 	} else {
-		res.Title = qs.Title
+		res.Title = detail[0].Title
 	}
 	res.Time = fmt.Sprint(qs.Time)
 	res.AnswerCount = qs.AnswerCount

@@ -76,7 +76,6 @@ func TestServiceQuestionListResponse(t *testing.T) {
 			[]entity.Questions{{
 				15,
 				5,
-				"title",
 				"math",
 				sql.NullInt64{Valid: false},
 				5,
@@ -89,6 +88,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 			}},
 			[]entity.QuestionDetails{{
 				15,
+				"test",
 				"What is gradient?",
 				"pictureUrl",
 				"What is gradient?",
@@ -130,7 +130,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				a.Nil(err)
 				a.Equal(len(questions), len(tt.mockResult))
 				if len(tt.mockResult) > 0 {
-					a.Equal(questions[0].Title, tt.questions[0].Title)
+					a.Equal(questions[0].Title, tt.questionDetails[0].Title)
 					shouldHave := tt.questionDetails[0].PictureUrl != ""
 					has := len(questions[0].PictureUrls) > 0
 					a.Equal(shouldHave, has)
@@ -939,7 +939,6 @@ func TestServiceMainPage(t *testing.T) {
 			{
 				17,
 				5,
-				"title",
 				"life",
 				sql.NullInt64{Valid: false},
 				4,
@@ -954,6 +953,7 @@ func TestServiceMainPage(t *testing.T) {
 		DetailsResult = []entity.QuestionDetails{
 			{
 				17,
+				"title",
 				"What to eat?\n![](picture URL)",
 				"picture URL",
 				"What to eat",
@@ -1024,7 +1024,7 @@ func TestServiceMainPage(t *testing.T) {
 						Nickname: UserInfosResult[0].Nickname,
 						Icon:     UserInfosResult[0].Icon,
 					},
-					Title:         MainPageResult[0].Title,
+					Title:         DetailsResult[0].Title,
 					Time:          fmt.Sprint(time.Unix(MainPageResult[0].Time, 0)),
 					AnswerCount:   MainPageResult[0].AnswerCount,
 					ViewCount:     MainPageResult[0].ViewCount,
@@ -1168,19 +1168,18 @@ func TestServiceQuestionDetail(t *testing.T) {
 	question := []entity.Questions{{
 		Qid:            234,
 		Raiser:         78,
-		Title:          "title",
 		Category:       "life",
 		AcceptedAnswer: sql.NullInt64{Valid: false},
 	}}
 	questionWithAccepted := []entity.Questions{{
 		Qid:            234,
 		Raiser:         78,
-		Title:          "title",
 		Category:       "life",
 		AcceptedAnswer: sql.NullInt64{Valid: true, Int64: 567},
 	}}
 	details := []entity.QuestionDetails{{
 		234,
+		"title",
 		"content",
 		"",
 		"content",
@@ -1423,7 +1422,7 @@ func TestServiceAddAnswer(t *testing.T) {
 	var role int8 = service.USER
 	banned := []string{"river"}
 	pictureUrl := ""
-	questions := []entity.Questions{{Qid: 456, Raiser: 89, Title: "title", Category: "life", Labels: []string{}}}
+	questions := []entity.Questions{{Qid: 456, Raiser: 89, Category: "life", Labels: []string{}}}
 	unknownFailure := map[string]int8{"type": UnknownError}
 
 	t.Run("Normal", func(t *testing.T) {
