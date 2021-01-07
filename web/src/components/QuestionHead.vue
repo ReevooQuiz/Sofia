@@ -81,7 +81,7 @@
 <script >
 import moment from "moment";
 import { HeartFilled, HeartOutlined,FireOutlined ,FileTextOutlined} from "@ant-design/icons-vue";
-import { postRequest } from "@/http/request";
+import { postRequest,putRequest } from "@/http/request";
 
 export default {
   components: {
@@ -104,7 +104,7 @@ export default {
       this.ques.collected = !this.ques.collected;
       if (this.ques.collected) this.ques.favorite_count++;
       else this.ques.favorite_count--;
-      postRequest(
+      putRequest(
         "/favorite",
         { qid: this.ques.qid, favorite: this.ques.collected },
         e => {
