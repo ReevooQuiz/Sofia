@@ -2,51 +2,34 @@
   <div>
     <a-card
       hoverable
-      :title="ques.title"
+      :title="ques.question_title"
       size="small"
       style="border-radius : 3px"
       :headStyle="tstyle"
-      v-if="!deleted"
     >
       <template #extra>
-        <!-- <a-tag color="#68b0af" style="margin-top:10px">
-          <a-tooltip title="分区">
-            <DatabaseOutlined />
-            {{ques.category}}
-          </a-tooltip>
-        </a-tag> -->
-         <a-button type="primary" style="margin-right:10px">
+        <a-button type="primary" style="margin-right:10px">
           <a-tooltip title="分区">
             <DatabaseOutlined />
             {{ques.category}}
           </a-tooltip>
         </a-button>
-        <a-space size="small">
-          <a-button size="small" shape="pill" type="primary" v-if="modifiable" @click="onModify">修改问题</a-button>
-          <a-button v-if="!ques.closed" @click="onClose" size="small" shape="pill" type="primary">关闭问题</a-button>
-          <a-avatar @click="onDelete" size="small" shape="round" type="primary" style="background-color:#fbbdbd;border-color: #ecc7d4;"><DeleteOutlined /></a-avatar>
-
-        </a-space>
+        <a-button
+          v-if="this.status"
+          type="primary"
+          @click="cancle"
+        >取消收藏</a-button>
+         <a-button
+          v-else
+          type="primary"
+          style="background-color:#fbbdbd;border-color: #ecc7d4;"
+          @click="collect"
+        >收藏</a-button>
       </template>
 
-      <a-row  @click="toQuestion">
-        <a-col :span="4" >
+      <a-row>
+        <a-col :span="5">
           <div style="align-items: center">
-          <!-- <a-carousel arrows>
-            <template #prevArrow>
-              <div class="custom-slick-arrow" style="left: 10px;zIndex: 1">
-                <left-circle-outlined />
-              </div>
-            </template>
-            <template #nextArrow>
-              <div class="custom-slick-arrow" style="right: 10px">
-                <right-circle-outlined />
-              </div>
-            </template>
-            <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
-              <img :src="item" @click="toQuestion" style="width:100%" />
-            </div>
-          </a-carousel> -->
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
@@ -55,10 +38,10 @@
         <a-col :span="18" :offset="1">
           <a-comment>
             <template #actions>
-               <span key="comment-basic-reply-to">
+              <span key="comment-basic-reply-to">
                 <a-tooltip title="赞">
-                 <LikeOutlined />
-                    {{ques.favorite_count}}
+                  <LikeOutlined />
+                  {{ques.favorite_count}}
                 </a-tooltip>
               </span>
 
@@ -79,19 +62,25 @@
                   <TeamOutlined />
                   {{ques.follow_count}}
                 </a-tooltip>
-              </span> -->
+              </span>-->
+            </template>
+            <template #author>
+              <a @click="gotoPerson(ques.raiser.uid)">{{ques.raiser.name}}</a>
+            </template>
+            <template #avatar>
+              <a-avatar @click="gotoPerson(ques.raiser.uid)" :src="ques.raiser.icon" alt="avatar" />
             </template>
             <template #content>
-              <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
+              <v-md-editor mode="preview" v-model="ques.question_head" @click="toQuestion"></v-md-editor>
             </template>
             <!-- <template #content>
               <p @click="toQuestion">{{ques.head}}</p>
-            </template> -->
-            <template #datetime>
+            </template>-->
+            <!-- <template #datetime>
               <a-tooltip :title="moment(ques.time).format('YYYY-MM-DD HH:mm:ss')">
                 <span>{{ moment(ques.time).fromNow() }}</span>
               </a-tooltip>
-            </template>
+            </template>-->
           </a-comment>
 
           <a-divider />
@@ -123,11 +112,9 @@ import {
   TeamOutlined,
   LeftCircleOutlined,
   RightCircleOutlined,
-  DatabaseOutlined,
-    DeleteOutlined,
-    CloseOutlined
+  DatabaseOutlined
 } from "@ant-design/icons-vue";
-import {postRequest,putRequest} from "../http/request";
+import { putRequest } from "../http/request";
 export default {
   components: {
     LikeFilled,
@@ -139,63 +126,60 @@ export default {
     FileTextOutlined,
     LeftCircleOutlined,
     RightCircleOutlined,
-    DatabaseOutlined,
-    DeleteOutlined,
-    CloseOutlined
-
+    DatabaseOutlined
   },
   props: ["ques"],
 
   data() {
     return {
-      likes: this.ques.likeNum,
-      dislikes: this.ques.dislikeNum,
+      status: true,
       action: null,
       moment,
-      modifiable:false,
-      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" },
-      deleted:false
+      modifiable: false,
+      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" }
     };
   },
   created() {
-    if (moment(this.ques.time).format('YYYY-MM-DD')>moment().subtract(1, 'days').format('YYYY-MM-DD'))
-      this.modifiable=true;
+    if (
+      moment(this.ques.time).format("YYYY-MM-DD") >
+      moment()
+        .subtract(1, "days")
+        .format("YYYY-MM-DD")
+    )
+      this.modifiable = true;
   },
   methods: {
     toQuestion() {
+      console.log("??");
+      console.log(this.ques.qid);
       this.$router.push({
         path: "/question",
         query: { questionId: this.ques.qid }
       });
     },
-    onModify(){
-      this.$router.push({ path:'/postQuestion' , query: { questionId: this.ques.qid } });
+
+    cancle() {
+      putRequest("/favorite", { qid: this.ques.qid, favorite: false }, res => {
+        this.status = false;
+      },{errorCallback:(e)=>{JSON.stringify(e)}});
     },
-    onDelete(){
-      postRequest("/disable_question", {qid:this.ques.qid},(e)=>{
-        console.log(e);
-        if (e.code==0){
-          this.deleted=true;
-        }
-      },{errorCallback:(e)=>{
-          console.log(e);
-        }});
+    collect() {
+      putRequest("/favorite", { qid: this.ques.qid, favorite: true }, res => {
+        this.status = true;
+      },{errorCallback:(e)=>{JSON.stringify(e)}});
     },
-    onClose(){
-      this.ques.closed=true;
-      putRequest("/disable_question", {qid:this.ques.qid},(e)=>{
-        console.log(e);
-        if (e.code==0){
-        }
-      },{errorCallback:(e)=>{
-          console.log(e);
-        }});
-    },
+    gotoPerson(id) {
+      console.log(id);
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
+      });
+    }
   }
 };
 </script>
 
-<style scoped>
+<style >
 .ant-divider-horizontal {
   display: block;
   clear: both;
@@ -204,7 +188,10 @@ export default {
   height: 1px;
   margin: 1px 0;
 }
-
+.v-md-editor-preview {
+    padding: 6px;
+    word-break: break-all;
+}
 /* .ant-comment-inner {
     display: flex;
     padding: 1px 0;

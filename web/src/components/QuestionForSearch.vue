@@ -2,12 +2,18 @@
   <div class="questionForSearch">
     <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
       <template #extra>
-        <a-tag color="#68b0af" style="margin-top:10px">
+        <!-- <a-tag color="#68b0af" style="margin-top:10px">
           <a-tooltip title="分区">
             <DatabaseOutlined />
             {{ques.category}}
           </a-tooltip>
-        </a-tag>
+        </a-tag> -->
+         <a-button type="primary" style="margin-right:10px">
+          <a-tooltip title="分区">
+            <DatabaseOutlined />
+            {{ques.category}}
+          </a-tooltip>
+        </a-button>
       </template>
       <a-row>
         <a-col :span="5">
@@ -18,10 +24,10 @@
         <a-col :span="17 " :offset="1">
           <a-comment>
             <template #author>
-              <a>{{ques.raiser.nickname}}</a>
+              <a  @click="gotoPerson(ques.raiser.uid)">{{ques.raiser.nickname}}</a>
             </template>
             <template #avatar>
-              <a-avatar :src="ques.raiser.icon" :alt="ques.raiser.nickname" />
+              <a-avatar @click="gotoPerson(ques.raiser.uid)" :src="ques.raiser.icon" :alt="ques.raiser.nickname" />
             </template>
             <template #content>
               <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
@@ -100,6 +106,13 @@ export default {
       this.$router.push({
         path: "/question",
         query: { questionId: this.ques.qid }
+      });
+    },
+    gotoPerson(id) {
+      console.log(id)
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
       });
     }
   }

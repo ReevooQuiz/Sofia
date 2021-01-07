@@ -9,6 +9,7 @@
       v-bind="layout"
       @finish="handleFinish"
       @finishFailed="handleFinishFailed"
+      onkeydown="if(event.keyCode==13){return false;}"
     >
       <a-row>
         <a-col :span="1" :offset="1">
@@ -69,7 +70,7 @@
           <br />
           <!-- <a-tag color="#88d5d1">
             <VerifiedOutlined />学习区专家
-          </a-tag> -->
+          </a-tag>-->
           <a-tag color="#88d5d1">
             <FireOutlined />
             等级 {{info.level}}
@@ -81,7 +82,42 @@
           </a-tag>
 
           <a-divider />
+          <div v-if="this.edit===false">
+            <a-tag
+              v-for="(item) in info.labels"
+              v-bind:key="item.index"
+              color="#88d5d1"
+              style="margin-right:2px;margin-bottom:2px"
+            >{{item}}</a-tag>
+          </div>
 
+          <div v-else>
+            <template v-for="(tag, index) in tags">
+              <a-tooltip v-if="tag.length > 20" :title="tag">
+                <a-tag
+                  :key="tag"
+                  :closable=" index >= 0"
+                  @close="handleClose(tag)"
+                >{{ `${tag.slice(0, 20)}...` }}</a-tag>
+              </a-tooltip>
+              <a-tag v-else :closable="index >= 0" @close="handleClose(tag)">{{ tag }}</a-tag>
+            </template>
+            <a-input
+              v-if="inputVisible"
+              ref="input"
+              type="text"
+              size="small"
+              :style="{ width: '78px' }"
+              v-model:value="inputValue"
+              @blur="handleInputConfirm"
+              @submit.native.prevent="onSubmit"
+            />
+             <!-- @keyup.enter="handleInputConfirm" -->
+            <a-tag v-else @click="showInput" style="background: #fff; borderStyle: dashed;">
+              <plus-outlined />New Tag
+            </a-tag>
+          </div>
+          <a-divider />
           <span>
             <TeamOutlined />
             {{info.following_count}} 关注 ·
@@ -112,7 +148,8 @@
             <a-form-item>
               <a-row>
                 <a-col :span="10" :offset="1">
-                  <a-button ghost html-type="submit">保存</a-button>
+                  <a-button ghost html-type="submit" @keyup.enter.native="none">保存</a-button>
+                  <!-- <a-button ghost @click="handleFinish">保存</a-button> -->
                 </a-col>
                 <a-col :span="10" :offset="2">
                   <a-button ghost style="margin-left: 50px" @click="handleCancle">取消</a-button>
@@ -129,7 +166,7 @@
             @click="changeEditPassStatus"
           >修改密码</a-button>
 
-           <a-button
+          <a-button
             style="margin-top: 10px"
             v-if="this.editPass===false && this.edit===false &&this.forgetPass===false"
             block
@@ -209,7 +246,7 @@
               </a-col>
               <a-col :span="19" :offset="2">
                 <a-form-item required has-feedback name="name">
-                  <a-input v-model:value="ruleForm.name" />
+                  <a-input @blur="validate('name', { trigger: 'blur' }).catch(() => {})" v-model:value="ruleForm.name" />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -322,7 +359,7 @@
             </a-form>
           </div>
 
-           <div v-else-if="this.edit===false && this.forgetPass===true  && this.editPass===false">
+          <div v-else-if="this.edit===false && this.forgetPass===true  && this.editPass===false">
             <a-form
               name="passwordChange"
               ref="passwordChange"
@@ -338,7 +375,7 @@
                 </a-col>
                 <a-col :span="19" :offset="2">
                   <a-form-item required has-feedback name="old">
-                    <a-input v-model:value="passwordChange.old"  autocomplete="off" />
+                    <a-input v-model:value="passwordChange.old" autocomplete="off" />
                   </a-form-item>
                 </a-col>
               </a-row>
@@ -397,7 +434,7 @@ import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
 import SubMenu from "../../components/PersonalNavigation";
 import { message } from "ant-design-vue";
-import { PlusOutlined, LoadingOutlined } from "@ant-design/icons-vue";
+import { PlusOutlined, LoadingOutlined} from "@ant-design/icons-vue";
 import {
   CameraOutlined,
   FireOutlined,
@@ -407,8 +444,9 @@ import {
   LikeOutlined,
   FormOutlined,
   CopyOutlined
+ 
 } from "@ant-design/icons-vue";
-import { postRequest, getRequest ,putRequest} from "@/http/request.js";
+import { postRequest, getRequest, putRequest } from "@/http/request.js";
 
 function getBase64(img, callback) {
   const reader = new FileReader();
@@ -499,6 +537,12 @@ export default {
       fileList: [],
       loading: false,
       imageUrl: "",
+
+      inputVisible: false,
+      inputValue: '',
+      tags:[],
+
+
       done: false,
       headers: {
         authorization: "authorization-text"
@@ -506,14 +550,15 @@ export default {
       info: {},
       edit: false,
       editPass: false,
-      forgetPass:false,
+      forgetPass: false,
       ruleForm: {
         name: "",
         nickname: "",
         email: "",
         gender: 3,
         icon: "",
-        profile: ""
+        profile: "",
+        labels:[]
       },
       passwordChange: {
         old: "",
@@ -521,11 +566,11 @@ export default {
         newCheck: ""
       },
       passwordForget: {
-        verify:"",
+        verify: "",
         new: "",
         newCheck: ""
       },
-      
+
       passRules: {
         old: [{ validator: validatePass, trigger: "change" }],
         new: [{ validator: validatePass, trigger: "change" }],
@@ -566,20 +611,33 @@ export default {
     // this.ruleForm.profile = this.info.profile;
   },
   methods: {
+    onSubmit: function () {
+     // 阻止默认表单提交
+     // 做你自己想做的事，比如ajax请求后台数据
+     return false;
+   },
     handleCallback(response) {
       console.log(response);
       this.info = response.result;
       this.imageUrl = this.info.icon;
+      this.tags=this.info.labels
     },
 
-    handleFinish() {
-      console.log(this.ruleForm);
+    handleFinish(e) {
+       if(this.tags.length<=1)
+      {
+        message.error("标签数不能少于一个")
+      }
+      else{
+         console.log(this.ruleForm);
       console.log("finished");
       putRequest("/publicInfo", this.ruleForm, this.mycallback, {
         errorCallback: error => {
           console.log(JSON.stringify(error));
         }
       });
+      }
+     
     },
     mycallback(response) {
       if (response.code === 0) {
@@ -588,6 +646,7 @@ export default {
         this.info.email = this.ruleForm.email;
         this.info.gender = this.ruleForm.gender.toString();
         this.info.profile = this.ruleForm.profile;
+        this.info.labels=this.tags;
         this.edit = !this.edit;
       }
     },
@@ -603,14 +662,14 @@ export default {
       this.ruleForm.gender = this.info.gender.toString();
       this.ruleForm.icon = this.info.icon;
       this.ruleForm.profile = this.info.profile;
+      this.ruleForm.labels=this.info.labels;
       this.edit = !this.edit;
     },
     changeEditPassStatus() {
       this.editPass = !this.editPass;
     },
-    changeForgetPassStatus()
-    {
-      this.forgetPass =!this.forgetPass;
+    changeForgetPassStatus() {
+      this.forgetPass = !this.forgetPass;
     },
     handleCancle() {
       this.ruleForm.name = this.info.name;
@@ -652,33 +711,72 @@ export default {
       }
       return isJpgOrPng && isLt2M;
     },
-    passCallback(res)
-    {
-      if(res.code===1)
-      {
-        if(res.type===0)
-        {
-          message.error("更新密码失败：原密码输入错误")
+    passCallback(res) {
+      if (res.code === 1) {
+        if (res.type === 0) {
+          message.error("更新密码失败：原密码输入错误");
+        } else {
+          message.error("更新密码失败");
         }
-        else{
-           message.error("更新密码失败")
-        }
-      }
-      else if(res.code===0)
-      {
-        message.success("更新密码成功")
-        this.editPass=!this.editPass
+      } else if (res.code === 0) {
+        message.success("更新密码成功");
+        this.editPass = !this.editPass;
       }
     },
-    handleSavePass()
-    {
-      console.log("change pass")
-      postRequest("/passwd",this.passwordChange,this.passCallback,{
+    handleSavePass() {
+      console.log("change pass");
+      postRequest("/passwd", this.passwordChange, this.passCallback, {
         errorCallback: error => {
           console.log(JSON.stringify(error));
         }
-      })
-    }
+      });
+    },
+    handleClose(removedTag) {
+      // if(this.tags.length===1)
+      // {
+      //   message.error("标签数不能少于一个")
+      // }
+      // else{
+        const tags = this.tags.filter(tag => tag !== removedTag);
+      console.log(tags);
+      this.tags = tags;
+      this.ruleForm.labels=this.tags;
+      // }
+      
+    },
+
+    showInput() {
+      this.inputVisible = true;
+      this.$nextTick(() => {
+        this.$refs.input.focus();
+      });
+    },
+
+    handleInputConfirm() {
+      
+      const inputValue = this.inputValue;
+
+      if(inputValue.length>6)
+      {
+        message.error("标签不可超过6个字符")
+      }
+      else{
+         let tags = this.tags;
+      if (inputValue && tags.indexOf(inputValue) === -1) {
+        tags = [...tags, inputValue];
+      }
+      console.log(tags);
+      Object.assign(this, {
+        tags,
+        inputVisible: false,
+        inputValue: '',
+      });
+
+      
+      this.ruleForm.labels=this.tags;
+      }
+     
+    },
   }
 };
 </script>
