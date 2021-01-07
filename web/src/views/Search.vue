@@ -21,7 +21,7 @@
               <QuestionForSearch v-for="(item) in questionData" v-bind:key="item.qid" :ques="item" />
             </a-tab-pane>
             <a-tab-pane key="2" tab="用户">
-              <UserForSearch v-for="(item) in userData" v-bind:key="item.uid" :user="item"/>
+              <UserForSearch v-for="(item) in userData" v-bind:key="item.uid" :user="item" :admin="admin"/>
             </a-tab-pane>
             <a-tab-pane key="3" tab="回答">
               <AnswerForSearch v-for="(item) in answerData" v-bind:key="item.aid" :ans="item"/>
@@ -59,7 +59,8 @@ export default {
       questionPageNow:0,
       answerPageNow:0,
       userPageNow:0,
-      tabNow:1
+      tabNow:1,
+      admin:false
     };
   },
   created() {
@@ -68,6 +69,10 @@ export default {
     console.log(this.inputValue);
     this.searchQuestion();
     this.searchCard();
+    if (sessionStorage.getItem("user") !== null) {
+      if (JSON.parse(sessionStorage.getItem("user")).role==0)
+        this.admin=true;
+    }
   },
   methods: {
     onSearch(value) {
@@ -86,10 +91,20 @@ export default {
     },
     searchQuestion(){
       getRequest("/searchQuestions",(e)=>{
-        this.questionData=this.questionData.concat(e.result);
-        this.questionPageNow++;
+        this.searchQuestionCallback(e);
       }, {errorCallback:(e)=>{console.log(e)},
         params:{page:this.questionPageNow,text:this.searchValue}});
+    },
+    searchQuestionCallback(e){
+      let empty = true;
+      for (let i=0; i<e.result.length; ++i)
+        if (!e.result[i].has_keywords) {
+          this.questionData.push(e.result[i]);
+          empty=false;
+        }
+      this.questionPageNow++;
+      if (empty)
+        this.searchQuestion();
     },
     searchUser(){
       getRequest("/searchUsers",(e)=>{

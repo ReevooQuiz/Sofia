@@ -4,7 +4,19 @@
       <img alt="Sofia" src="../assets/Sofia.png" height="25" width="65" style="marginLeft:20px" />
       <a-menu v-model:selectedKeys="current" mode="horizontal" inlineIndent="0" align="middle">
         <a-menu-item key="home"><router-link to="/">首页</router-link></a-menu-item>
-        <a-menu-item key="category">分类</a-menu-item>
+        <a-sub-menu key="category">
+          <template #title>
+            <span class="submenu-title-wrapper">
+              分类
+            </span>
+          </template>
+          <a-menu-item key="study">
+            <router-link to="/category?c=study"><BookOutlined />学习</router-link>
+          </a-menu-item>
+          <a-menu-item key="life">
+            <router-link to="/category?c=life"><CoffeeOutlined />生活</router-link>
+          </a-menu-item>
+        </a-sub-menu>
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
         <a-menu-item key="explore">探索</a-menu-item>
         <a-menu-item key="ban">
@@ -48,14 +60,16 @@
 <script >
 import { defineComponent } from "vue";
 import { Options, Vue } from "vue-class-component";
-import { UserOutlined, SearchOutlined } from "@ant-design/icons-vue";
+import { UserOutlined, SearchOutlined , BookOutlined, CoffeeOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
 import { Button } from "ant-design-vue";
 export default {
   components: {
     UserOutlined,
     SearchOutlined,
-    "a-button": Button
+    "a-button": Button,
+    BookOutlined,
+    CoffeeOutlined
   },
   data() {
     return {

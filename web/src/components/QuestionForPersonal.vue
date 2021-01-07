@@ -14,6 +14,7 @@
             {{ques.category}}
           </a-tooltip>
         </a-tag>
+        <a-button v-if="modifiable" @click="onModify">修改问题</a-button>
       </template>
 
       <a-row >
@@ -69,7 +70,7 @@
                     {{ques.favorite_count}}
                 </a-tooltip>
               </span>
-              
+
               <span key="comment-basic-reply-to">
                 <a-tooltip title="浏览量">
                   <FireOutlined />
@@ -119,7 +120,7 @@
     <br />
   </div>
 </template>
-       
+
 
 
 <script >
@@ -157,20 +158,15 @@ export default {
       dislikes: this.ques.dislikeNum,
       action: null,
       moment,
+      modifiable:false,
       tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" }
     };
   },
+  created() {
+    if (moment(this.ques.time).format('YYYY-MM-DD')>moment().subtract(1, 'days').format('YYYY-MM-DD'))
+      this.modifiable=true;
+  },
   methods: {
-    like() {
-      this.likes = 1;
-      this.dislikes = 0;
-      this.action = "liked";
-    },
-    dislike() {
-      this.likes = 0;
-      this.dislikes = 1;
-      this.action = "disliked";
-    },
     toQuestion() {
       console.log("??");
       console.log(this.ques.qid);
@@ -178,6 +174,9 @@ export default {
         path: "/question",
         query: { questionId: this.ques.qid }
       });
+    },
+    onModify(){
+      this.$router.push({ path:'/postQuestion' , query: { questionId: this.ques.qid } });
     }
   }
 };
