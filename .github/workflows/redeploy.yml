@@ -21,6 +21,7 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USER }}
              -p ${{ secrets.DOCKER_PASS }}
       - name: Build Docker image
+        working-directory: backend/qa-service
         run: docker build -t qa-service:latest -t qa-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
         run: docker push qa-service
@@ -40,6 +41,7 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USER }}
              -p ${{ secrets.DOCKER_PASS }}
       - name: Build Docker image
+        working-directory: backend/users-service
         run: docker build -t users-service:latest -t users-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
         run: docker push users-service
