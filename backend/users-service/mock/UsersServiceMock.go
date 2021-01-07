@@ -34,6 +34,21 @@ func (m *MockUsersService) EXPECT() *MockUsersServiceMockRecorder {
 	return m.recorder
 }
 
+// Approve mocks base method
+func (m *MockUsersService) Approve(arg0 string, arg1 service.ReqApprove) (service.ResApprove, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Approve", arg0, arg1)
+	ret0, _ := ret[0].(service.ResApprove)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Approve indicates an expected call of Approve
+func (mr *MockUsersServiceMockRecorder) Approve(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Approve", reflect.TypeOf((*MockUsersService)(nil).Approve), arg0, arg1)
+}
+
 // Ban mocks base method
 func (m *MockUsersService) Ban(arg0 string, arg1 service.ReqBan) (service.ResBan, error) {
 	m.ctrl.T.Helper()

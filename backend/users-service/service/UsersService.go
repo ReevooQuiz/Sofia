@@ -7,6 +7,7 @@ import (
 type UsersService interface {
 	Init(usersDAO ...dao.UsersDao) (err error)
 	Destruct()
+	Approve(token string, req ReqApprove) (res ResApprove, err error)
 	Ban(token string, req ReqBan) (res ResBan, err error)
 	Banned(token string, page int64) (res ResBanned, err error)
 	CheckSession(token string) (res ResCheckSession, err error)

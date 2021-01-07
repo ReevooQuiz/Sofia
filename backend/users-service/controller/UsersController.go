@@ -25,6 +25,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		return server
 	}
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/approve", u.Approve)
 	http.HandleFunc("/ban", u.Ban)
 	http.HandleFunc("/banned", u.Banned)
 	http.HandleFunc("/checkSession", u.CheckSession)
@@ -58,6 +59,25 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 
 func (u *UsersController) Destruct() {
 	u.usersService.Destruct()
+}
+
+func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqApprove
+	var res service.ResApprove
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Approve(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
