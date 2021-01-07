@@ -101,10 +101,10 @@ func (s *SearchServiceImpl) QuestionListResponse(questions []entity.Questions, q
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
 		res[i].Closed = v.Closed
-		if MatchKeywords(&v.Title, keywords) {
+		if MatchKeywords(&questionDetails[i].Title, keywords) {
 			res[i].Title = "[标题包含敏感词，已屏蔽]"
 		} else {
-			res[i].Title = v.Title
+			res[i].Title = questionDetails[i].Title
 		}
 		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
 		res[i].AnswerCount = v.AnswerCount

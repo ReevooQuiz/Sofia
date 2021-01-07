@@ -297,7 +297,7 @@ func (q *QaDaoImpl) CheckAnswerOwner(ctx TransactionContext, aid int64, uid int6
 
 func (q *QaDaoImpl) GetAnswerActionInfos(ctx TransactionContext, uid int64, qids []int64, aids []int64) (infos []AnswerActionInfo, err error) {
 	infos = make([]AnswerActionInfo, len(aids))
-	var userLabels map[int64]bool = make(map[int64]bool)
+	var userLabels = make(map[int64]bool)
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query("select * from user_labels where uid=?", uid)
 	if err != nil {
@@ -439,6 +439,7 @@ func (q *QaDaoImpl) AddQuestion(ctx TransactionContext, uid int64, title string,
 	// insert into question_details
 	var questionDetail entity.QuestionDetails
 	questionDetail.Qid = qid
+	questionDetail.Title = title
 	questionDetail.Content = content
 	questionDetail.PictureUrl = pictureUrl
 	questionDetail.Head = head
@@ -472,20 +473,24 @@ func (q *QaDaoImpl) ModifyQuestion(ctx TransactionContext, qid int64, title stri
 		}
 	}
 	// modify
-	_, err = ctx.sqlTx.Exec("update questions set title=?,category=?where qid=?", title, category, qid)
+	_, err = ctx.sqlTx.Exec("update questions set category=?where qid=?", category, qid)
 	if err != nil {
 		return
 	}
 	return ctx.session.DB("sofia").C("question_details").UpdateId(
 		qid,
-		bson.D{{"$set", bson.D{{"content", content}, {"pictureUrl", pictureUrl}, {"head", head}}}})
+		bson.D{{"$set", bson.D{
+			{"content", content},
+			{"pictureUrl", pictureUrl},
+			{"head", head},
+			{"title", title}}}})
 }
 
 func (q *QaDaoImpl) AddAnswer(ctx TransactionContext, uid int64, qid int64, content string, pictureUrl string, head string) (aid int64, err error) {
 	// insert into answers
 	var res sql.Result
 	res, err = ctx.sqlTx.Exec(
-		"insert into answers(answerer,qid,comment_count,criticism_count,like_count,approval_count,view_count,time,scanned)values(?,?,0,0,0,0,0,?,0)",
+		"insert into answers(answerer,qid,comment_count,criticism_count,like_count,approval_count,time,scanned)values(?,?,0,0,0,0,?,0)",
 		uid, qid, time.Now().Unix())
 	if err != nil {
 		return
@@ -608,8 +613,9 @@ func (q *QaDaoImpl) FindAnswerById(ctx TransactionContext, aid int64) (answer []
 
 func (q *QaDaoImpl) SaveQuestionSkeleton(ctx TransactionContext, question entity.Questions) (err error) {
 	res, err := ctx.sqlTx.Exec(
-		"update questions set title=?,category=?,accepted_answer=?,answer_count=?,view_count=?,favorite_count=?,scanned=?",
-		question.Title, question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount, question.FavoriteCount, question.Scanned)
+		"update questions set category=?,accepted_answer=?,answer_count=?,view_count=?,favorite_count=?,scanned=?where qid=?",
+		question.Category, question.AcceptedAnswer, question.AnswerCount, question.ViewCount,
+		question.FavoriteCount, question.Scanned, question.Qid)
 	if err != nil {
 		return
 	}
@@ -623,8 +629,8 @@ func (q *QaDaoImpl) SaveQuestionSkeleton(ctx TransactionContext, question entity
 
 func (q *QaDaoImpl) SaveAnswerSkeleton(ctx TransactionContext, answer entity.Answers) (err error) {
 	res, err := ctx.sqlTx.Exec(
-		"update answers set comment_count_count=?,criticism_count=?like_count=?,approval_count=?,scanned=?",
-		answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Scanned)
+		"update answers set comment_count=?,criticism_count=?,like_count=?,approval_count=?,scanned=?where aid=?",
+		answer.CommentCount, answer.CriticismCount, answer.LikeCount, answer.ApprovalCount, answer.Scanned, answer.Aid)
 	if err != nil {
 		return
 	}

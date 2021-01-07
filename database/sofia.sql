@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : localhost_mysql
+ Source Server         : localhost_3306
  Source Server Type    : MySQL
- Source Server Version : 50725
+ Source Server Version : 50728
  Source Host           : localhost:3306
  Source Schema         : sofia
 
  Target Server Type    : MySQL
- Target Server Version : 50725
+ Target Server Version : 50728
  File Encoding         : 65001
 
- Date: 04/01/2021 02:46:00
+ Date: 08/01/2021 05:42:00
 */
 
 SET NAMES utf8mb4;
@@ -30,6 +30,7 @@ CREATE TABLE `answers`  (
   `like_count` bigint(20) NOT NULL,
   `approval_count` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
+  `scanned` tinyint(1) NOT NULL,
   PRIMARY KEY (`aid`) USING BTREE,
   INDEX `answerer`(`answerer`) USING BTREE,
   INDEX `qid`(`qid`) USING BTREE,
@@ -58,7 +59,7 @@ DROP TABLE IF EXISTS `ban_words`;
 CREATE TABLE `ban_words`  (
   `word` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`word`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for comments
@@ -144,6 +145,28 @@ CREATE TABLE `hotlist_items`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
+-- Table structure for kcard_attrs
+-- ----------------------------
+DROP TABLE IF EXISTS `kcard_attrs`;
+CREATE TABLE `kcard_attrs`  (
+  `kid` bigint(20) NOT NULL,
+  `name` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `value` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `origin` bigint(20) NULL DEFAULT NULL,
+  PRIMARY KEY (`kid`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for kcards
+-- ----------------------------
+DROP TABLE IF EXISTS `kcards`;
+CREATE TABLE `kcards`  (
+  `kid` bigint(20) NOT NULL,
+  `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  PRIMARY KEY (`kid`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for labels
 -- ----------------------------
 DROP TABLE IF EXISTS `labels`;
@@ -198,10 +221,8 @@ CREATE TABLE `questions`  (
   `closed` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`qid`) USING BTREE,
   INDEX `questions_ibfk_1`(`raiser`) USING BTREE,
-  INDEX `questions_ibfk_2`(`accepted_answer`) USING BTREE,
-  CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`raiser`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `questions_ibfk_2` FOREIGN KEY (`accepted_answer`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+  INDEX `questions_ibfk_2`(`accepted_answer`) USING BTREE
+) ENGINE = MyISAM AUTO_INCREMENT = 100001 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_labels
@@ -244,5 +265,21 @@ CREATE TABLE `users`  (
   `notification_time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Procedure structure for proc_initData
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `proc_initData`;
+delimiter ;;
+CREATE PROCEDURE `proc_initData`()
+BEGIN
+    DECLARE i INT DEFAULT 1;
+    WHILE i<=100000 DO
+        INSERT INTO questions(raiser,category,answer_count,view_count,favorite_count,time,scanned,closed) VALUES(5,"life",0,0,0,0,0,0);
+        SET i=i+1;  
+    END WHILE;  
+END
+;;
+delimiter ;
 
 SET FOREIGN_KEY_CHECKS = 1;
