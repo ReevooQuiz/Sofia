@@ -29,6 +29,11 @@ type UsersServiceImpl struct {
 	usersDao dao.UsersDao
 }
 
+type ReqApprove struct {
+	Aid     string `json:"aid"`
+	Approve bool   `json:"approve"`
+}
+
 type ReqBan struct {
 	Uid string `json:"uid"`
 	Ban bool   `json:"ban"`
@@ -84,6 +89,10 @@ type ReqRegister struct {
 type ReqWordBan struct {
 	Word string `json:"word"`
 	Ban  bool   `json:"ban"`
+}
+
+type ResApprove struct {
+	Code int8 `json:"code"`
 }
 
 type ResBan struct {
@@ -381,6 +390,78 @@ func (u *UsersServiceImpl) Init(usersDao ...dao.UsersDao) (err error) {
 
 func (u *UsersServiceImpl) Destruct() {
 	u.usersDao.Destruct()
+}
+
+func (u *UsersServiceImpl) Approve(token string, req ReqApprove) (res ResApprove, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var aid int64
+	aid, err = strconv.ParseInt(req.Aid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var approveAnswer entity.ApproveAnswers
+	if req.Approve {
+		approveAnswer.Uid = user.Uid
+		approveAnswer.Aid = aid
+		approveAnswer.Time = time.Now().Unix()
+		err = u.usersDao.InsertApproveAnswer(ctx, approveAnswer)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	} else {
+		approveAnswer, err = u.usersDao.FindApproveAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		err = u.usersDao.RemoveApproveAnswerByUidAndAid(ctx, user.Uid, aid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	}
+	var answer entity.Answers
+	answer, err = u.usersDao.FindAnswerByAid(ctx, aid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Approve {
+		answer.ApprovalCount++
+	} else {
+		answer.ApprovalCount--
+	}
+	err = u.usersDao.UpdateAnswerByAid(ctx, answer)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Ban(token string, req ReqBan) (res ResBan, err error) {

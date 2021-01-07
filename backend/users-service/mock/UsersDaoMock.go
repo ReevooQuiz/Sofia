@@ -449,6 +449,20 @@ func (mr *MockUsersDaoMockRecorder) Init() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockUsersDao)(nil).Init))
 }
 
+// InsertApproveAnswer mocks base method
+func (m *MockUsersDao) InsertApproveAnswer(arg0 dao.TransactionContext, arg1 entity.ApproveAnswers) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertApproveAnswer", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InsertApproveAnswer indicates an expected call of InsertApproveAnswer
+func (mr *MockUsersDaoMockRecorder) InsertApproveAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertApproveAnswer", reflect.TypeOf((*MockUsersDao)(nil).InsertApproveAnswer), arg0, arg1)
+}
+
 // InsertBanWord mocks base method
 func (m *MockUsersDao) InsertBanWord(arg0 dao.TransactionContext, arg1 entity.BanWords) error {
 	m.ctrl.T.Helper()
@@ -562,6 +576,20 @@ func (m *MockUsersDao) InsertUserLabel(arg0 dao.TransactionContext, arg1 entity.
 func (mr *MockUsersDaoMockRecorder) InsertUserLabel(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertUserLabel", reflect.TypeOf((*MockUsersDao)(nil).InsertUserLabel), arg0, arg1)
+}
+
+// RemoveApproveAnswerByUidAndAid mocks base method
+func (m *MockUsersDao) RemoveApproveAnswerByUidAndAid(arg0 dao.TransactionContext, arg1, arg2 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveApproveAnswerByUidAndAid", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveApproveAnswerByUidAndAid indicates an expected call of RemoveApproveAnswerByUidAndAid
+func (mr *MockUsersDaoMockRecorder) RemoveApproveAnswerByUidAndAid(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveApproveAnswerByUidAndAid", reflect.TypeOf((*MockUsersDao)(nil).RemoveApproveAnswerByUidAndAid), arg0, arg1, arg2)
 }
 
 // RemoveBanWordByWord mocks base method

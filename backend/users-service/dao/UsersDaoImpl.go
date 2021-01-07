@@ -462,6 +462,17 @@ func (u *UsersDaoImpl) FindUsersByRolePageable(ctx TransactionContext, role int8
 	return users, err
 }
 
+func (u *UsersDaoImpl) InsertApproveAnswer(ctx TransactionContext, approveAnswer entity.ApproveAnswers) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("insert into approve_answers values(?, ?, ?)")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(approveAnswer.Uid, approveAnswer.Aid, approveAnswer.Time)
+	return err
+}
+
 func (u *UsersDaoImpl) InsertBanWord(ctx TransactionContext, banWord entity.BanWords) (err error) {
 	var stmt *sql.Stmt
 	stmt, err = ctx.sqlTx.Prepare("insert into ban_words values(?)")
@@ -555,6 +566,17 @@ func (u *UsersDaoImpl) InsertUserLabel(ctx TransactionContext, userLabel entity.
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(userLabel.Uid, userLabel.Lid)
+	return err
+}
+
+func (u *UsersDaoImpl) RemoveApproveAnswerByUidAndAid(ctx TransactionContext, uid int64, aid int64) (err error) {
+	var stmt *sql.Stmt
+	stmt, err = ctx.sqlTx.Prepare("delete from approve_answers where uid = ? and aid = ?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(uid, aid)
 	return err
 }
 
