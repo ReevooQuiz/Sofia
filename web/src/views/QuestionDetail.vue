@@ -24,8 +24,10 @@
               <DownOutlined />
             </a-button>
           </a-dropdown>
-          <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
-                <a-button v-else @click="onWriteAnswer">我要回答</a-button>
+          <span v-if="questionHead.closed">
+            <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
+            <a-button v-else @click="onWriteAnswer">我要回答</a-button>
+          </span>
         </a-space>
       </a-row>
         <br/>
@@ -65,7 +67,7 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
-import { postRequest,getRequest } from "@/http/request.js";
+import { postRequest,getRequest,putRequest } from "@/http/request.js";
 
 const orderBy = ["按时间排序", "按热度排序"];
 export default {
@@ -140,7 +142,7 @@ export default {
       this.writeAnswer=true;
     },
     onCommitAnswer(){
-      console.log(this.writeAnswerValue);
+      //console.log(this.writeAnswerValue);
       postRequest("/answers", {qid:this.questionHead.qid,content:this.writeAnswerValue},(e)=>{
         console.log(e);
         this.writeAnswer=false;

@@ -171,7 +171,7 @@
 import moment from "moment";
 import { LikeFilled, LikeOutlined,MessageOutlined,MessageTwoTone,HeartOutlined,HeartFilled } from '@ant-design/icons-vue';
 import { notification } from 'ant-design-vue';
-import { postRequest,getRequest } from "@/http/request.js";
+import { postRequest,getRequest,putRequest } from "@/http/request.js";
 
 export default {
   components: {
@@ -217,7 +217,7 @@ export default {
       if (this.ans.liked)
         this.ans.like_count++;
       else this.ans.like_count--;
-      postRequest("/like", {aid: this.ans.aid, like: this.ans.liked}, (e) => {
+      putRequest("/like", {aid: this.ans.aid, like: this.ans.liked}, (e) => {
         console.log(e);
       }, {
         errorCallback: (e) => {
@@ -230,7 +230,7 @@ export default {
       if (this.ans.approved)
         this.ans.approval_count++;
       else this.ans.approval_count--;
-      postRequest("/approve", {aid: this.ans.aid, approve: this.ans.approved}, (e) => {
+      putRequest("/approve", {aid: this.ans.aid, approve: this.ans.approved}, (e) => {
         console.log(e);
       }, {
         errorCallback: (e) => {

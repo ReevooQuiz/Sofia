@@ -35,7 +35,7 @@
 
 <script>
 import {message} from "ant-design-vue";
-import { postRequest,getRequest } from "@/http/request.js";
+import { postRequest,getRequest,putRequest } from "@/http/request.js";
 
 export default {
   data(){
@@ -86,7 +86,7 @@ export default {
         count++;
       }
       if (this.qid!=null){
-        postRequest("/questions",
+        putRequest("/questions",
             {
               qid:this.qid,
               title:this.title,
