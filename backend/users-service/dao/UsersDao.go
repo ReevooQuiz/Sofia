@@ -19,6 +19,7 @@ type UsersDao interface {
 	FindCriticismByCtid(ctx TransactionContext, ctid int64) (criticism entity.Criticisms, err error)
 	FindFavoriteByUidAndTitle(ctx TransactionContext, uid int64, title string) (favorite entity.Favorites, err error)
 	FindFavoriteItemByFidAndQid(ctx TransactionContext, fid int64, qid int64) (favoriteItem entity.FavoriteItems, err error)
+	FindFavoriteItemsByFidPageable(ctx TransactionContext, fid int64, pageable Pageable) (favoriteItems []entity.FavoriteItems, err error)
 	FindFollowByUidAndFollower(ctx TransactionContext, uid int64, follower int64) (follow entity.Follows, err error)
 	FindFollowsByFollower(ctx TransactionContext, follower int64) (follows []entity.Follows, err error)
 	FindFollowsByUid(ctx TransactionContext, uid int64) (follows []entity.Follows, err error)

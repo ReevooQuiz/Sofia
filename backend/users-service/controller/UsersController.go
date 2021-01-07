@@ -30,6 +30,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/banned", u.Banned)
 	http.HandleFunc("/checkSession", u.CheckSession)
 	http.HandleFunc("/checkToken", u.CheckToken)
+	http.HandleFunc("/collection", u.Collection)
 	http.HandleFunc("/favorite", u.Favorite)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
@@ -149,6 +150,35 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.CheckToken(r.FormValue("token"))
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Collection(w http.ResponseWriter, r *http.Request) {
+	var res service.ResCollection
+	err := r.ParseForm()
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	var page int64
+	page, err = strconv.ParseInt(r.FormValue("page"), 10, 64)
+	if err != nil || page < 0 {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Collection(r.Header.Get("Authorization"), page)
 	if err != nil {
 		log.Info(err)
 	}

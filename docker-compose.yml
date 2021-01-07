@@ -10,7 +10,7 @@ services:
     ports:
       - "9093:9093"
     labels:
-      - "traefik.http.routers.redirect-finalbackend.rule=Path(`/{short:[A-Za-z0-9]{6}}`)"
+      - "traefik.http.routers.qa-service-sofia.rule=Path(`/questions`) || Path(`/question`) || Path(`/answers`) || Path(`/answer`) || Path(`/comments`) || Path(`/criticisms`)"
     networks:
       - sofia
 
@@ -23,6 +23,8 @@ services:
       - ../credentials.env:/credentials.env
     ports:
       - "9092:9092"
+    labels:
+      - "traefik.http.routers.users-service-sofia.rule=Path(`/approve`) || Path(`/ban`) || Path(`/banned`) || Path(`/checkSession`) || Path(`/checkToken`) || Path(`/collection`) || Path(`/favorite`) || Path(`/follow`) || Path(`/followed`) || Path(`/followers`) || Path(`/infoList`) || Path(`/like`) || Path(`/login`) || Path(`/notifications`) || Path(`/oauth/github`) || Path(`/passwd`) || Path(`/publicInfo`) || Path(`/refreshToken`) || Path(`/register`) || Path(`/userAnswers`) || Path(`/userQuestions`) || Path(`/verificationCode`) || Path(`/verify`) || Path(`/wordBan`) || Path(`/wordsBanned`)"
     networks:
       - sofia
 
@@ -101,13 +103,13 @@ services:
     hostname: kafka
     restart: always
     ports:
-      - "9092:9092"
+      - "9100:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-server:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.17.0.2:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.17.0.2:9100
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_ADVERTISED_HOST_NAME: kafka

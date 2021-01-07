@@ -109,6 +109,21 @@ func (mr *MockUsersServiceMockRecorder) CheckToken(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckToken", reflect.TypeOf((*MockUsersService)(nil).CheckToken), arg0)
 }
 
+// Collection mocks base method
+func (m *MockUsersService) Collection(arg0 string, arg1 int64) (service.ResCollection, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Collection", arg0, arg1)
+	ret0, _ := ret[0].(service.ResCollection)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Collection indicates an expected call of Collection
+func (mr *MockUsersServiceMockRecorder) Collection(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Collection", reflect.TypeOf((*MockUsersService)(nil).Collection), arg0, arg1)
+}
+
 // Destruct mocks base method
 func (m *MockUsersService) Destruct() {
 	m.ctrl.T.Helper()
