@@ -78,6 +78,9 @@
             <template #content>
               <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
             </template>
+            <!-- <template #content>
+              <p @click="toQuestion">{{ques.head}}</p>
+            </template> -->
             <template #datetime>
               <a-tooltip :title="moment(ques.time).format('YYYY-MM-DD HH:mm:ss')">
                 <span>{{ moment(ques.time).fromNow() }}</span>
