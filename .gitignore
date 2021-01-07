@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Project files
+.idea
+
+# Misc
+.DS_Store
+
+# Enviroment files
+*.env
