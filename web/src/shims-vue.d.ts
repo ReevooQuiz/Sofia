@@ -4,7 +4,6 @@ declare module '*.vue' {
   export default component
 }
 // declare module
-
 import { ComponentCustomProperties } from 'vue'
 import { Store } from 'vuex'
 
