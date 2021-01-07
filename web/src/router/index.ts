@@ -46,10 +46,16 @@ const routes: Array<RouteRecordRaw> = [
       import(/* webpackChunkName: "about" */ "../views/Recommend.vue")
   },
   {
-    path: "/category",
-    name: "Category",
+    path: "/categoryLife",
+    name: "CategoryLife",
     component: () =>
-        import(/* webpackChunkName: "about" */ "../views/Category.vue")
+        import(/* webpackChunkName: "about" */ "../views/CategoryLife.vue")
+  },
+  {
+    path: "/categoryStudy",
+    name: "/CategoryStudy",
+    component: () =>
+        import(/* webpackChunkName: "about" */ "../views/CategoryStudy.vue")
   },
   {
     path: "/postQuestion",
@@ -205,8 +211,6 @@ router.beforeEach((to, from, next) => {
 
       }
       )
-
-
 
       if (to.meta.roles===0) {
         if (role_check !== 0) {

@@ -1,6 +1,6 @@
 <template>
-  <a-row type="flex" justify="space-around" align="middle">
-    <a-col :span="8">
+  <a-row  justify="center" >
+    <a-col :span="12" :offset="6" >
       <a-button type="primary" :disabled="!hasSelected" :loading="loading" @click="deleteHot">
         撤榜
       </a-button>
@@ -21,7 +21,10 @@
       <br/>
 
     </a-col>
-    <a-col :span="7">
+    <a-col :span="5" :offset="1">
+        <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 340px"/>
+    </a-col>
+    <!-- <a-col :span="7">
       <a-card title="申诉" :bordered="false">
         <a-list
             class="comment-list"
@@ -41,7 +44,7 @@
           </template>
         </a-list>
       </a-card>
-    </a-col>
+    </a-col> -->
   </a-row>
 </template>
 
@@ -125,6 +128,9 @@ export default {
 }
 </script>
 
-<style scoped>
-
+<style>
+body {
+  height: 100%;
+  background-color: #edeeed;
+}
 </style>

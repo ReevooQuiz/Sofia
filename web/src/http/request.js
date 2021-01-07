@@ -4,7 +4,7 @@ import router from "@/router/index.ts";
 const server = axios.create({
     // baseURL: "http://localhost:4000/",
     baseURL: "https://private-74c97e-reevooapi.apiary-mock.com",
-    timeout: 1000,
+    timeout: 5000,
 
 });
 
@@ -42,8 +42,9 @@ server.interceptors.response.use(
         return response;
     },
     function axiosRetryInterceptor(err) {
-        var config = err.config;console.log("retry")
-        console.log(config.retry)
+        var config = err.config;
+        // console.log("retry")
+        // console.log(config.retry)
         // If config does not exist or the retry option is not set, reject
         if (!config || !config.retry) return Promise.reject(err);
 

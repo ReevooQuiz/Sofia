@@ -17,7 +17,7 @@
               />
             </template>
             <template #content>
-              <v-md-editor mode="preview" v-model="ans.head" @click="toQuestion"></v-md-editor>...查看全部
+              <v-md-editor mode="preview" v-model="ans.head" @click="toQuestion"></v-md-editor>  <a>...查看全部</a>
             </template>
           </a-comment>
         </a-col>

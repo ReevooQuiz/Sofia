@@ -44,12 +44,12 @@
                         />
                         <br />
                         <!-- <br /> -->
-                        <span class="follower-name">{{item.name}}</span>
+                        <span class="follower-name" @click="gotoPerson(item.uid)">{{item.name}}</span>
                         <br />
-                        <span class="follower-nickname">{{item.nickname}}</span>
+                        <span class="follower-nickname" @click="gotoPerson(item.uid)">{{item.nickname}}</span>
                         <br />
                         <br />
-                        <span class="follower-profile">{{item.profile}}</span>
+                        <span class="follower-profile" @click="gotoPerson(item.uid)">{{item.profile}}</span>
                         
                        
                       </a-col>

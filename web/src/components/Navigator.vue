@@ -11,16 +11,16 @@
             </span>
           </template>
           <a-menu-item key="study">
-            <router-link to="/category?c=study"><BookOutlined />学习</router-link>
+            <router-link to="/categoryStudy"><BookOutlined />学习</router-link>
           </a-menu-item>
           <a-menu-item key="life">
-            <router-link to="/category?c=life"><CoffeeOutlined />生活</router-link>
+            <router-link to="/categoryLife"><CoffeeOutlined />生活</router-link>
           </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
         <!-- <a-menu-item key="explore">探索</a-menu-item> -->
         <a-menu-item key="ban">
-          <router-link to="/ban">封禁</router-link></a-menu-item>
+          <router-link v-if="admin" to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
           <router-link to="/personalSet">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">

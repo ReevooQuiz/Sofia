@@ -29,7 +29,7 @@
           </a-tabs>
         </div>
       </a-col>
-      <a-col :span="8" :offset="1">
+      <a-col :span="6" :offset="2">
         <CardForSearch v-for="(item) in cardInfo" v-bind:key="item.title" :info="item" />
       </a-col>
     </a-row>
@@ -146,7 +146,7 @@ export default {
 
 <style scoped>
 #search {
-  min-height: 667px;
+  min-height: 681px;
   background-color: #edeeed;
 }
 
