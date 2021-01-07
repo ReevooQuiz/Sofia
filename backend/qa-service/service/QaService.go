@@ -31,4 +31,7 @@ type QaService interface {
 
 	GetComments(token string, aid int64, page int64) (int8, interface{})
 	AddComment(token string, req ReqCommentsPost) (int8, interface{})
+
+	GetCriticisms(token string, aid int64, page int64) (int8, interface{})
+	AddCriticism(token string, req ReqCriticismsPost) (int8, interface{})
 }

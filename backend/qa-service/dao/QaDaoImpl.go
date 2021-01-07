@@ -212,6 +212,21 @@ func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity
 	return
 }
 
+func (q *QaDaoImpl) FindCriticismDetails(ctx TransactionContext, criticisms []entity.Criticisms) (details []entity.CriticismDetails) {
+	var findErr error
+	var current entity.CriticismDetails
+	for _, v := range criticisms {
+		findErr = ctx.session.DB("sofia").C("criticism_details").FindId(v.Ctid).One(current)
+		if findErr != nil {
+			log.Warn(findErr)
+			details = append(details, current)
+		} else {
+			details = append(details, entity.CriticismDetails{})
+		}
+	}
+	return
+}
+
 func (q *QaDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails) {
 	var findErr error
 	var current entity.QuestionDetails
@@ -586,6 +601,19 @@ func (q *QaDaoImpl) ParseComments(rows *sql.Rows) (comments []entity.Comments, e
 	return res, nil
 }
 
+func (q *QaDaoImpl) ParseCriticisms(rows *sql.Rows) (comments []entity.Criticisms, err error) {
+	var res []entity.Criticisms
+	for rows.Next() {
+		var it entity.Criticisms
+		err = rows.Scan(&it.Ctid, &it.Uid, &it.Time)
+		if err != nil {
+			return
+		}
+		res = append(res, it)
+	}
+	return res, nil
+}
+
 func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
@@ -595,6 +623,18 @@ func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (
 	}
 	defer rows.Close()
 	comments, err = q.ParseComments(rows)
+	return
+}
+
+func (q *QaDaoImpl) GetCriticisms(ctx TransactionContext, aid int64, page int64) (comments []entity.Criticisms, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query(
+		"select ctid,uid,time from criticisms where aid=? limit ?,?", aid, page * CommentPageSize, CommentPageSize)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	comments, err = q.ParseCriticisms(rows)
 	return
 }
 
@@ -711,4 +751,25 @@ func (q *QaDaoImpl) AddComment(ctx TransactionContext, uid int64, aid int64, con
 		return
 	}
 	return cmid, nil
+}
+
+func (q *QaDaoImpl) AddCriticism(ctx TransactionContext, uid int64, aid int64, content string) (ctid int64, err error) {
+	// insert into answers
+	var res sql.Result
+	res, err = ctx.sqlTx.Exec(
+		"insert into criticisms(uid,aid,time)values(?,?,?)",
+		uid, aid, time.Now().Unix())
+	if err != nil {
+		return
+	}
+	ctid, err = res.LastInsertId()
+	// insert into answer_details
+	var criticismDetail entity.CriticismDetails
+	criticismDetail.Ctid = ctid
+	criticismDetail.Content = content
+	err = ctx.session.DB("sofia").C("criticism_details").Insert(criticismDetail)
+	if err != nil {
+		return
+	}
+	return ctid, nil
 }

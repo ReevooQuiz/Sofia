@@ -2049,3 +2049,220 @@ func TestServiceAddComment(t *testing.T) {
 		a.Equal(map[string]int8{"type": HasKeywords}, res)
 	})
 }
+
+func TestServiceCriticismListResponse(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	var (
+		ctid int64 = 345
+	)
+	criticisms := []entity.Criticisms{{Ctid: ctid, Uid: 11, Aid: 97}}
+	details := []entity.CriticismDetails{{Ctid: 456, Content: "ha ha ha"}}
+	keywords := []string{"test"}
+	uids := []int64{11}
+	err := errors.New("xxx")
+	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nickname", Icon: "icon"}}
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
+		result, err := q.CriticismListResponse(criticisms, details, &keywords)
+		res := result.([]service.CriticismListItem)[0]
+		a.Nil(err)
+		a.Equal("nickname", res.Nickname)
+		a.Equal("345", res.Ctid)
+		a.Equal("icon", res.Icon)
+		a.Equal("ha ha ha", res.Content)
+	})
+
+	t.Run("Failed to Get User Info", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(nil, err)
+		_, err := q.CriticismListResponse(criticisms, details, &keywords)
+		a.NotNil(err)
+	})
+}
+
+func TestServiceGetCriticisms(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	token := "token"
+	var (
+		aid int64 = 345
+		page int64 = 5
+		uid int64 = 76
+		role int8 = service.USER
+	)
+	criticisms := []entity.Criticisms{{Ctid: 98, Uid: 9, Aid: aid}}
+	details := []entity.CriticismDetails{{Ctid: 98, Content: "ha ha ha"}}
+	uids := []int64{9}
+	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	bannedWords := []string{"xxx"}
+	err := errors.New("xxx")
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetCriticisms(gomock.Any(), aid, page).Return(criticisms, nil)
+		mockQaDao.EXPECT().FindCriticismDetails(gomock.Any(), criticisms).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(userInfos, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.GetCriticisms(token, aid, page)
+		a.Equal(int8(service.Succeeded), code)
+		res := result.([]service.CriticismListItem)[0]
+		a.Equal("ha ha ha", res.Content)
+		a.False(res.HasKeywords)
+		a.Equal("nick", res.Nickname)
+		a.Equal("98", res.Ctid)
+		a.Equal("9", res.Uid)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.GetCriticisms(token, aid, page)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Failed to Get Criticisms", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetCriticisms(gomock.Any(), aid, page).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetCriticisms(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetCriticisms(gomock.Any(), aid, page).Return(criticisms, nil)
+		mockQaDao.EXPECT().FindCriticismDetails(gomock.Any(), criticisms).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetCriticisms(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetCriticisms(gomock.Any(), aid, page).Return(criticisms, nil)
+		mockQaDao.EXPECT().FindCriticismDetails(gomock.Any(), criticisms).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos(uids).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.GetCriticisms(token, aid, page)
+		a.Equal(int8(service.Failed), code)
+	})
+}
+
+func TestServiceAddCriticism(t *testing.T) {
+	const (
+		ConstraintsViolated = 0
+		HasKeywords         = 1
+		UnknownError        = 2
+	)
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaDao := mock.NewMockQaDao(mockCtrl)
+	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
+	mockQaDao.EXPECT().Init().AnyTimes()
+	mockQaDao.EXPECT().Begin(gomock.Any()).Return(dao.TransactionContext{}, nil).AnyTimes()
+	var q service.QaServiceImpl
+	_ = q.Init(mockQaDao, mockUsersRPC)
+	a := assert.New(t)
+
+	token := "token"
+	var (
+		aid int64 = 345
+		uid int64 = 76
+		role int8 = service.USER
+		ctid int64 = 234
+	)
+	req := service.ReqCriticismsPost{
+		Aid:     "345",
+		Content: "ha ha ha",
+	}
+	bannedWords := []string{"xxx"}
+	err := errors.New("xxx")
+	unknownFailure := map[string]int8{"type": UnknownError}
+
+	t.Run("Normal", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddCriticism(gomock.Any(), uid, aid, req.Content).Return(ctid, nil)
+		mockQaDao.EXPECT().Commit(gomock.Any())
+		code, result := q.AddCriticism(token, req)
+		res := result.(map[string]string)["ctid"]
+		a.Equal(int8(service.Succeeded), code)
+		a.Equal("234", res)
+	})
+
+	t.Run("Failed Parse", func(t *testing.T) {
+		newReq := service.ReqCriticismsPost{
+			Aid:     "345sdf",
+			Content: "ha ha ha",
+		}
+		code, _ := q.AddCriticism(token, newReq)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.AddCriticism(token, req)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Long Content", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		newReq := service.ReqCriticismsPost{
+			Aid:     "345",
+			Content: string(make([]byte, service.CriticismLengthMax + 1)),
+		}
+		code, result := q.AddCriticism(token, newReq)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": ConstraintsViolated}, result)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddCriticism(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Failed to Add Criticism", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddCriticism(gomock.Any(), uid, aid, req.Content).Return(int64(0), err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddCriticism(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Has Keywords", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return([]string{"ha"}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddCriticism(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": HasKeywords}, res)
+	})
+}

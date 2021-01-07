@@ -34,6 +34,7 @@ func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) 
 	http.HandleFunc("/answers", q.Answers)
 	http.HandleFunc("/answer", q.AnswerDetail)
 	http.HandleFunc("/comments", q.Comments)
+	http.HandleFunc("/criticisms", q.Criticisms)
 	go func() {
 		defer group.Done()
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
@@ -255,6 +256,50 @@ func (q *QaController) Comments(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			token := r.Header.Get("Authorization")
 			code, result := q.qaService.AddComment(token, req)
+			response.Code = code
+			response.Result = result
+			object, _ := json.Marshal(response)
+			_, _ = w.Write(object)
+			return
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+}
+
+func (q *QaController) Criticisms(w http.ResponseWriter, r *http.Request) {
+	var response ServerResponse
+	var err error
+	if r.Method == "GET" {
+		err = r.ParseForm()
+		if err == nil {
+			aid, aidErr := strconv.ParseInt(r.FormValue("aid"), 10, 64)
+			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 64)
+			token := r.Header.Get("Authorization")
+			if aidErr == nil && pageErr == nil {
+				code, result := q.qaService.GetCriticisms(token, aid, page)
+				response.Code = code
+				response.Result = result
+				object, _ := json.Marshal(response)
+				_, _ = w.Write(object)
+				return
+			}
+		}
+		log.Info(err)
+		response.Code = 1
+		object, _ := json.Marshal(response)
+		_, _ = w.Write(object)
+		return
+	}
+	if r.Method == "POST" {
+		var req service.ReqCriticismsPost
+		err = json.NewDecoder(r.Body).Decode(&req)
+		if err == nil {
+			token := r.Header.Get("Authorization")
+			code, result := q.qaService.AddCriticism(token, req)
 			response.Code = code
 			response.Result = result
 			object, _ := json.Marshal(response)

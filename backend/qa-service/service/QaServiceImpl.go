@@ -32,7 +32,8 @@ const (
 	LabelLengthMax           = 32
 	QuestionContentLengthMax = 50000
 	CommentLengthMax         = 150
-	AnswerContentLengthMax = 50000
+	AnswerContentLengthMax   = 50000
+	CriticismLengthMax       = 150
 )
 
 type QaServiceImpl struct {
@@ -66,6 +67,11 @@ type ReqAnswersPut struct {
 }
 
 type ReqCommentsPost struct {
+	Aid     string `json:"aid"`
+	Content string `json:"content"`
+}
+
+type ReqCriticismsPost struct {
 	Aid     string `json:"aid"`
 	Content string `json:"content"`
 }
@@ -141,6 +147,17 @@ type AnswerListItem struct {
 type CommentListItem struct {
 	HasKeywords bool      `json:"has_keywords"`
 	Cmid        string    `json:"cmid"`
+	Uid         string    `json:"uid"`
+	Name        string    `json:"name"`
+	Nickname    string    `json:"nickname"`
+	Icon        string    `json:"icon"`
+	Time        time.Time `json:"time"`
+	Content     string    `json:"content"`
+}
+
+type CriticismListItem struct {
+	HasKeywords bool      `json:"has_keywords"`
+	Ctid        string    `json:"ctid"`
 	Uid         string    `json:"uid"`
 	Name        string    `json:"name"`
 	Nickname    string    `json:"nickname"`
@@ -290,6 +307,32 @@ func (q *QaServiceImpl) CommentListResponse(comments []entity.Comments, details 
 	for i, v := range comments {
 		uids[i] = v.Uid
 		res[i].Cmid = strconv.FormatInt(v.Cmid, 10)
+		res[i].Uid = strconv.FormatInt(v.Uid, 10)
+		res[i].Time = time.Unix(v.Time, 0)
+		res[i].HasKeywords = MatchKeywords(&details[i].Content, keywords)
+		if !res[i].HasKeywords {
+			res[i].Content = details[i].Content
+		}
+	}
+	var userInfos []rpc.UserInfo
+	userInfos, err = q.usersRPC.GetUserInfos(uids)
+	if err != nil {
+		return
+	}
+	for i := range res {
+		res[i].Name = userInfos[i].Name
+		res[i].Icon = userInfos[i].Icon
+		res[i].Nickname = userInfos[i].Nickname
+	}
+	return res, nil
+}
+
+func (q *QaServiceImpl) CriticismListResponse(comments []entity.Criticisms, details []entity.CriticismDetails, keywords *[]string) (result interface{}, err error) {
+	res := make([]CriticismListItem, len(comments))
+	uids := make([]int64, len(comments))
+	for i, v := range comments {
+		uids[i] = v.Uid
+		res[i].Ctid = strconv.FormatInt(v.Ctid, 10)
 		res[i].Uid = strconv.FormatInt(v.Uid, 10)
 		res[i].Time = time.Unix(v.Time, 0)
 		res[i].HasKeywords = MatchKeywords(&details[i].Content, keywords)
@@ -991,11 +1034,6 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 		return Failed, nil
 	}
 	details := q.qaDao.FindCommentDetails(ctx, comments)
-	if err != nil {
-		_ = q.qaDao.Rollback(&ctx)
-		log.Warn(err)
-		return Failed, nil
-	}
 	// fetch keywords
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
@@ -1008,6 +1046,51 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 	var result interface{}
 	// construct response
 	result, err = q.CommentListResponse(comments, details, &keywords)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		return Failed, nil
+	}
+	err = q.qaDao.Rollback(&ctx)
+	if err != nil {
+		log.Warn(err)
+		return Failed, nil
+	}
+	return Succeeded, result
+}
+
+func (q *QaServiceImpl) GetCriticisms(token string, aid int64, page int64) (int8, interface{}) {
+	// check token
+	suc, _, _ := q.usersRPC.ParseToken(token)
+	if !suc {
+		return Expired, nil
+	}
+	// serve
+	ctx, err := q.qaDao.Begin(true)
+	criticisms, err := q.qaDao.GetCriticisms(ctx, aid, page)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, nil
+	}
+	details := q.qaDao.FindCriticismDetails(ctx, criticisms)
+	// fetch keywords
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		return Failed, nil
+	}
+	var result interface{}
+	// construct response
+	result, err = q.CriticismListResponse(criticisms, details, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
@@ -1087,4 +1170,70 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 		log.Warn(err)
 	}
 	return Succeeded, map[string]string{"cmid": strconv.FormatInt(cmid, 10)}
+}
+
+func (q *QaServiceImpl) AddCriticism(token string, req ReqCriticismsPost) (int8, interface{}) {
+	const (
+		ConstraintsViolated = 0
+		HasKeywords         = 1
+		UnknownError        = 2
+	)
+	aid, err := strconv.ParseInt(req.Aid, 10, 64)
+	if err != nil {
+		return Failed, nil
+	}
+	content := req.Content
+	// check token
+	suc, uid, _ := q.usersRPC.ParseToken(token)
+	if !suc {
+		return Expired, nil
+	}
+	// check constraints
+	if len(content) > CriticismLengthMax {
+		return Failed, map[string]int8{"type": ConstraintsViolated}
+	}
+	// check keywords
+	ctx, err := q.qaDao.Begin(false)
+	if err != nil {
+		return Failed, map[string]int8{"type": UnknownError}
+	}
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, map[string]int8{"type": UnknownError}
+	}
+	banned := false
+	for _, v := range keywords {
+		if strings.Index(content, v) != -1 {
+			banned = true
+			break
+		}
+	}
+	if banned {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, map[string]int8{"type": HasKeywords}
+	}
+	// serve
+	ctid, err := q.qaDao.AddCriticism(ctx, uid, aid, content)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, map[string]int8{"type": UnknownError}
+	}
+	err = q.qaDao.Commit(&ctx)
+	if err != nil {
+		log.Warn(err)
+	}
+	return Succeeded, map[string]string{"ctid": strconv.FormatInt(ctid, 10)}
 }
