@@ -51,7 +51,6 @@
                         <br />
                         <span class="follower-profile" @click="gotoPerson(item.uid)">{{item.profile}}</span>
 
-
                       </a-col>
                       <!-- <a-col :span="2" :offset="1"></a-col> -->
                     </a-row>
