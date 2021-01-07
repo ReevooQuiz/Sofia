@@ -1,8 +1,8 @@
 <template>
   <div>
     <!-- <a-row justify="center"> -->
-      
-    
+
+
     <a-col :span="16" :offset="4">
       <a-row>
         <div>
@@ -55,7 +55,7 @@
         </a-col>
       </a-row>
     </a-col>
-    
+
     <!-- </a-row> -->
   </div>
 </template>
@@ -107,7 +107,7 @@ export default {
           (response)=>{
             this.answerData=this.answerData.concat(response.result);
             this.loadingMore=false;
-            if (response.res.length==0)
+            if (response.result.length==0)
               this.showLoadingMore=false;
           },
           {

@@ -98,6 +98,7 @@ export default {
     };
   },
   created() {
+    this.$store.commit('changeTarget','recommend');
     this.getQuestions();
     getRequest("/hotlist",
         (response)=>{

@@ -71,6 +71,7 @@ export default {
     };
   },
   mounted() {
+    this.$store.commit('changeTarget','life');
     this.category= "life";
     if (this.category!="study"&&this.category!="life"){
       this.$router.push({ path:'/'});
@@ -121,7 +122,7 @@ export default {
 
       }
     },
-    
+
   }
 }
 </script>

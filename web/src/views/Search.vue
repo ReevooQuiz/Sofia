@@ -64,6 +64,7 @@ export default {
     };
   },
   created() {
+    this.$store.commit('changeTarget','home');
     this.searchValue=this.$route.query.content;
     this.inputValue=this.$route.query.content;
     console.log(this.inputValue);

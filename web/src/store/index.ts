@@ -1,15 +1,32 @@
-import { InjectionKey } from 'vue'
-import { createStore, useStore as baseUseStore, Store } from 'vuex'
+import { InjectionKey } from 'vue';
+import { createStore, useStore as baseUseStore, Store } from 'vuex';
 
 export interface State {
-    count: number
+    navIcon: string,
+    navTarget: string,
+    count: number,
+    logStatus:boolean
 }
 
 export const key: InjectionKey<Store<State>> = Symbol()
 
 export const store = createStore<State>({
     state: {
-        count: 0
+        navIcon: "",
+        navTarget:"home",
+        count: 0,
+        logStatus:false,
+    },
+    mutations: {
+        changeTarget(state,newTarget){
+            state.navTarget=newTarget;
+        },
+        changeIcon(state,newIcon){
+            state.navIcon=newIcon;
+        },
+        changeLogStatus(state,newStatus){
+            state.logStatus=newStatus;
+        }
     }
 })
 

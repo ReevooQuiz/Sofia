@@ -52,7 +52,7 @@
                       style="font-size: 20px;
     font-weight: bold; overflow: hidden;
   white-space: nowrap;
- 
+
   text-overflow: ellipsis;"
                     >{{item.word}}</span>
                   </a-col>
@@ -62,8 +62,7 @@
                     <a-button
                       v-if="item.ban===false"
                       type="primary"
-                      style="background-color:#fbbdbd;border-color: #ecc7d4;
-"
+                      style="background-color:#fbbdbd;border-color: #ecc7d4;"
                       @click="ban2(item.word)"
                     >封禁</a-button>
                   </a-col>
@@ -104,6 +103,7 @@ export default {
     };
   },
   mounted() {
+    this.$store.commit('changeTarget','ban');
     this.getData(res => {
       console.log("!");
       console.log(res.result);
