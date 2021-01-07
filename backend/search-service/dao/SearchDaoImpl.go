@@ -53,7 +53,7 @@ type KListItem struct {
 
 const (
 	PageSize       = 5
-	questionFields = "qid,closed,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
+	questionFields = "qid,closed,raiser,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 	answerFields   = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
 	HotListSize    = 10
 	KListSize = 3
@@ -137,9 +137,13 @@ func (s *SearchDaoImpl) GetBannedWords(ctx TransactionContext) (words []string, 
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var it string
 		err = rows.Scan(&it)
+		if err != nil {
+			return
+		}
 		words = append(words, it)
 	}
 	return words, nil
@@ -172,10 +176,12 @@ func (s *SearchDaoImpl) AssignLabels(ctx TransactionContext, questions []entity.
 		for rows.Next() {
 			err = rows.Scan(&current)
 			if err != nil {
+				_ = rows.Close()
 				return
 			}
 			v.Labels = append(v.Labels, current)
 		}
+		_ = rows.Close()
 	}
 	return nil
 }
@@ -256,7 +262,7 @@ func (s *SearchDaoImpl) FindAnswerSkeletons(ctx TransactionContext, details []en
 
 func (s *SearchDaoImpl) GetAnswerActionInfos(ctx TransactionContext, uid int64, qids []int64, aids []int64) (infos []AnswerActionInfo, err error) {
 	infos = make([]AnswerActionInfo, len(aids))
-	var userLabels map[int64]bool = make(map[int64]bool)
+	var userLabels = make(map[int64]bool)
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query("select * from user_labels where uid=?", uid)
 	if err != nil {
@@ -316,20 +322,28 @@ func (s *SearchDaoImpl) GetAnswerActionInfos(ctx TransactionContext, uid int64, 
 }
 
 func (s *SearchDaoImpl) SearchUsers(ctx TransactionContext, page int64, text string) (result []SearchUserResult, err error) {
-	rows, err := ctx.sqlTx.Query("select uid,role,name,nickname,profile,icon from users where match(name,nickname,profile)against(? in boolean mode)limit ?,?",
+	rows, err := ctx.sqlTx.Query("select uid,role,name,nickname,profile from users where match(name,nickname,profile)against(? in boolean mode)limit ?,?",
 		text, page*PageSize, PageSize)
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var it SearchUserResult
 		var role int64
-		err = rows.Scan(&it.Uid, &role, &it.Name, &it.Nickname, &it.Profile, &it.Icon)
+		err = rows.Scan(&it.Uid, &role, &it.Name, &it.Nickname, &it.Profile)
 		if err != nil {
 			return
 		}
 		it.Banned = role == entity.DISABLE
 		result = append(result, it)
+	}
+	for i, _ := range result {
+		var detail entity.UserDetails
+		e := ctx.session.DB("sofia").C("user_details").FindId(result[i].Uid).One(&detail)
+		if e != nil {
+			result[i].Icon = detail.Icon
+		}
 	}
 	return
 }
@@ -351,7 +365,7 @@ func (s *SearchDaoImpl) HotList(ctx TransactionContext) (questions []entity.Ques
 
 func (s *SearchDaoImpl) Search(ctx TransactionContext, text string) (result []KListItem, err error) {
 	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select kid,title form kcards where match(title)against(?)limit ?", text, KListSize)
+	rows, err = ctx.sqlTx.Query("select kid,title from kcards where match(title)against(?)limit ?", text, KListSize)
 	if err != nil {
 		return
 	}

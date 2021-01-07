@@ -68,7 +68,6 @@ func TestServiceQuestionListResponse(t *testing.T) {
 			[]entity.Questions{{
 				15,
 				5,
-				"title",
 				"math",
 				sql.NullInt64{Valid: false},
 				5,
@@ -81,6 +80,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 			}},
 			[]entity.QuestionDetails{{
 				15,
+				"title",
 				"What is gradient?",
 				"pictureUrl",
 				"What is gradient?",
@@ -120,7 +120,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				a.Nil(err)
 				a.Equal(len(questions), len(tt.mockResult))
 				if len(tt.mockResult) > 0 {
-					a.Equal(questions[0].Title, tt.questions[0].Title)
+					a.Equal(questions[0].Title, tt.questionDetails[0].Title)
 					shouldHave := tt.questionDetails[0].PictureUrl != ""
 					has := len(questions[0].PictureUrls) > 0
 					a.Equal(shouldHave, has)
@@ -151,8 +151,8 @@ func TestServiceSearchQuestions(t *testing.T) {
 		uid int64 = 234
 		role int8 = service.USER
 	)
-	questions := []entity.Questions {{Qid: 645, Raiser: 23, Title: "title", Category: "life"}}
-	details := []entity.QuestionDetails {{Qid: 645, Content: "frozen code", PictureUrl: "pic url", Head: "frozen code "}}
+	questions := []entity.Questions {{Qid: 645, Raiser: 23, Category: "life"}}
+	details := []entity.QuestionDetails {{Qid: 645, Content: "frozen code", Title: "title", PictureUrl: "pic url", Head: "frozen code "}}
 	keywords := []string{"test"}
 	userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
 	uids := []int64{23}
@@ -423,8 +423,8 @@ func TestServiceHotList(t *testing.T) {
 		uid int64 = 234
 		role int8 = service.USER
 	)
-	questions := []entity.Questions {{Qid: 645, Raiser: 23, Title: "title", Category: "life"}}
-	details := []entity.QuestionDetails {{Qid: 645, Content: "frozen code", PictureUrl: "pic url", Head: "frozen code "}}
+	questions := []entity.Questions {{Qid: 645, Raiser: 23, Category: "life"}}
+	details := []entity.QuestionDetails {{Qid: 645, Content: "frozen code", Title: "title", PictureUrl: "pic url", Head: "frozen code "}}
 	keywords := []string{"test"}
 	userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
 	uids := []int64{23}
