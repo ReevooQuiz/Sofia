@@ -28,7 +28,7 @@
                   <template #content>
                     <span>
                       你的问题
-                      <a>『{{item.question_title}}』</a>
+                      <a @click="toQuestion(item.qid)">『{{item.question_title}}』</a>
                       新增了 {{item.new_answer_count}} 个回答
                     </span>
                   </template>
@@ -40,13 +40,13 @@
                 </a-comment>
                 <a-comment v-if="item.type===1">
                   <template #author>
-                    <a>问题 : {{item.question_title}}</a>
+                    <a @click="toQuestion(item.qid)">问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
                     <span>你的回答</span>
                     <br/>
                     <span>
-                      <a>『{{item.answer_head}}』</a>
+                      <a @click="toQuestion(item.qid)">『{{item.answer_head}}』</a>
                     </span>
                      <br/>
                     <span>新增了 {{item.new_like_count}} 个赞</span>
@@ -59,13 +59,13 @@
                 </a-comment>
                 <a-comment v-if="item.type===3">
                   <template #author>
-                    <a>问题 : {{item.question_title}}</a>
+                    <a @click="toQuestion(item.qid)">问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
                     <span>你的回答</span>
                     <br/>
                     <span>
-                      <a>『{{item.answer_head}}』</a>
+                      <a @click="toQuestion(item.qid)">『{{item.answer_head}}』</a>
                     </span>
                      <br/>
                     <span>
@@ -80,13 +80,13 @@
                 </a-comment>
                 <a-comment v-if="item.type===4">
                   <template #author>
-                    <a>问题 : {{item.question_title}}</a>
+                    <a @click="toQuestion(item.qid)">问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
                     <span>你的回答</span>
                     <br/>
                     <span>
-                      <a>『{{item.answer_head}}』</a>
+                      <a @click="toQuestion(item.qid)">『{{item.answer_head}}』</a>
                     </span>
                      <br/>
                     <span>
@@ -101,13 +101,13 @@
                 </a-comment>
                 <a-comment v-if="item.type===2">
                   <template #author>
-                    <a>问题 : {{item.question_title}}</a>
+                    <a @click="toQuestion(item.qid)">问题 : {{item.question_title}}</a>
                   </template>
                   <template #content>
                     <span>你的回答</span>
                     <br/>
                     <span>
-                      <a>『{{item.answer_head}}』</a>
+                      <a @click="toQuestion(item.qid)">『{{item.answer_head}}』</a>
                     </span>
                      <br/>
                     <span>
@@ -125,6 +125,51 @@
                     <span>
                       你
                       新增了 {{item.new_follower_count}} 个粉丝
+                    </span>
+                  </template>
+                  <template #datetime>
+                    <a-tooltip :title="moment(item.time).format('YYYY-MM-DD HH:mm:ss')">
+                      <span>{{ moment(item.time).fromNow() }}</span>
+                    </a-tooltip>
+                  </template>
+                </a-comment>
+
+               <a-comment v-if="item.type===6">
+                  <template #content>
+                    <span>
+                      你关注的问题
+                      <a @click="toQuestion(item.qid)">『{{item.question_title}}』</a>
+                      新增了 {{item.new_answer_count}} 个回答
+                    </span>
+                  </template>
+                  <template #datetime>
+                    <a-tooltip :title="moment(item.time).format('YYYY-MM-DD HH:mm:ss')">
+                      <span>{{ moment(item.time).fromNow() }}</span>
+                    </a-tooltip>
+                  </template>
+                </a-comment>
+
+                <a-comment v-if="item.type===7">
+                  <template #content>
+                    <span>
+                      你关注的用户
+                      <a @click="toPerson(item.uid)">『{{item.name}}』</a>
+                      发布了新的问题 <a @click="toQuestion(item.qid)">『{{item.question_title}}』</a>
+                    </span>
+                  </template>
+                  <template #datetime>
+                    <a-tooltip :title="moment(item.time).format('YYYY-MM-DD HH:mm:ss')">
+                      <span>{{ moment(item.time).fromNow() }}</span>
+                    </a-tooltip>
+                  </template>
+                </a-comment>
+
+                 <a-comment v-if="item.type===8">
+                  <template #content>
+                    <span>
+                      你关注的用户
+                      <a  @click="toPerson(item.uid)">『{{item.name}}』</a>
+                      新增了 {{item.new_answer_count}} 个回答
                     </span>
                   </template>
                   <template #datetime>
@@ -160,69 +205,7 @@ import {
 } from "@ant-design/icons-vue";
 import SubMenu from "../../components/PersonalNavigation";
 import QuestionForPersonal from "../../components/QuestionForPersonal";
-const data = [
-  {
-    type: 0,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "657x575c7576",
-    title: "What is a bird?",
-    new_answer_count: 2
-  },
 
-  {
-    type: 1,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "384cb234cb",
-    question_title: "What is a board?",
-    aid: "234b2v34",
-    answer_head: "A board is",
-    new_like_count: 2
-  },
-  {
-    type: 2,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "384cb234cb",
-    question_title: "What is a board?",
-    aid: "234b2v34",
-    answer_head: "A board is",
-    new_comment_count: 2
-  },
-
-  {
-    type: 3,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "384cb234cb",
-    question_title: "What is a board?",
-    aid: "234b2v34",
-    answer_head: "A board is",
-    new_criticism_count: 2
-  },
-  { type: 4, time: "2015-08-05T08:40:51.620Z", new_follower_count: 3 },
-  {
-    type: 0,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "657x575c7576",
-    title: "What is a bird?",
-    new_answer_count: 2
-  },
-  {
-    type: 3,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "384cb234cb",
-    question_title: "What is a board?",
-    aid: "234b2v34",
-    answer_head: "A board is",
-    new_criticism_count: 2
-  },
-  { type: 4, time: "2015-08-05T08:40:51.620Z", new_follower_count: 3 },
-  {
-    type: 0,
-    time: "2015-08-05T08:40:51.620Z",
-    qid: "657x575c7576",
-    title: "What is a bird?",
-    new_answer_count: 2
-  }
-];
 export default {
   components: {
     UserOutlined,
@@ -272,6 +255,16 @@ export default {
         this.$nextTick(() => {
           window.dispatchEvent(new Event("resize"));
         });
+      });
+    },
+    toQuestion(id) {
+      this.$router.push({ path:'/question' , query: { questionId:id } });
+    },
+    toPerson(id) {
+      console.log(id)
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
       });
     }
   }

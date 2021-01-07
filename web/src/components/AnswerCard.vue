@@ -29,7 +29,7 @@
               </span>
 
               <span key="comment-basic-comment" @click="clickComment" >
-                <MessageTwoTone v-if="showComment" />
+                <MessageTwoTone twoToneColor="#88d5d1" v-if="showComment" />
                 <MessageOutlined v-else />
                 <span style="padding-left: '8px';cursor: 'auto'">{{ ans.comment_count }}</span>
               </span>
@@ -37,10 +37,11 @@
               <a-button v-else @click="onWriteComment" type="primary" shape="pill" size="small">我要评论</a-button>
             </template>
             <template #author>
-              <a> {{ans.answerer.name}}</a>
+              <a @click="gotoPerson(ans.answerer.uid)"> {{ans.answerer.name}}</a>
             </template>
             <template #avatar>
               <a-avatar
+              @click="gotoPerson(ans.answerer.uid)"
                 :src="ans.answerer.icon"
                 :alt="ans.answerer.name"
               />
@@ -242,6 +243,13 @@ export default {
       },{errorCallback:(e)=>{
         console.log(e);
       }});
+    },
+    gotoPerson(id) {
+      console.log(id)
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
+      });
     }
   }
 };
@@ -250,6 +258,11 @@ export default {
 <style>
 #answerCard
 {
-  min-width :1280px;
+  min-width :1022px;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 0.2em;
 }
 </style>

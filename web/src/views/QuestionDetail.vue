@@ -1,14 +1,17 @@
 <template>
   <div>
-    <a-col :span="20" :offset="2">
+    <!-- <a-row justify="center"> -->
+      
+    
+    <a-col :span="16" :offset="4">
       <a-row>
         <div>
           <QuestionHead :ques="questionHead" />
         </div>
       </a-row>
       <a-row justify="space-between">
-        <a-tag>{{questionHead.answer_count}} 个回答</a-tag>
-        <a-space :size="20">
+        <a-tag> {{questionHead.answer_count}} 个回答</a-tag>
+        <a-space :size="19">
           <a-dropdown>
             <template #overlay>
               <a-menu @click="handleOrderClick">
@@ -52,6 +55,8 @@
         </a-col>
       </a-row>
     </a-col>
+    
+    <!-- </a-row> -->
   </div>
 </template>
 

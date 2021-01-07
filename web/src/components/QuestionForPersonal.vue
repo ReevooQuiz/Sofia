@@ -20,7 +20,7 @@
       <a-row >
         <a-col :span="4" >
           <div style="align-items: center">
-          <a-carousel arrows>
+          <!-- <a-carousel arrows>
             <template #prevArrow>
               <div class="custom-slick-arrow" style="left: 10px;zIndex: 1">
                 <left-circle-outlined />
@@ -34,36 +34,15 @@
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
-          </a-carousel>
+          </a-carousel> -->
+            <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
+              <img :src="item" @click="toQuestion" style="width:100%" />
+            </div>
           </div>
         </a-col>
         <a-col :span="18" :offset="1">
           <a-comment>
             <template #actions>
-              <!-- <span key="comment-basic-like">
-                <a-tooltip title="赞">
-                  <template v-if="action === 'liked'">
-                    <LikeFilled @click="like" />
-                    {{ques.favorite_count}}
-                  </template>
-                  <template v-else>
-                    <LikeOutlined @click="like" />
-                    {{ques.favorite_count}}
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ likes }}</span>
-              </span>
-              <span key="comment-basic-dislike">
-                <a-tooltip title="Dislike">
-                  <template v-if="action === 'disliked'">
-                    <DislikeFilled @click="dislike" />
-                  </template>
-                  <template v-else>
-                    <DislikeOutlined @click="dislike" />
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
-              </span> -->
                <span key="comment-basic-reply-to">
                 <a-tooltip title="赞">
                  <LikeOutlined />
@@ -97,8 +76,11 @@
               <a-avatar :src="ques.owner.user_icon" alt="avatar" />
             </template> -->
             <template #content>
-              <p @click="toQuestion">{{ques.head}}</p>
+              <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
             </template>
+            <!-- <template #content>
+              <p @click="toQuestion">{{ques.head}}</p>
+            </template> -->
             <template #datetime>
               <a-tooltip :title="moment(ques.time).format('YYYY-MM-DD HH:mm:ss')">
                 <span>{{ moment(ques.time).fromNow() }}</span>

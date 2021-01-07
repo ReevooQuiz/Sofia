@@ -46,10 +46,16 @@ const routes: Array<RouteRecordRaw> = [
       import(/* webpackChunkName: "about" */ "../views/Recommend.vue")
   },
   {
-    path: "/category",
-    name: "Category",
+    path: "/categoryLife",
+    name: "CategoryLife",
     component: () =>
-        import(/* webpackChunkName: "about" */ "../views/Category.vue")
+        import(/* webpackChunkName: "about" */ "../views/CategoryLife.vue")
+  },
+  {
+    path: "/categoryStudy",
+    name: "/CategoryStudy",
+    component: () =>
+        import(/* webpackChunkName: "about" */ "../views/CategoryStudy.vue")
   },
   {
     path: "/postQuestion",
@@ -145,6 +151,15 @@ const routes: Array<RouteRecordRaw> = [
     // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/Register.vue")
+  },
+  {
+    path: "/personalSetOthers",
+    name: "PersonalSetOthers",
+    // route level code-splitting
+    // this generates a separate chunk (about.[hash].js) for this route
+    // which is lazy-loaded when the route is visited.
+    component: () =>
+      import(/* webpackChunkName: "about" */ "../views/personalView/PersonalOthers.vue")
   }
 
 ];
@@ -196,8 +211,6 @@ router.beforeEach((to, from, next) => {
 
       }
       )
-
-
 
       if (to.meta.roles===0) {
         if (role_check !== 0) {

@@ -52,29 +52,44 @@
                 <a-form-item required has-feedback label="昵称" name="nickname">
                   <a-input v-model:value="ruleForm.nickname" />
                 </a-form-item>
-                <a-form-item required has-feedback label="邮箱" name="email">
-                  <a-input v-model:value="ruleForm.email" />
-                </a-form-item>
                 <a-form-item required label="性别" name="gender">
                   <a-radio-group v-model:value="ruleForm.gender">
-                    <a-radio value=0>男</a-radio>
-                    <a-radio value=1>女</a-radio>
+                    <a-radio value="0">男</a-radio>
+                    <a-radio value="1">女</a-radio>
                   </a-radio-group>
                 </a-form-item>
                 <a-form-item required has-feedback label="密码" name="pass">
                   <a-input v-model:value="ruleForm.pass" type="password" autocomplete="off" />
                 </a-form-item>
-                <a-form-item class="register-form-item" has-feedback label="确认密码" name="checkPass">
+                <a-form-item
+                  required
+                  class="register-form-item"
+                  has-feedback
+                  label="确认密码"
+                  name="checkPass"
+                >
                   <a-input v-model:value="ruleForm.checkPass" type="password" autocomplete="off" />
                 </a-form-item>
+                <a-form-item required has-feedback label="邮箱" name="email">
+                  <a-input v-model:value="ruleForm.email" />
+                </a-form-item>
+
+                <a-input
+                  style="width: 95px ;margin-left: 110px"
+                  v-model:value="verify"
+                  placeholder="输入验证码"
+                />
+                <a-button v-if="this.sendCode==false" style="margin-left: 5px" @click="getVerificationCode">获取</a-button>
+                <a-button v-else disabled style="margin-left: 5px" @click="getVerificationCode">获取</a-button>
+                <a-button style="margin-left: 5px" @click="activate">激活</a-button>
               </a-col>
             </a-row>
+            <br />
             <a-form-item :wrapper-col="{ span: 20 }">
               <a-button type="primary" html-type="submit">注册</a-button>
               <a-button style="margin-left: 50px" @click="resetForm">重置</a-button>
             </a-form-item>
           </a-form>
-      
         </div>
       </a-col>
     </a-row>
@@ -91,7 +106,7 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
 import { Button } from "ant-design-vue";
 import { PlusOutlined, LoadingOutlined } from "@ant-design/icons-vue";
 import { message } from "ant-design-vue";
-import {postRequest} from "@/http/request.js";
+import {postRequest,getRequest} from "@/http/request.js";
 function getBase64(img, callback) {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -144,6 +159,7 @@ export default {
             return Promise.reject("请输入正确邮箱格式");
           }
         }
+        this.ec=true;
         return Promise.resolve();
       }
     };
@@ -152,9 +168,11 @@ export default {
         return Promise.reject("请输入密码");
       } else {
 
-        if(value.length<6)
+        if(value !== "")
         {
-          return Promise.reject("密码至少6位");
+          var reg=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,16}$/;
+          if(!reg.test(value))
+            return Promise.reject("需包含大小写字母和数字，至少8位");
         }
         if (this.ruleForm.checkPass !== "") {
           this.$refs.ruleForm.validateField("checkPass");
@@ -168,6 +186,12 @@ export default {
       } else if (value !== this.ruleForm.pass) {
         return Promise.reject("确认密码与密码不相同");
       } else {
+        if(value !== "")
+        {
+          var reg=/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,16}$/;
+          if(!reg.test(value))
+            return Promise.reject("需包含大小写字母和数字，至少8位");
+        }
         return Promise.resolve();
       }
     };
@@ -179,7 +203,8 @@ export default {
         nickname: "",
         email: "",
         gender: 3,
-        icon: ""
+        icon: "",
+       
       },
       rules: {
         pass: [{ validator: validatePass, trigger: "change" }],
@@ -198,7 +223,11 @@ export default {
       fileList: [],
       loading: false,
       imageUrl: "",
-      done:false
+      done:false,
+      verify:"",
+      ec:false,
+      sendCode:false,
+      emailWithCode:""
     };
   },
 
@@ -215,17 +244,30 @@ export default {
       console.log(response);
       if(response.code==0)
       {
-        message.error("注册失败：用户名已被使用");
-      }
-      else if(response.code==1)
-      {
-        message.error("注册失败：邮箱已被使用");
-      }
-      else if(response.code==2)
-      {
         message.success("注册成功");
         this.$router.push({ path:'/login'  });
       }
+      else if(response.code==1)
+      {
+        
+        if(response.type===0)
+        {
+          message.error("注册失败：用户名已存在");
+        }
+        else if(response.type===1)
+        {
+          message.error("注册失败：邮箱已被使用");
+        }
+        else if(response.type===2)
+        {
+          message.error("注册失败：邮箱未激活");
+        }
+        else if(response.type===3)
+        {
+          message.error("注册失败");
+        }
+      }
+      
     },
     handleFinishFailed(errors) {
       console.log(JSON.stringify(errors));
@@ -234,6 +276,10 @@ export default {
       this.imageUrl="",
       this.fileList=[],
       this.done=false;
+      this.ec=false;
+      this.verify="";
+      this.sendCode=false;
+      this.emailWithCode="";
       this.$refs.ruleForm.resetFields();
     },
     handleChange(info) {
@@ -268,6 +314,63 @@ export default {
         message.error("Image must smaller than 2MB!");
       }
       return isJpgOrPng && isLt2M;
+    },
+    verificationCodeCallBack(res)
+    {
+      if(res.code===1)
+      {
+        if(res.type===0)
+        {
+           message.error("验证码获取失败：邮箱已被注册或邮箱不存在");
+        }
+        else{
+          message.error("验证码获取失败");
+        }
+      }
+      else{
+          this.sendCode=true;
+          this.emailWithCode=this.ruleForm.email;
+      }
+    },
+    getVerificationCode()
+    {
+      console.log("!")
+      if(this.ruleForm.email=="" || !this.ec)
+      {
+        message.error("验证码获取失败：请填写正确邮箱");
+      }
+      else{
+        
+        console.log(this.ruleForm.email)
+        getRequest("/verificationCode", this.verificationCodeCallBack,{errorCallback:(e)=>{console.log(e)},
+            params:{}})
+      }
+    },
+     activateCallBack(res)
+    {
+      if(res.code===1)
+      {
+        
+          message.error("激活失败");
+        
+      }
+      else{
+          message.success("激活成功");
+      }
+    },
+    activate(){
+      if(this.verify=="")
+      {
+        message.error("激活失败：请填写验证码");
+      }
+      else if(this.emailWithCode=="" || !this.sendCode)
+      {
+          message.error("激活失败：请先填写邮箱并获取验证码");
+      }
+      else{
+        getRequest("/verify", this.activateCallBack,{errorCallback:(e)=>{console.log(e)},
+            params:{email:this.sendCode,code:this.verify}})
+      }
     }
   }
 };

@@ -11,19 +11,18 @@
         <br />
         <br />
 
-        <a-list
-          :loading="loading"
-          item-layout="vertical"
-          size="large"
-          :data-source="questionData"
-        >
+        <a-list :loading="loading" item-layout="vertical" size="large" :data-source="questionData">
           <template #loadMore>
             <div
               v-if="showLoadingMore"
               :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
             >
+              
               <a-spin v-if="loadingMore" />
-              <a-button v-else @click="onLoadMore">加载更多</a-button>
+            <a-button v-else-if="!loading" @click="onLoadMore">
+              加载更多
+            </a-button>
+              
             </div>
           </template>
           <template #renderItem="{ item, index }">
@@ -80,8 +79,9 @@ export default {
       console.log("!");
       console.log(res.result);
       this.loading = false;
-      this.questionData= res.result;
+      this.questionData = res.result;
       this.pageNum = this.pageNum + 1;
+      this.loadingMore=false;
     });
   },
   methods: {
@@ -96,9 +96,9 @@ export default {
         params: { id: uid, page: this.pageNum }
       });
     },
-    
+
     onLoadMore() {
-      
+      this.loadingMore=true;
       this.getData(res => {
         this.questionData = this.questionData.concat(res.result);
         this.loadingMore = false;
