@@ -21,7 +21,7 @@
             <a-avatar @click="onDelete" size="small" shape="round" type="primary" style="background-color:#fbbdbd;border-color: #ecc7d4;"><DeleteOutlined /></a-avatar>
           </a-space>
       </template>
-      <a-row v-if="!modifying">
+      <a-row v-if="!modifying" @click="toQuestion" >
         <a-col :span="4">
           <div style="align-items: center">
             <a-carousel arrows>
@@ -188,7 +188,13 @@ export default {
       },{errorCallback:(e)=>{
           console.log(e);
         }});
-    }
+    },
+    toQuestion() {
+      this.$router.push({
+        path: "/question",
+        query: { questionId: this.ans.question.qid }
+      });
+    },
   }
 };
 </script>

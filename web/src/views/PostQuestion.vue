@@ -14,6 +14,7 @@
       <v-md-editor v-model="questionValue" height="400px"></v-md-editor>
     </a-col>
     <a-col :span="2" :offset="1" >
+      分类
       <a-select
           v-model:value="category"
           style="width: 80px"

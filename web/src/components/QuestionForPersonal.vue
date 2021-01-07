@@ -23,7 +23,7 @@
         </a-space>
       </template>
 
-      <a-row >
+      <a-row  @click="toQuestion">
         <a-col :span="4" >
           <div style="align-items: center">
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
@@ -139,8 +139,6 @@ export default {
   },
   methods: {
     toQuestion() {
-      console.log("??");
-      console.log(this.ques.qid);
       this.$router.push({
         path: "/question",
         query: { questionId: this.ques.qid }
@@ -168,7 +166,7 @@ export default {
       },{errorCallback:(e)=>{
           console.log(e);
         }});
-    }
+    },
   }
 };
 </script>
