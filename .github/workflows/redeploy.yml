@@ -5,6 +5,24 @@ on:
     branches: [ master ]
 
 jobs:
+  docker-search-service:
+    name: Publish - Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Go environment
+        uses: actions/setup-go@v2.1.2
+      - name: Build with Gobuild
+        working-directory: backend/search-service
+        run: go build -o search-service .
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USER }}
+             -p ${{ secrets.DOCKER_PASS }}
+      - name: Build Docker image
+        working-directory: backend/search-service
+        run: docker build -t sofia2021/search-service:latest -t sofia2021/search-service:${GITHUB_SHA::8} .
+      - name: Publish Docker image
+        run: docker push sofia2021/search-service
   docker-qa-service:
     name: Publish - Docker Hub
     runs-on: ubuntu-latest
@@ -44,7 +62,7 @@ jobs:
   redeploy:
     name: Redeploy webhook call
     runs-on: ubuntu-18.04
-    needs: [ docker-qa-service, docker-users-service ]
+    needs: [ docker-search-service, docker-qa-service, docker-users-service ]
     steps:
       - name: Deploy docker container webhook
         uses: joelwmale/webhook-action@master

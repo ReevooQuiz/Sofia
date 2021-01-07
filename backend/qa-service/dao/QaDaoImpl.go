@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	PageSize = 5
-	answerFields = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
-	questionFields = "qid,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
+	PageSize        = 5
+	CommentPageSize = 10
+	answerFields    = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
+	questionFields  = "qid,closed,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 )
 
 var (
@@ -31,7 +32,7 @@ type QaDaoImpl struct {
 }
 
 type TransactionContext struct {
-	sqlTx *sql.Tx
+	sqlTx   *sql.Tx
 	session *mgo.Session
 }
 
@@ -41,14 +42,20 @@ type AnswerActionInfo struct {
 	Approvable bool
 }
 
-func (q *QaDaoImpl) Commit(t *TransactionContext) (err error) {
+func (q *QaDaoImpl) Commit(t *TransactionContext) {
 	t.session.Close()
-	return t.sqlTx.Commit()
+	e := t.sqlTx.Commit()
+	if e != nil {
+		log.Warn(e)
+	}
 }
 
-func (q *QaDaoImpl) Rollback(t *TransactionContext) (err error) {
+func (q *QaDaoImpl) Rollback(t *TransactionContext) {
 	t.session.Close()
-	return t.sqlTx.Rollback()
+	e := t.sqlTx.Rollback()
+	if e != nil {
+		log.Warn(e)
+	}
 }
 
 func init() {
@@ -85,124 +92,43 @@ func (q *QaDaoImpl) Begin(read bool) (ctx TransactionContext, err error) {
 	return TransactionContext{tx, q.session.New()}, nil
 }
 
-/*func (q *QaDaoImpl) FindAnswersByQid(qid bson.ObjectId) (answers []entity.Answers, err error) {
-	err = q.session.DB("sofia").C("answers").Find(bson.M{"qid": qid}).All(&answers)
-	return answers, err
-}
-
-func (q *QaDaoImpl) FindLabelByLid(lid int64) (label entity.Labels, err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("select * from labels where lid = ?")
-	if err != nil {
-		return label, err
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(lid).Scan(&label.Lid, &label.Title)
-	return label, err
-}
-
-func (q *QaDaoImpl) FindLabelByTitle(title string) (label entity.Labels, err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("select * from labels where title = ?")
-	if err != nil {
-		return label, err
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(title).Scan(&label.Lid, &label.Title)
-	return label, err
-}
-
-func (q *QaDaoImpl) FindQuestionByQid(qid bson.ObjectId) (question entity.Questions, err error) {
-	var res []entity.Questions
-	err = q.session.DB("sofia").C("questions").Find(bson.M{"_id": qid}).All(&res)
-	if err != nil {
-		return question, err
-	}
-	if len(res) == 0 {
-		return question, errors.New("mongo: no rows in result set")
-	}
-	return res[0], err
-}
-
-func (q *QaDaoImpl) FindQuestionLabelsByQid(qid string) (questionLabels []entity.QuestionLabels, err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("select * from question_labels where qid = ?")
-	if err != nil {
-		return questionLabels, err
-	}
-	defer stmt.Close()
-	var res *sql.Rows
-	res, err = stmt.Query(qid)
-	if err != nil {
-		return questionLabels, err
-	}
-	for res.Next() {
-		var questionLabel entity.QuestionLabels
-		err = res.Scan(&questionLabel.Qid, &questionLabel.Lid)
-		if err != nil {
-			return questionLabels, err
+func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails) {
+	var findErr error
+	var current entity.CommentDetails
+	for _, v := range comments {
+		findErr = ctx.session.DB("sofia").C("comment_details").FindId(v.Cmid).One(&current)
+		if findErr != nil {
+			log.Warn(findErr)
+			details = append(details, current)
+		} else {
+			details = append(details, entity.CommentDetails{})
 		}
-		questionLabels = append(questionLabels, questionLabel)
 	}
-	return questionLabels, err
+	return
 }
 
-func (q *QaDaoImpl) InsertKcard(kcard entity.Kcards) (kid int64, err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("insert into kcards(title) values(?)")
-	if err != nil {
-		return kid, err
+func (q *QaDaoImpl) FindCriticismDetails(ctx TransactionContext, criticisms []entity.Criticisms) (details []entity.CriticismDetails) {
+	var findErr error
+	var current entity.CriticismDetails
+	for _, v := range criticisms {
+		findErr = ctx.session.DB("sofia").C("criticism_details").FindId(v.Ctid).One(&current)
+		if findErr != nil {
+			log.Warn(findErr)
+			details = append(details, current)
+		} else {
+			details = append(details, entity.CriticismDetails{})
+		}
 	}
-	defer stmt.Close()
-	var res sql.Result
-	res, err = stmt.Exec(kcard.Title)
-	if err != nil {
-		return kid, err
-	}
-	kid, err = res.LastInsertId()
-	return kid, err
+	return
 }
-
-func (q *QaDaoImpl) InsertLabel(label entity.Labels) (lid int64, err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("insert into labels(title) values(?)")
-	if err != nil {
-		return lid, err
-	}
-	defer stmt.Close()
-	var res sql.Result
-	res, err = stmt.Exec(label.Title)
-	if err != nil {
-		return lid, err
-	}
-	lid, err = res.LastInsertId()
-	return lid, err
-}
-
-func (q *QaDaoImpl) InsertQuestion(question entity.Questions) (qid bson.ObjectId, err error) {
-	question.Qid = bson.NewObjectId()
-	err = q.session.DB("sofia").C("questions").Insert(question)
-	return question.Qid, err
-}
-
-func (q *QaDaoImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (err error) {
-	var stmt *sql.Stmt
-	stmt, err = q.db.Prepare("insert into question_labels values(?, ?)")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(questionLabel.Qid, questionLabel.Lid)
-	return err
-}*/
 
 func (q *QaDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails) {
 	var findErr error
 	var current entity.QuestionDetails
 	for _, v := range questions {
-		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(current)
+		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(&current)
 		if findErr != nil {
-			log.Info(findErr)
+			log.Warn(findErr)
 			questionDetails = append(questionDetails, current)
 		} else {
 			questionDetails = append(questionDetails, entity.QuestionDetails{})
@@ -215,7 +141,7 @@ func (q *QaDaoImpl) FindAnswerDetails(ctx TransactionContext, answers []entity.A
 	var findErr error
 	var current entity.AnswerDetails
 	for _, v := range answers {
-		findErr = ctx.session.DB("sofia").C("answer_details").FindId(v.Aid).One(current)
+		findErr = ctx.session.DB("sofia").C("answer_details").FindId(v.Aid).One(&current)
 		if findErr != nil {
 			log.Info(findErr)
 			answerDetails = append(answerDetails, current)
@@ -231,6 +157,7 @@ func (q *QaDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Questions, e
 	for rows.Next() {
 		err = rows.Scan(
 			&it.Qid,
+			&it.Closed,
 			&it.Raiser,
 			&it.Category,
 			&it.AcceptedAnswer,
@@ -306,6 +233,30 @@ func (q *QaDaoImpl) IncUserAnswerCount(ctx TransactionContext, uid int64) (err e
 	affected, e := res.RowsAffected()
 	if e == nil && affected != 1 {
 		log.Warn("IncAnswerCount: uid = ", uid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) IncCommentCount(ctx TransactionContext, aid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update answers set comment_count=comment_count+1 where aid=?", aid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncCommentCount: aid = ", aid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) IncCriticismCount(ctx TransactionContext, aid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update answers set criticism_count=criticism_count+1 where aid=?", aid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncCriticismCount: aid = ", aid, ", but rows affected = ", affected)
 	}
 	return nil
 }
@@ -445,16 +396,18 @@ func (q *QaDaoImpl) MakeLabels(ctx TransactionContext, titles []string) (labels 
 	return labels, nil
 }
 
-func (q *QaDaoImpl) GetBannedWords(ctx TransactionContext, ) (words []string, err error) {
-	var result struct {
-		UselessId int64    `bson:"_id"`
-		Words     []string `bson:"words"`
-	}
-	err = ctx.session.DB("sofia").C("banned_words").FindId(0).One(result)
+func (q *QaDaoImpl) GetBannedWords(ctx TransactionContext) (words []string, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query("select word from ban_words")
 	if err != nil {
 		return
 	}
-	return result.Words, nil
+	for rows.Next() {
+		var it string
+		err = rows.Scan(&it)
+		words = append(words, it)
+	}
+	return words, nil
 }
 
 func (q *QaDaoImpl) AddQuestion(ctx TransactionContext, uid int64, title string, content string, category string, labels []string, pictureUrl string, head string) (resultQid int64, err error) {
@@ -557,11 +510,61 @@ func (q *QaDaoImpl) ModifyAnswer(ctx TransactionContext, aid int64, content stri
 		bson.D{{"$set", bson.D{{"content", content}, {"pictureUrl", pictureUrl}, {"head", head}}}})
 }
 
-func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (questions []entity.Questions, err error) {
+func (q *QaDaoImpl) ParseComments(rows *sql.Rows) (comments []entity.Comments, err error) {
+	var res []entity.Comments
+	for rows.Next() {
+		var it entity.Comments
+		err = rows.Scan(&it.Cmid, &it.Uid, &it.Time)
+		if err != nil {
+			return
+		}
+		res = append(res, it)
+	}
+	return res, nil
+}
+
+func (q *QaDaoImpl) ParseCriticisms(rows *sql.Rows) (comments []entity.Criticisms, err error) {
+	var res []entity.Criticisms
+	for rows.Next() {
+		var it entity.Criticisms
+		err = rows.Scan(&it.Ctid, &it.Uid, &it.Time)
+		if err != nil {
+			return
+		}
+		res = append(res, it)
+	}
+	return res, nil
+}
+
+func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select " + questionFields + " from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q order by time desc limit ?,?",
-		uid, page*PageSize, PageSize)
+		"select cmid,uid,time from comments where aid=? limit ?,?", aid, page*CommentPageSize, CommentPageSize)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	comments, err = q.ParseComments(rows)
+	return
+}
+
+func (q *QaDaoImpl) GetCriticisms(ctx TransactionContext, aid int64, page int64) (comments []entity.Criticisms, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query(
+		"select ctid,uid,time from criticisms where aid=? limit ?,?", aid, page*CommentPageSize, CommentPageSize)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	comments, err = q.ParseCriticisms(rows)
+	return
+}
+
+func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, category string, page int64) (questions []entity.Questions, err error) {
+	var rows *sql.Rows
+	rows, err = ctx.sqlTx.Query(
+		"select "+questionFields+" from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q where ?='all' or category=? order by time desc limit ?,?",
+		uid, category, category, page*PageSize, PageSize)
 	if err != nil {
 		return
 	}
@@ -576,7 +579,7 @@ func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, page int64) (que
 
 func (q *QaDaoImpl) FindQuestionById(ctx TransactionContext, qid int64) (question []entity.Questions, err error) {
 	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select " + questionFields + " from questions where qid=?", qid)
+	rows, err = ctx.sqlTx.Query("select "+questionFields+" from questions where qid=?", qid)
 	if err != nil {
 		return
 	}
@@ -591,7 +594,7 @@ func (q *QaDaoImpl) FindQuestionById(ctx TransactionContext, qid int64) (questio
 
 func (q *QaDaoImpl) FindAnswerById(ctx TransactionContext, aid int64) (answer []entity.Answers, err error) {
 	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select " + questionFields + " from answers where aid=?", aid)
+	rows, err = ctx.sqlTx.Query("select "+questionFields+" from answers where aid=?", aid)
 	if err != nil {
 		return
 	}
@@ -642,11 +645,69 @@ func (q *QaDaoImpl) FindQuestionAnswers(ctx TransactionContext, qid int64, page 
 		query += "time desc"
 	}
 	query += " limit ?,?"
-	rows, err = ctx.sqlTx.Query(query, qid, page * PageSize, PageSize)
+	rows, err = ctx.sqlTx.Query(query, qid, page*PageSize, PageSize)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	answers, err = q.ParseAnswers(rows)
 	return answers, err
+}
+
+func (q *QaDaoImpl) AddComment(ctx TransactionContext, uid int64, aid int64, content string) (cmid int64, err error) {
+	// insert into answers
+	var res sql.Result
+	res, err = ctx.sqlTx.Exec(
+		"insert into comments(uid, aid,time)values(?,?,?)",
+		uid, aid, time.Now().Unix())
+	if err != nil {
+		return
+	}
+	cmid, err = res.LastInsertId()
+	// insert into answer_details
+	var commentDetail entity.CommentDetails
+	commentDetail.Cmid = cmid
+	commentDetail.Content = content
+	err = ctx.session.DB("sofia").C("comment_details").Insert(commentDetail)
+	if err != nil {
+		return
+	}
+	return cmid, nil
+}
+
+func (q *QaDaoImpl) AddCriticism(ctx TransactionContext, uid int64, aid int64, content string) (ctid int64, err error) {
+	// insert into answers
+	var res sql.Result
+	res, err = ctx.sqlTx.Exec(
+		"insert into criticisms(uid,aid,time)values(?,?,?)",
+		uid, aid, time.Now().Unix())
+	if err != nil {
+		return
+	}
+	ctid, err = res.LastInsertId()
+	// insert into answer_details
+	var criticismDetail entity.CriticismDetails
+	criticismDetail.Ctid = ctid
+	criticismDetail.Content = content
+	err = ctx.session.DB("sofia").C("criticism_details").Insert(criticismDetail)
+	if err != nil {
+		return
+	}
+	return ctid, nil
+}
+
+func (q *QaDaoImpl) DeleteQuestion(ctx TransactionContext, qid int64) (err error) {
+	_, err = ctx.sqlTx.Exec("delete from questions where qid=?", qid)
+	if err != nil {
+		return
+	}
+	return ctx.session.DB("sofia").C("question_details").RemoveId(qid)
+}
+
+func (q *QaDaoImpl) DeleteAnswer(ctx TransactionContext, aid int64) (err error) {
+	_, err = ctx.sqlTx.Exec("delete from answers where aid=?", aid)
+	if err != nil {
+		return
+	}
+	return ctx.session.DB("sofia").C("answer_details").RemoveId(aid)
 }

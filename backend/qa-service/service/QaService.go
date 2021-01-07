@@ -21,11 +21,19 @@ type QaService interface {
 
 	AddQuestion(token string, req ReqQuestionsPost) (int8, interface{})
 	ModifyQuestion(token string, req ReqQuestionsPut) (int8, interface{})
+	DeleteQuestion(token string, req ReqQuestionsDelete) (int8, interface{})
 	AddAnswer(token string, req ReqAnswersPost) (int8, interface{})
 	ModifyAnswer(token string, req ReqAnswersPut) (int8, interface{})
+	DeleteAnswer(token string, req ReqAnswersDelete) (int8, interface{})
 
-	MainPage(token string, page int64) (int8, interface{})
+	MainPage(token string, category string, page int64) (int8, interface{})
 	QuestionDetail(token string, qid int64) (int8, interface{})
 	ListAnswers(token string, qid int64, page int64, sort int8) (int8, interface{})
 	AnswerDetail(token string, aid int64) (int8, interface{})
+
+	GetComments(token string, aid int64, page int64) (int8, interface{})
+	AddComment(token string, req ReqCommentsPost) (int8, interface{})
+
+	GetCriticisms(token string, aid int64, page int64) (int8, interface{})
+	AddCriticism(token string, req ReqCriticismsPost) (int8, interface{})
 }

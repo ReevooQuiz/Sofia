@@ -50,6 +50,36 @@ func (mr *MockQaServiceMockRecorder) AddAnswer(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAnswer", reflect.TypeOf((*MockQaService)(nil).AddAnswer), arg0, arg1)
 }
 
+// AddComment mocks base method
+func (m *MockQaService) AddComment(arg0 string, arg1 service.ReqCommentsPost) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddComment", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// AddComment indicates an expected call of AddComment
+func (mr *MockQaServiceMockRecorder) AddComment(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddComment", reflect.TypeOf((*MockQaService)(nil).AddComment), arg0, arg1)
+}
+
+// AddCriticism mocks base method
+func (m *MockQaService) AddCriticism(arg0 string, arg1 service.ReqCriticismsPost) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddCriticism", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// AddCriticism indicates an expected call of AddCriticism
+func (mr *MockQaServiceMockRecorder) AddCriticism(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCriticism", reflect.TypeOf((*MockQaService)(nil).AddCriticism), arg0, arg1)
+}
+
 // AddQuestion mocks base method
 func (m *MockQaService) AddQuestion(arg0 string, arg1 service.ReqQuestionsPost) (int8, interface{}) {
 	m.ctrl.T.Helper()
@@ -80,6 +110,36 @@ func (mr *MockQaServiceMockRecorder) AnswerDetail(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AnswerDetail", reflect.TypeOf((*MockQaService)(nil).AnswerDetail), arg0, arg1)
 }
 
+// DeleteAnswer mocks base method
+func (m *MockQaService) DeleteAnswer(arg0 string, arg1 service.ReqAnswersDelete) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteAnswer", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// DeleteAnswer indicates an expected call of DeleteAnswer
+func (mr *MockQaServiceMockRecorder) DeleteAnswer(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAnswer", reflect.TypeOf((*MockQaService)(nil).DeleteAnswer), arg0, arg1)
+}
+
+// DeleteQuestion mocks base method
+func (m *MockQaService) DeleteQuestion(arg0 string, arg1 service.ReqQuestionsDelete) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQuestion", arg0, arg1)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// DeleteQuestion indicates an expected call of DeleteQuestion
+func (mr *MockQaServiceMockRecorder) DeleteQuestion(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuestion", reflect.TypeOf((*MockQaService)(nil).DeleteQuestion), arg0, arg1)
+}
+
 // Destruct mocks base method
 func (m *MockQaService) Destruct() {
 	m.ctrl.T.Helper()
@@ -90,6 +150,36 @@ func (m *MockQaService) Destruct() {
 func (mr *MockQaServiceMockRecorder) Destruct() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destruct", reflect.TypeOf((*MockQaService)(nil).Destruct))
+}
+
+// GetComments mocks base method
+func (m *MockQaService) GetComments(arg0 string, arg1, arg2 int64) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetComments", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// GetComments indicates an expected call of GetComments
+func (mr *MockQaServiceMockRecorder) GetComments(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetComments", reflect.TypeOf((*MockQaService)(nil).GetComments), arg0, arg1, arg2)
+}
+
+// GetCriticisms mocks base method
+func (m *MockQaService) GetCriticisms(arg0 string, arg1, arg2 int64) (int8, interface{}) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCriticisms", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int8)
+	ret1, _ := ret[1].(interface{})
+	return ret0, ret1
+}
+
+// GetCriticisms indicates an expected call of GetCriticisms
+func (mr *MockQaServiceMockRecorder) GetCriticisms(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCriticisms", reflect.TypeOf((*MockQaService)(nil).GetCriticisms), arg0, arg1, arg2)
 }
 
 // Init mocks base method
@@ -122,18 +212,18 @@ func (mr *MockQaServiceMockRecorder) ListAnswers(arg0, arg1, arg2, arg3 interfac
 }
 
 // MainPage mocks base method
-func (m *MockQaService) MainPage(arg0 string, arg1 int64) (int8, interface{}) {
+func (m *MockQaService) MainPage(arg0, arg1 string, arg2 int64) (int8, interface{}) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MainPage", arg0, arg1)
+	ret := m.ctrl.Call(m, "MainPage", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int8)
 	ret1, _ := ret[1].(interface{})
 	return ret0, ret1
 }
 
 // MainPage indicates an expected call of MainPage
-func (mr *MockQaServiceMockRecorder) MainPage(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockQaServiceMockRecorder) MainPage(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaService)(nil).MainPage), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MainPage", reflect.TypeOf((*MockQaService)(nil).MainPage), arg0, arg1, arg2)
 }
 
 // ModifyAnswer mocks base method
