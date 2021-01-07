@@ -20,7 +20,7 @@
       <a-row >
         <a-col :span="4" >
           <div style="align-items: center">
-          <a-carousel arrows>
+          <!-- <a-carousel arrows>
             <template #prevArrow>
               <div class="custom-slick-arrow" style="left: 10px;zIndex: 1">
                 <left-circle-outlined />
@@ -34,7 +34,10 @@
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
-          </a-carousel>
+          </a-carousel> -->
+            <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
+              <img :src="item" @click="toQuestion" style="width:100%" />
+            </div>
           </div>
         </a-col>
         <a-col :span="18" :offset="1">

@@ -18,11 +18,11 @@
           </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
-        <a-menu-item key="explore">探索</a-menu-item>
+        <!-- <a-menu-item key="explore">探索</a-menu-item> -->
         <a-menu-item key="ban">
           <router-link to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
-          <router-link to="/personal">我的</router-link></a-menu-item>
+          <router-link to="/personalSet">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">
           <router-link to="/hotRank">热榜管理</router-link></a-menu-item>
       </a-menu>
@@ -91,7 +91,7 @@ export default {
 
   methods: {
     goToPersonal() {
-      this.$router.push({ path: "/personal" });
+      this.$router.push({ path: "/personalSet" });
     },
     goToLogin() {
       console.log("!");

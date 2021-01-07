@@ -29,7 +29,6 @@
                 slot="cover"
                 alt="example"
                 :src="this.imageUrl"
-               
                 style="height: 100px; border-radius: 50%"
               />
               <br />
@@ -68,9 +67,9 @@
           </a-row>
 
           <br />
-          <a-tag color="#88d5d1">
+          <!-- <a-tag color="#88d5d1">
             <VerifiedOutlined />学习区专家
-          </a-tag>
+          </a-tag> -->
           <a-tag color="#88d5d1">
             <FireOutlined />
             等级 {{info.level}}
@@ -85,9 +84,9 @@
 
           <span>
             <TeamOutlined />
-            {{info.follower_count}} 关注 ·
+            {{info.following_count}} 关注 ·
           </span>
-          <span>{{info.followed_count}} 粉丝 ·</span>
+          <span>{{info.follower_count}} 粉丝 ·</span>
           <span>
             <LikeOutlined />
             {{info.like_count}} 赞
@@ -103,7 +102,12 @@
           </span>
           <a-divider />
 
-          <a-button v-if="this.edit===false" block ghost @click="changeEditStatus">修改个人信息</a-button>
+          <a-button
+            v-if="this.edit===false && this.editPass===false &&this.forgetPass===false"
+            block
+            ghost
+            @click="changeEditStatus"
+          >修改个人信息</a-button>
           <div v-if="this.edit===true">
             <a-form-item>
               <a-row>
@@ -116,19 +120,36 @@
               </a-row>
             </a-form-item>
           </div>
+
+          <a-button
+            style="margin-top: 10px"
+            v-if="this.editPass===false && this.edit===false &&this.forgetPass===false"
+            block
+            ghost
+            @click="changeEditPassStatus"
+          >修改密码</a-button>
+
+           <a-button
+            style="margin-top: 10px"
+            v-if="this.editPass===false && this.edit===false &&this.forgetPass===false"
+            block
+            ghost
+            @click="changeForgetPassStatus"
+          >忘记密码</a-button>
+          <!-- <a-button v-if="this.editPass===true" block ghost @click="savePassWord">保存密码</a-button> -->
         </a-col>
 
         <a-col :span="10" :offset="2">
           <br />
           <br />
           <br />
-          <div v-if="this.edit===false">
+          <div v-if="this.edit===false && this.editPass===false && this.forgetPass===false ">
             <a-row>
               <a-col :span="3">
                 <span class="set-lable">姓名</span>
               </a-col>
               <a-col :span="16" :offset="2">
-                <span class="set-content">{{info.username}}</span>
+                <span class="set-content">{{info.name}}</span>
               </a-col>
             </a-row>
 
@@ -147,8 +168,8 @@
                 <span class="set-lable">性别</span>
               </a-col>
               <a-col :span="17" :offset="2">
-                <span v-if="info.gender===0" class="set-content">男</span>
-                <span v-else class="set-content">女</span>
+                <span v-if="info.gender==0" class="set-content">男</span>
+                <span v-else-if="info.gender==1" class="set-content">女</span>
               </a-col>
             </a-row>
             <br />
@@ -171,7 +192,7 @@
             </a-row>
           </div>
 
-          <div v-else>
+          <div v-else-if="this.edit===true && this.editPass===false && this.forgetPass===false">
             <!-- <a-form
             style="margin-left:60px"
             name="custom-validation"
@@ -187,8 +208,8 @@
                 <span class="set-lable">姓名</span>
               </a-col>
               <a-col :span="19" :offset="2">
-                <a-form-item required has-feedback name="username">
-                  <a-input v-model:value="ruleForm.username" />
+                <a-form-item required has-feedback name="name">
+                  <a-input v-model:value="ruleForm.name" />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -241,6 +262,124 @@
             </a-row>
             <!-- </a-form> -->
           </div>
+
+          <div v-else-if="this.edit===false && this.editPass===true && this.forgetPass===false">
+            <a-form
+              name="passwordChange"
+              ref="passwordChange"
+              :model="passwordChange"
+              :rules="passRules"
+              v-bind="layout"
+              @finish="handleSavePass"
+              @finishFailed="handleFinishFailed"
+            >
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">原密码</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item required has-feedback name="old">
+                    <a-input v-model:value="passwordChange.old" type="password" autocomplete="off" />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">新密码</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item required has-feedback name="new">
+                    <a-input v-model:value="passwordChange.new" type="password" autocomplete="off" />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">密码确认</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item has-feedback name="newCheck">
+                    <a-input
+                      v-model:value="passwordChange.newCheck"
+                      type="password"
+                      autocomplete="off"
+                    />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <a-form-item>
+                    <a-button v-if="this.editPass===true" ghost html-type="submit">保存密码</a-button>
+                    <!-- <a-button type="primary" html-type="submit">Submit</a-button> -->
+                  </a-form-item>
+                </a-col>
+                <a-col :span="19" :offset="2"></a-col>
+              </a-row>
+            </a-form>
+          </div>
+
+           <div v-else-if="this.edit===false && this.forgetPass===true  && this.editPass===false">
+            <a-form
+              name="passwordChange"
+              ref="passwordChange"
+              :model="passwordChange"
+              :rules="passRules"
+              v-bind="layout"
+              @finish="handleSavePass"
+              @finishFailed="handleFinishFailed"
+            >
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">验证码</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item required has-feedback name="old">
+                    <a-input v-model:value="passwordChange.old"  autocomplete="off" />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">新密码</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item required has-feedback name="new">
+                    <a-input v-model:value="passwordChange.new" type="password" autocomplete="off" />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <span class="set-lable">密码确认</span>
+                </a-col>
+                <a-col :span="19" :offset="2">
+                  <a-form-item has-feedback name="newCheck">
+                    <a-input
+                      v-model:value="passwordChange.newCheck"
+                      type="password"
+                      autocomplete="off"
+                    />
+                  </a-form-item>
+                </a-col>
+              </a-row>
+
+              <a-row>
+                <a-col :span="3">
+                  <a-form-item>
+                    <a-button v-if="this.editPass===true" ghost html-type="submit">保存密码</a-button>
+                    <!-- <a-button type="primary" html-type="submit">Submit</a-button> -->
+                  </a-form-item>
+                </a-col>
+                <a-col :span="19" :offset="2"></a-col>
+              </a-row>
+            </a-form>
+          </div>
         </a-col>
       </a-row>
 
@@ -269,7 +408,7 @@ import {
   FormOutlined,
   CopyOutlined
 } from "@ant-design/icons-vue";
-import { postRequest, getRequest } from "@/http/request.js";
+import { postRequest, getRequest ,putRequest} from "@/http/request.js";
 
 function getBase64(img, callback) {
   const reader = new FileReader();
@@ -326,6 +465,35 @@ export default {
         return Promise.resolve();
       }
     };
+    let validatePass = async (rule, value) => {
+      if (value === "") {
+        return Promise.reject("请输入密码");
+      } else {
+        if (value !== "") {
+          var reg = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,16}$/;
+          if (!reg.test(value))
+            return Promise.reject("需包含大小写字母和数字，至少8位");
+        }
+        if (this.ruleForm.checkPass !== "") {
+          this.$refs.ruleForm.validateField("checkPass");
+        }
+        return Promise.resolve();
+      }
+    };
+    let validatePass2 = async (rule, value, callback) => {
+      if (value === "") {
+        return Promise.reject("请再次输入密码");
+      } else if (value !== this.passwordChange.new) {
+        return Promise.reject("确认密码与密码不相同");
+      } else {
+        if (value !== "") {
+          var reg = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,16}$/;
+          if (!reg.test(value))
+            return Promise.reject("需包含大小写字母和数字，至少8位");
+        }
+        return Promise.resolve();
+      }
+    };
 
     return {
       fileList: [],
@@ -337,17 +505,35 @@ export default {
       },
       info: {},
       edit: false,
+      editPass: false,
+      forgetPass:false,
       ruleForm: {
-        username: "",
+        name: "",
         nickname: "",
         email: "",
-        gender: 0,
+        gender: 3,
         icon: "",
         profile: ""
       },
+      passwordChange: {
+        old: "",
+        new: "",
+        newCheck: ""
+      },
+      passwordForget: {
+        verify:"",
+        new: "",
+        newCheck: ""
+      },
+      
+      passRules: {
+        old: [{ validator: validatePass, trigger: "change" }],
+        new: [{ validator: validatePass, trigger: "change" }],
+        newCheck: [{ validator: validatePass2, trigger: "change" }]
+      },
       rules: {
         email: [{ validator: checkEmail, trigger: "change" }],
-        username: [{ validator: checkName, trigger: "change" }],
+        name: [{ validator: checkName, trigger: "change" }],
         nickname: [{ validator: checkNickName, trigger: "change" }],
         gender: [{ validator: checkGender, trigger: "change" }]
         // icon: [{ validator: checkIcon }]
@@ -369,13 +555,13 @@ export default {
       },
       params: { id: uid }
     });
-    this.imageUrl =JSON.parse(sessionStorage.getItem("user")).icon;
+    this.imageUrl = JSON.parse(sessionStorage.getItem("user")).icon;
     // this.ruleForm.username = this.info.username;
 
     // this.ruleForm.nickname = this.info.nickname;
     // this.ruleForm.email = this.info.email;
     // this.ruleForm.gender = this.info.gender.toString();
-    
+
     // this.ruleForm.icon = this.info.icon;
     // this.ruleForm.profile = this.info.profile;
   },
@@ -383,13 +569,13 @@ export default {
     handleCallback(response) {
       console.log(response);
       this.info = response.result;
-      this.imageUrl=this.info.icon;
+      this.imageUrl = this.info.icon;
     },
 
     handleFinish() {
       console.log(this.ruleForm);
       console.log("finished");
-      postRequest("/publicInfo", this.ruleForm, this.mycallback, {
+      putRequest("/publicInfo", this.ruleForm, this.mycallback, {
         errorCallback: error => {
           console.log(JSON.stringify(error));
         }
@@ -397,7 +583,7 @@ export default {
     },
     mycallback(response) {
       if (response.code === 0) {
-        this.info.nickname = this.ruleForm.username;
+        this.info.nickname = this.ruleForm.name;
         this.info.nickname = this.ruleForm.nickname;
         this.info.email = this.ruleForm.email;
         this.info.gender = this.ruleForm.gender.toString();
@@ -409,7 +595,7 @@ export default {
       console.log(JSON.stringify(errors));
     },
     changeEditStatus() {
-      this.ruleForm.username = this.info.username;
+      this.ruleForm.name = this.info.name;
 
       this.ruleForm.nickname = this.info.nickname;
       this.ruleForm.email = this.info.email;
@@ -419,8 +605,15 @@ export default {
       this.ruleForm.profile = this.info.profile;
       this.edit = !this.edit;
     },
+    changeEditPassStatus() {
+      this.editPass = !this.editPass;
+    },
+    changeForgetPassStatus()
+    {
+      this.forgetPass =!this.forgetPass;
+    },
     handleCancle() {
-      this.ruleForm.username = this.info.username;
+      this.ruleForm.name = this.info.name;
       this.ruleForm.nickname = this.info.nickname;
       this.ruleForm.email = this.info.email;
       this.ruleForm.gender = this.info.gender;
@@ -458,6 +651,33 @@ export default {
         message.error("Image must smaller than 2MB!");
       }
       return isJpgOrPng && isLt2M;
+    },
+    passCallback(res)
+    {
+      if(res.code===1)
+      {
+        if(res.type===0)
+        {
+          message.error("更新密码失败：原密码输入错误")
+        }
+        else{
+           message.error("更新密码失败")
+        }
+      }
+      else if(res.code===0)
+      {
+        message.success("更新密码成功")
+        this.editPass=!this.editPass
+      }
+    },
+    handleSavePass()
+    {
+      console.log("change pass")
+      postRequest("/passwd",this.passwordChange,this.passCallback,{
+        errorCallback: error => {
+          console.log(JSON.stringify(error));
+        }
+      })
     }
   }
 };

@@ -5,7 +5,7 @@
       <MenuFoldOutlined v-else />
     </a-button>
     <a-menu
-      :default-selected-keys="['1']"
+      :default-selected-keys="['6']"
       mode="inline"
       :inline-collapsed="collapsed"
     >

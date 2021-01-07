@@ -18,7 +18,7 @@
               :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
             >
               <a-spin v-if="loadingMore" />
-              <a-button v-else @click="onLoadMore">加载更多</a-button>
+              <a-button v-else-if="!loading" @click="onLoadMore">加载更多</a-button>
             </div>
           </template>
           <template #renderItem="{ item, index }">
@@ -49,104 +49,6 @@ import {
 } from "@ant-design/icons-vue";
 import SubMenu from "../../components/PersonalNavigation";
 import AnswerForPersonal from "../../components/AnswerForPersonal";
-const data = [
-  {
-    question: {
-      qid: "234",
-      title: "Favourite programming language?",
-      category: "study",
-      labels: ["programming"],
-      head: "What if we put"
-    },
-    answer: {
-      aid: "234",
-      like_count: 2,
-      criticism_count: 4,
-      approval_count: 2,
-      comment_count: 2,
-      head:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
-      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前f",
-      time: "2015-08-05T08:40:51.620Z",
-      pictureUrls: [
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-      ]
-    }
-  },
-  {
-    question: {
-      qid: "234",
-      title: "Favourite programming language?",
-      category: "study",
-      labels: ["programming"],
-      head: "What if we put"
-    },
-    answer: {
-      aid: "234",
-      like_count: 2,
-      criticism_count: 4,
-      approval_count: 2,
-      comment_count: 2,
-      head:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
-      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前f",
-      time: "2015-08-05T08:40:51.620Z",
-      pictureUrls: [
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-      ]
-    }
-  },
-  {
-    question: {
-      qid: "234",
-      title: "Favourite programming language?",
-      category: "study",
-      labels: ["programming"],
-      head: "What if we put"
-    },
-    answer: {
-      aid: "234",
-      like_count: 2,
-      criticism_count: 4,
-      approval_count: 2,
-      comment_count: 2,
-      head:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
-      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前f",
-      time: "2015-08-05T08:40:51.620Z",
-      pictureUrls: [
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-      ]
-    }
-  },
-  {
-    question: {
-      qid: "234",
-      title: "Favourite programming language?",
-      category: "study",
-      labels: ["programming"],
-      head: "What if we put"
-    },
-    answer: {
-      aid: "234",
-      like_count: 2,
-      criticism_count: 4,
-      approval_count: 2,
-      comment_count: 2,
-      head:
-        "近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前往花店协商未果，拍照发差评却被打\
-      近日，有消息称上海一花店老板因差评进校骚扰上海交通大学密西根学院学生一事引发关注。当事学生在网上发帖称其买到的花与预定样子不符，前f",
-      time: "2015-08-05T08:40:51.620Z",
-      pictureUrls: [
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png",
-        "https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-      ]
-    }
-  }
-];
 export default {
   components: {
     UserOutlined,
@@ -160,7 +62,7 @@ export default {
     return {
       answerData: [],
       loading: true,
-      loadingMore: false,
+      loadingMore:false,
       showLoadingMore: true,
       pageNum: 0
     };
@@ -171,6 +73,7 @@ export default {
       console.log(res.result);
       this.loading = false;
       this.answerData = res.result;
+      this.loadingMore=false;
       this.pageNum = this.pageNum + 1;
     });
   },
@@ -187,6 +90,7 @@ export default {
       });
     },
     onLoadMore() {
+      this.loadingMore=true;
       this.getData(res => {
         this.answerData = this.answerData.concat(res.result);
         this.loadingMore = false;
