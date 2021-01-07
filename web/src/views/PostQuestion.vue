@@ -37,8 +37,8 @@
 </template>
 
 <script>
-import {postRequest} from "@/http/request";
 import {message} from "ant-design-vue";
+import { postRequest,getRequest } from "@/http/request.js";
 
 export default {
   data(){
@@ -47,8 +47,29 @@ export default {
       category:"study",
       title:"",
       labelString:"",
-      labels:[]
+      labels:[],
+      qid:null
     };
+  },
+  created() {
+    let p= this.$route.query.questionId;
+    if (p!=null){
+      this.qid=p;
+      getRequest("/question",
+          (response)=>{
+            this.questionValue=response.result.content;
+            this.title=response.result.title;
+            this.category=response.result.category;
+            for (var i=0;i<response.result.labels.length;++i){
+              this.labelString=this.labelString.concat(response.result.labels[i]).concat("#");
+            }
+            console.log(response);
+          }, {
+            errorCallback:(e)=>{console.log(e)},
+            params:{qid:p}
+          });
+    }
+
   },
   methods: {
     onPostQuestion(){
@@ -58,21 +79,41 @@ export default {
         this.labels=this.labels.concat(this.labelString.slice(start,end));
         start=end+1;
       }
-      postRequest("/questions",
-          {
-            title:this.title,
-            content:this.questionValue,
-            labels:this.labels,
-            category:this.category,
-          },(e)=>{
-        //console.log(e);
-            if (e.code==0){
-              message.success("发布成功");
-              this.$router.push({ path:'/question' , query: { questionId: e.result.qid } });
-            }
-          },{errorCallback:(e)=>{
-              console.log(e);
-            }});
+      if (this.qid!=null){
+        postRequest("/questions",
+            {
+              qid:this.qid,
+              title:this.title,
+              content:this.questionValue,
+              labels:this.labels,
+              category:this.category,
+            },(e)=>{
+              //console.log(e);
+              if (e.code==0){
+                message.success("发布成功");
+                this.$router.push({ path:'/question' , query: { questionId: this.qid } });
+              }
+            },{errorCallback:(e)=>{
+                console.log(e);
+              }});
+      }
+      else {
+        postRequest("/questions",
+            {
+              title:this.title,
+              content:this.questionValue,
+              labels:this.labels,
+              category:this.category,
+            },(e)=>{
+              //console.log(e);
+              if (e.code==0){
+                message.success("发布成功");
+                this.$router.push({ path:'/question' , query: { questionId: e.result.qid } });
+              }
+            },{errorCallback:(e)=>{
+                console.log(e);
+              }});
+      }
     }
   },
 }

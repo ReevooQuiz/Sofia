@@ -12,6 +12,20 @@
     </a-col>
     <a-col :span="12">
       <QuestionForSearch v-for="(item) in recommendedQuestionData" v-bind:key="item.qid" :ques="item" />
+      <a-row type="flex" justify="space-around" >
+        <a-col>
+          <div
+              v-if="showLoadingMore"
+              :style="{ textAlign: 'center', marginTop: '12px', height: '32px', lineHeight: '32px' }"
+          >
+            <a-spin v-if="loadingMore" />
+            <a-button v-else @click="onLoadMore">
+              加载更多
+            </a-button>
+          </div>
+          <div v-else>已经到底了</div>
+        </a-col>
+      </a-row>
     </a-col>
     <a-col :span="4">
       <a-table
@@ -78,16 +92,13 @@ export default {
       recommendedQuestionData: [],
       hotRankData:[],
       columns,
+      pageNow:0,
+      showLoadingMore: true,
+      loadingMore:true
     };
   },
   created() {
-    getRequest("/questions",
-        (response)=>{
-          this.recommendedQuestionData=response.result;
-        }, {
-          errorCallback:(e)=>{console.log(e)},
-          params:{}
-        });
+    this.getQuestions();
     getRequest("/hotlist",
         (response)=>{
           this.hotRankData=response.result;
@@ -101,6 +112,37 @@ export default {
           errorCallback:(e)=>{console.log(e)},
           params:{}
         });
+  },
+  methods:{
+    onLoadMore(){
+      this.loadingMore = true;
+      this.getQuestions();
+    },
+    getQuestions(){
+      getRequest("/questions",
+          (response)=>{
+        this.getQuestionCallback(response);
+          }, {
+            errorCallback:(e)=>{console.log(e)},
+            params:{category:"all",page:this.pageNow++}
+          });
+    },
+    getQuestionCallback(e){
+      this.loadingMore=false;
+      if (e.result.length==0)
+        this.showLoadingMore=false;
+      else {
+        let empty = true;
+        for (let i=0; i<e.result.length; ++i)
+          if (!e.result[i].has_keywords) {
+            this.recommendedQuestionData.push(e.result[i]);
+            empty=false;
+          }
+        if (empty)
+          this.getQuestions();
+
+      }
+    },
   }
 }
 </script>

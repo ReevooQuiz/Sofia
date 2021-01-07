@@ -13,7 +13,7 @@ import 'ant-design-vue/dist/antd.less';
 // import './mock.js'
 import moment from 'moment';
 import 'moment/locale/zh-cn';
-import Vuex from 'vuex'
+//import Vuex from 'vuex'
 moment.locale('zh-cn');
 
 // import { store, key } from './store'
@@ -32,4 +32,4 @@ createApp(App)
   .use(VueMarkdownEditor)
   // .use(store, key)
   .mount("#app");
- 
+

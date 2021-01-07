@@ -2,11 +2,13 @@
   <div id="questionHead">
     <a-card hoverable :title="ques.title" size="small" style="border-radius : 3px">
       <template #extra>
-        <!-- <a-tag v-for="(item) in ques.tags" v-bind:key="item.tid">
-          {{111}}
-        </a-tag> -->
+        <a-tag color="#68b0af" style="margin-top:10px">
+          <a-tooltip title="分区">
+            <DatabaseOutlined />
+            {{ques.category}}
+          </a-tooltip>
+        </a-tag>
       </template>
-
       <a-row>
         <a-col :span="22">
           <!-- <template> -->
@@ -42,6 +44,14 @@
               </a-tooltip>
             </template>
           </a-comment>
+          <a-divider />
+
+          <a-tag
+              v-for="(item) in ques.labels"
+              v-bind:key="item.index"
+              color="#88d5d1"
+              style="margin-top:10px"
+          >{{item}}</a-tag>
         </a-col>
         <a-col :span="2" align="center">
           <h2>{{ques.category}}</h2>
