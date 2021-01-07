@@ -20,7 +20,7 @@
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
         <!-- <a-menu-item key="explore">探索</a-menu-item> -->
         <a-menu-item  v-if="admin" key="ban">
-          <router-link to="/ban">封禁</router-link></a-menu-item>
+          <router-link v-if="admin" to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
           <router-link to="/personalSet">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">

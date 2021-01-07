@@ -70,7 +70,7 @@
           <br />
           <!-- <a-tag color="#88d5d1">
             <VerifiedOutlined />学习区专家
-          </a-tag>-->
+          </a-tag> -->
           <a-tag color="#88d5d1">
             <FireOutlined />
             等级 {{info.level}}
@@ -444,7 +444,7 @@ import {
   LikeOutlined,
   FormOutlined,
   CopyOutlined
- 
+
 } from "@ant-design/icons-vue";
 import { postRequest, getRequest, putRequest } from "@/http/request.js";
 
@@ -576,6 +576,22 @@ export default {
         new: [{ validator: validatePass, trigger: "change" }],
         newCheck: [{ validator: validatePass2, trigger: "change" }]
       },
+      passwordChange: {
+        old: "",
+        new: "",
+        newCheck: ""
+      },
+      passwordForget: {
+        verify:"",
+        new: "",
+        newCheck: ""
+      },
+
+      passRules: {
+        old: [{ validator: validatePass, trigger: "change" }],
+        new: [{ validator: validatePass, trigger: "change" }],
+        newCheck: [{ validator: validatePass2, trigger: "change" }]
+      },
       rules: {
         email: [{ validator: checkEmail, trigger: "change" }],
         name: [{ validator: checkName, trigger: "change" }],
@@ -637,7 +653,7 @@ export default {
         }
       });
       }
-     
+
     },
     mycallback(response) {
       if (response.code === 0) {
@@ -742,7 +758,7 @@ export default {
       this.tags = tags;
       this.ruleForm.labels=this.tags;
       // }
-      
+
     },
 
     showInput() {
@@ -753,7 +769,7 @@ export default {
     },
 
     handleInputConfirm() {
-      
+
       const inputValue = this.inputValue;
 
       if(inputValue.length>6)
@@ -772,10 +788,10 @@ export default {
         inputValue: '',
       });
 
-      
+
       this.ruleForm.labels=this.tags;
       }
-     
+
     },
   }
 };

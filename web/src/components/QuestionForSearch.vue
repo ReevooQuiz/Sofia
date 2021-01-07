@@ -57,7 +57,7 @@
                   {{ques.answer_count}}
                 </a-tooltip>
               </span>
-             
+
             </template>
           </a-comment>
           <a-divider />
