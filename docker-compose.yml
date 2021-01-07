@@ -1,6 +1,19 @@
 version: '3.2'
 
 services:
+  search-service:
+    image: sofia2021/search-service:latest
+    hostname: search-service
+    restart: always
+    volumes:
+      - ../credentials.env:/credentials.env
+    ports:
+      - "9094:9094"
+    labels:
+      - "traefik.http.routers.search-service-sofia.rule=Path(`/searchQuestions`) || Path(`/searchAnswers`) || Path(`/searchUsers`) || Path(`/hotlist`) || Path(`/search`)"
+    networks:
+      - sofia
+
   qa-service:
     image: sofia2021/qa-service:latest
     hostname: qa-service

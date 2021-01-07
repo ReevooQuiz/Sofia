@@ -64,6 +64,7 @@ func (u *UsersController) Destruct() {
 }
 
 func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqApprove
 	var res service.ResApprove
@@ -84,6 +85,7 @@ func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqBan
 	var res service.ResBan
@@ -104,6 +106,7 @@ func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResBanned
 	err := r.ParseForm()
@@ -134,6 +137,7 @@ func (u *UsersController) Banned(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	res, err := u.usersService.CheckSession(r.Header.Get("Authorization"))
 	if err != nil {
@@ -144,6 +148,7 @@ func (u *UsersController) CheckSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCheckToken
 	err := r.ParseForm()
@@ -163,6 +168,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Collection(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCollection
 	err := r.ParseForm()
@@ -193,6 +199,7 @@ func (u *UsersController) Collection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Favorite(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqFavorite
 	var res service.ResFavorite
@@ -213,6 +220,7 @@ func (u *UsersController) Favorite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqFollow
 	var res service.ResFollow
@@ -233,6 +241,7 @@ func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Followed(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResFollowed
 	err := r.ParseForm()
@@ -261,6 +270,7 @@ func (u *UsersController) Followed(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Followers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResFollowers
 	err := r.ParseForm()
@@ -289,6 +299,7 @@ func (u *UsersController) Followers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqInfoList
 	var res service.ResInfoList
@@ -309,6 +320,7 @@ func (u *UsersController) InfoList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqLike
 	var res service.ResLike
@@ -329,6 +341,7 @@ func (u *UsersController) Like(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqLogin
 	var res service.ResLogin
@@ -350,6 +363,7 @@ func (u *UsersController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResNotifications
 	err := r.ParseForm()
@@ -380,6 +394,7 @@ func (u *UsersController) Notifications(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResOAuthGithub
 	err := r.ParseForm()
@@ -400,6 +415,7 @@ func (u *UsersController) OAuthGithub(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqPasswd
 	var res service.ResPasswd
@@ -421,6 +437,7 @@ func (u *UsersController) Passwd(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if r.Method == "GET" {
 		var res service.ResPublicInfoGet
@@ -470,6 +487,7 @@ func (u *UsersController) PublicInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqRefreshToken
 	var res service.ResRefreshToken
@@ -491,6 +509,7 @@ func (u *UsersController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqRegister
 	var res service.ResRegister
@@ -512,6 +531,7 @@ func (u *UsersController) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResUserAnswers
 	err := r.ParseForm()
@@ -551,6 +571,7 @@ func (u *UsersController) UserAnswers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResUserQuestions
 	err := r.ParseForm()
@@ -590,6 +611,7 @@ func (u *UsersController) UserQuestions(w http.ResponseWriter, r *http.Request) 
 }
 
 func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResVerificationCode
 	err := r.ParseForm()
@@ -609,6 +631,7 @@ func (u *UsersController) VerificationCode(w http.ResponseWriter, r *http.Reques
 }
 
 func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResVerify
 	err := r.ParseForm()
@@ -637,6 +660,7 @@ func (u *UsersController) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var req service.ReqWordBan
 	var res service.ResWordBan
@@ -657,6 +681,7 @@ func (u *UsersController) WordBan(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) WordsBanned(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResWordsBanned
 	err := r.ParseForm()
