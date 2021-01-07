@@ -8,7 +8,7 @@
         </a-col>
         <a-col :span="9" :offset="1">
           请输入您想标注的标签
-          <a-textarea v-model:value="labelString" placeholder="格式：label1#label2#" showCount :maxlength="100" />
+          <a-textarea v-model:value="labelString" placeholder="格式：label1#label2#" showCount :maxlength="200" />
         </a-col>
       </a-row>
       <v-md-editor v-model="questionValue" height="400px"></v-md-editor>
@@ -24,9 +24,6 @@
         </a-select-option>
         <a-select-option value="life">
           生活
-        </a-select-option>
-        <a-select-option value="fashion">
-          时尚
         </a-select-option>
       </a-select>
       <br/>
@@ -73,11 +70,20 @@ export default {
   },
   methods: {
     onPostQuestion(){
-      let start=0,end=0;
+      let start=0,end=0,count=0;
       while (start<this.labelString.length){
+        if (count>=5){
+          message.error("label个数不应超过5个");
+          return;
+        }
         end=this.labelString.indexOf("#",start);
+        if (end-start>32){
+          message.error("单个label不应超过32个字符");
+          return;
+        }
         this.labels=this.labels.concat(this.labelString.slice(start,end));
         start=end+1;
+        count++;
       }
       if (this.qid!=null){
         postRequest("/questions",

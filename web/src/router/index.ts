@@ -46,6 +46,12 @@ const routes: Array<RouteRecordRaw> = [
       import(/* webpackChunkName: "about" */ "../views/Recommend.vue")
   },
   {
+    path: "/category",
+    name: "Category",
+    component: () =>
+        import(/* webpackChunkName: "about" */ "../views/Category.vue")
+  },
+  {
     path: "/postQuestion",
     name: "PostQuestion",
     meta: { requireAuth: true },
@@ -152,10 +158,10 @@ const router = createRouter({
 //   if(response.code===1)
 //   {
 //     sessionStorage.removeItem("user");
-    
+
 //   }
 // }
-// 路由守卫 
+// 路由守卫
 router.beforeEach((to, from, next) => {
 
   const flag = sessionStorage.getItem('user')
@@ -179,7 +185,7 @@ router.beforeEach((to, from, next) => {
       getRequest_checkSession((res)=>{
         if(res.code===1)
         {
-          sessionStorage.removeItem("user");    
+          sessionStorage.removeItem("user");
           next({
             path: '/login'
           })
@@ -188,21 +194,21 @@ router.beforeEach((to, from, next) => {
           console.log("check session time out")
         }
 
-      }    
+      }
       )
 
 
 
       if (to.meta.roles===0) {
-        if (role_check !== 0) { 
-          sessionStorage.removeItem("user");    
+        if (role_check !== 0) {
+          sessionStorage.removeItem("user");
           next({
             path: '/login'
           })
-        } else { 
+        } else {
           return next();
         }
-      } else {       
+      } else {
         return next();
       }
 
