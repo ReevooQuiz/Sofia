@@ -15,7 +15,8 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v2.1.2
       - name: Build with Gobuild
-        run: go build -o qa-service backend/qa-service
+        working-directory: backend/qa-service
+        run: go build -o qa-service .
       - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USER }}
              -p ${{ secrets.DOCKER_PASS }}
@@ -33,7 +34,8 @@ jobs:
       - name: Setup Go environment
         uses: actions/setup-go@v2.1.2
       - name: Build with Gobuild
-        run: go build -o users-service backend/users-service
+        working-directory: backend/users-service
+        run: go build -o users-service .
       - name: Login to Docker Hub
         run: docker login -u ${{ secrets.DOCKER_USER }}
              -p ${{ secrets.DOCKER_PASS }}
