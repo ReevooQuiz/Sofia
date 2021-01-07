@@ -90,7 +90,7 @@ func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity
 	var findErr error
 	var current entity.CommentDetails
 	for _, v := range comments {
-		findErr = ctx.session.DB("sofia").C("comment_details").FindId(v.Cmid).One(current)
+		findErr = ctx.session.DB("sofia").C("comment_details").FindId(v.Cmid).One(&current)
 		if findErr != nil {
 			log.Warn(findErr)
 			details = append(details, current)
@@ -105,7 +105,7 @@ func (q *QaDaoImpl) FindCriticismDetails(ctx TransactionContext, criticisms []en
 	var findErr error
 	var current entity.CriticismDetails
 	for _, v := range criticisms {
-		findErr = ctx.session.DB("sofia").C("criticism_details").FindId(v.Ctid).One(current)
+		findErr = ctx.session.DB("sofia").C("criticism_details").FindId(v.Ctid).One(&current)
 		if findErr != nil {
 			log.Warn(findErr)
 			details = append(details, current)
@@ -120,7 +120,7 @@ func (q *QaDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []enti
 	var findErr error
 	var current entity.QuestionDetails
 	for _, v := range questions {
-		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(current)
+		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(&current)
 		if findErr != nil {
 			log.Warn(findErr)
 			questionDetails = append(questionDetails, current)
@@ -135,7 +135,7 @@ func (q *QaDaoImpl) FindAnswerDetails(ctx TransactionContext, answers []entity.A
 	var findErr error
 	var current entity.AnswerDetails
 	for _, v := range answers {
-		findErr = ctx.session.DB("sofia").C("answer_details").FindId(v.Aid).One(current)
+		findErr = ctx.session.DB("sofia").C("answer_details").FindId(v.Aid).One(&current)
 		if findErr != nil {
 			log.Info(findErr)
 			answerDetails = append(answerDetails, current)

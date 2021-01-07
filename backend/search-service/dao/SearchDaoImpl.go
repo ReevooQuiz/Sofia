@@ -148,7 +148,7 @@ func (s *SearchDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []
 	var findErr error
 	var current entity.QuestionDetails
 	for _, v := range questions {
-		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(current)
+		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(&current)
 		if findErr != nil {
 			log.Warn(findErr)
 			questionDetails = append(questionDetails, current)
@@ -200,7 +200,7 @@ func (s *SearchDaoImpl) SearchAnswers(ctx TransactionContext, page int64, text s
 		Find(bson.M{"$text": bson.M{"$search": text}}).
 		Skip(int(page * PageSize)).
 		Limit(PageSize).
-		All(details)
+		All(&details)
 	return
 }
 
