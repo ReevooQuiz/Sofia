@@ -25,6 +25,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		return server
 	}
 	server = &http.Server{Addr: ":9092"}
+	http.HandleFunc("/approve", u.Approve)
 	http.HandleFunc("/ban", u.Ban)
 	http.HandleFunc("/banned", u.Banned)
 	http.HandleFunc("/checkSession", u.CheckSession)
@@ -58,6 +59,25 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 
 func (u *UsersController) Destruct() {
 	u.usersService.Destruct()
+}
+
+func (u *UsersController) Approve(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqApprove
+	var res service.ResApprove
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Approve(r.Header.Get("Authorization"), req)
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
 }
 
 func (u *UsersController) Ban(w http.ResponseWriter, r *http.Request) {
@@ -136,8 +156,9 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqFollow
 	var res service.ResFollow
-	err := r.ParseForm()
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		log.Info(err)
 		res.Code = 1
@@ -145,16 +166,7 @@ func (u *UsersController) Follow(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(object)
 		return
 	}
-	var uid int64
-	uid, err = strconv.ParseInt(r.FormValue("uid"), 10, 64)
-	if err != nil {
-		log.Info(err)
-		res.Code = 1
-		object, _ := json.Marshal(res)
-		_, _ = w.Write(object)
-		return
-	}
-	res, err = u.usersService.Follow(r.Header.Get("Authorization"), uid, r.FormValue("follow") == "true")
+	res, err = u.usersService.Follow(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}

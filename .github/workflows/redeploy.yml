@@ -8,8 +8,6 @@ jobs:
   docker-qa-service:
     name: Publish - Docker Hub
     runs-on: ubuntu-latest
-    env:
-      REPO: ${{ secrets.DOCKER_REPO }}
     steps:
       - uses: actions/checkout@v2
       - name: Setup Go environment
@@ -22,14 +20,12 @@ jobs:
              -p ${{ secrets.DOCKER_PASS }}
       - name: Build Docker image
         working-directory: backend/qa-service
-        run: docker build -t qa-service:latest -t qa-service:${GITHUB_SHA::8} .
+        run: docker build -t sofia2021/qa-service:latest -t sofia2021/qa-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
-        run: docker push qa-service:latest
+        run: docker push sofia2021/qa-service
   docker-users-service:
     name: Publish - Docker Hub
     runs-on: ubuntu-latest
-    env:
-      REPO: ${{ secrets.DOCKER_REPO }}
     steps:
       - uses: actions/checkout@v2
       - name: Setup Go environment
@@ -42,9 +38,9 @@ jobs:
              -p ${{ secrets.DOCKER_PASS }}
       - name: Build Docker image
         working-directory: backend/users-service
-        run: docker build -t users-service:latest -t users-service:${GITHUB_SHA::8} .
+        run: docker build -t sofia2021/users-service:latest -t sofia2021/users-service:${GITHUB_SHA::8} .
       - name: Publish Docker image
-        run: docker push users-service:latest
+        run: docker push sofia2021/users-service
   redeploy:
     name: Redeploy webhook call
     runs-on: ubuntu-18.04
