@@ -249,9 +249,21 @@ func TestControllerAnswers(t *testing.T) {
 			a.Equal(want, res)
 		})
 	}
+}
 
-	/******************************************* DELETE *********************************************/
-	t.Log("Testing DEL")
+func TestControllerDeleteAnswer(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/delete_answer", q.DeleteAnswer)
+
+	/******************************************* POST *********************************************/
+	t.Log("Testing POST")
 	delTests := []struct {
 		name       string
 		token      string
@@ -293,7 +305,7 @@ func TestControllerAnswers(t *testing.T) {
 				mockQaService.EXPECT().DeleteAnswer(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
 			}
 			body, _ := json.Marshal(tt.req)
-			r, _ := http.NewRequest("DELETE", "/answers", bytes.NewReader(body))
+			r, _ := http.NewRequest("POST", "/delete_answer", bytes.NewReader(body))
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
@@ -542,9 +554,21 @@ func TestControllerQuestions(t *testing.T) {
 			}
 		})
 	}
+}
 
-	/******************************************* DELETE *********************************************/
-	t.Log("Testing DEL")
+func TestControllerDisableQuestion(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/disable_question", q.DisableQuestion)
+
+	/******************************************* POST *********************************************/
+	t.Log("Testing POST")
 	delTests := []struct {
 		name       string
 		token      string
@@ -586,7 +610,7 @@ func TestControllerQuestions(t *testing.T) {
 				mockQaService.EXPECT().DeleteQuestion(tt.mockToken, tt.req).Return(tt.mockCode, tt.mockResult)
 			}
 			body, _ := json.Marshal(tt.req)
-			r, _ := http.NewRequest("DELETE", "/questions", bytes.NewReader(body))
+			r, _ := http.NewRequest("POST", "/disable_question", bytes.NewReader(body))
 			r.Header.Set("Authorization", tt.token)
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, r)
