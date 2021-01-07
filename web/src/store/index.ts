@@ -1,16 +1,36 @@
-// import { InjectionKey } from 'vue'
-// // import { createStore, Store } from 'vuex'
+import { InjectionKey } from 'vue';
+import { createStore, useStore as baseUseStore, Store } from 'vuex';
 
-// // define your typings for the store state
-// export interface State {
-//   count: number
-// }
+export interface State {
+    navIcon: string,
+    navTarget: string,
+    count: number,
+    logStatus:boolean
+}
 
-// // define injection key
-// export const key: InjectionKey<Store<State>> = Symbol()
+export const key: InjectionKey<Store<State>> = Symbol()
 
-// export const store = createStore<State>({
-//   state: {
-//     count: 0
-//   }
-// })
+export const store = createStore<State>({
+    state: {
+        navIcon: "",
+        navTarget:"home",
+        count: 0,
+        logStatus:false,
+    },
+    mutations: {
+        changeTarget(state,newTarget){
+            state.navTarget=newTarget;
+        },
+        changeIcon(state,newIcon){
+            state.navIcon=newIcon;
+        },
+        changeLogStatus(state,newStatus){
+            state.logStatus=newStatus;
+        }
+    }
+})
+
+// define your own `useStore` composition function
+export function useStore () {
+    return baseUseStore(key)
+}

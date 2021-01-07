@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
 import { getRequest_checkSession} from "@/http/request.js";
+import { useStore } from '../store/index'
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",

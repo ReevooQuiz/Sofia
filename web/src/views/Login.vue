@@ -90,9 +90,11 @@ export default {
       // 问题： 应该返回头像信息
       console.log(response);
       if (response.code == 0) {
+        this.$store.commit("changeLogStatus",true);
         message.success("登录成功");
 
         console.log(response.result);
+        this.$store.commit("changeIcon",response.result.icon);
         sessionStorage.setItem("user", JSON.stringify(response.result));
         // this.$store.commit('modify',"改变值！")
         //  this.$store.state.loginStatus=true;

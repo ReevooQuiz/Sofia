@@ -94,7 +94,7 @@ export default {
     };
   },
   created() {
-    //**************TODO check admin***************
+    this.$store.commit('changeTarget','hotRank');
     getRequest("/hotlist",
         (response)=>{
           this.hotRankData=response.result;
