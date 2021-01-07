@@ -53,7 +53,7 @@ type KListItem struct {
 
 const (
 	PageSize       = 5
-	questionFields = "qid,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
+	questionFields = "qid,closed,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 	answerFields   = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
 	HotListSize    = 10
 	KListSize = 3
@@ -115,6 +115,7 @@ func (s *SearchDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Question
 	for rows.Next() {
 		err = rows.Scan(
 			&it.Qid,
+			&it.Closed,
 			&it.Raiser,
 			&it.Category,
 			&it.AcceptedAnswer,

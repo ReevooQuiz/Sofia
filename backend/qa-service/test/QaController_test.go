@@ -267,7 +267,7 @@ func TestControllerDeleteAnswer(t *testing.T) {
 	delTests := []struct {
 		name       string
 		token      string
-		aid int64
+		aid        int64
 		req        service.ReqAnswersDelete
 		mock       bool
 		mockToken  string
@@ -572,7 +572,7 @@ func TestControllerDisableQuestion(t *testing.T) {
 	delTests := []struct {
 		name       string
 		token      string
-		qid int64
+		qid        int64
 		req        service.ReqQuestionsDelete
 		mock       bool
 		mockToken  string

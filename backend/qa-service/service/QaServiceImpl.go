@@ -93,6 +93,7 @@ type Owner struct {
 
 type QuestionListItem struct {
 	HasKeywords   bool     `json:"has_keywords"`
+	Closed        bool     `json:"closed"`
 	Qid           string   `json:"qid"`
 	Owner         Owner    `json:"raiser"`
 	Title         string   `json:"title"`
@@ -108,6 +109,7 @@ type QuestionListItem struct {
 
 type QuestionInfo struct {
 	HasKeywords   bool     `json:"has_keywords"`
+	Closed        bool     `json:"closed"`
 	Qid           string   `json:"qid"`
 	Owner         Owner    `json:"raiser"`
 	Title         string   `json:"title"`
@@ -234,6 +236,7 @@ func (q *QaServiceImpl) QuestionListResponse(uid int64, role int8, questions []e
 	for i, v := range questions {
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
+		res[i].Closed = v.Closed
 		if uid != v.Raiser && role != ADMIN && MatchKeywords(&v.Title, keywords) {
 			res[i].Title = "[标题包含敏感词，已屏蔽]"
 		} else {
@@ -762,6 +765,7 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	qs := question[0]
 	var res QuestionInfo
 	res.Qid = strconv.FormatInt(qs.Qid, 10)
+	res.Closed = qs.Closed
 	if uid == qs.Raiser || role == ADMIN || MatchKeywords(&qs.Title, &keywords) {
 		res.Title = "[标题包含敏感词，已屏蔽]"
 	} else {

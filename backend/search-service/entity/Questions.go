@@ -15,5 +15,6 @@ type Questions struct {
 	FavoriteCount  int64         `json:"favorite_count"`
 	Time           int64         `json:"time"`
 	Labels         []string      `json:"labels"`
+	Closed         bool          `json:"closed"`
 	Scanned        bool          `json:"scanned"`
 }

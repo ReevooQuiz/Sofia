@@ -85,6 +85,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				time.Now().Unix(),
 				[]string{"gradient"},
 				false,
+				false,
 			}},
 			[]entity.QuestionDetails{{
 				15,
@@ -946,6 +947,7 @@ func TestServiceMainPage(t *testing.T) {
 				2,
 				time.Now().Unix(),
 				[]string{"math"},
+				false,
 				false,
 			},
 		}
@@ -2321,9 +2323,9 @@ func TestServiceDeleteQuestion(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 	var (
-		qid int64  = 345
-		uid int64 = 23
-		role int8 = service.USER
+		qid  int64 = 345
+		uid  int64 = 23
+		role int8  = service.USER
 	)
 	req := service.ReqQuestionsDelete{Qid: "345"}
 	question := []entity.Questions{{Qid: 345, Raiser: uid}}

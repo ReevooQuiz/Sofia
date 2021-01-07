@@ -77,6 +77,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				time.Now().Unix(),
 				[]string{"gradient"},
 				false,
+				false,
 			}},
 			[]entity.QuestionDetails{{
 				15,

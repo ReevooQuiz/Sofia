@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	PageSize = 5
+	PageSize        = 5
 	CommentPageSize = 10
-	answerFields = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
-	questionFields = "qid,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
+	answerFields    = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
+	questionFields  = "qid,closed,raiser,title,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
 )
 
 var (
@@ -32,7 +32,7 @@ type QaDaoImpl struct {
 }
 
 type TransactionContext struct {
-	sqlTx *sql.Tx
+	sqlTx   *sql.Tx
 	session *mgo.Session
 }
 
@@ -157,6 +157,7 @@ func (q *QaDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Questions, e
 	for rows.Next() {
 		err = rows.Scan(
 			&it.Qid,
+			&it.Closed,
 			&it.Raiser,
 			&it.Category,
 			&it.AcceptedAnswer,
@@ -538,7 +539,7 @@ func (q *QaDaoImpl) ParseCriticisms(rows *sql.Rows) (comments []entity.Criticism
 func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (comments []entity.Comments, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select cmid,uid,time from comments where aid=? limit ?,?", aid, page * CommentPageSize, CommentPageSize)
+		"select cmid,uid,time from comments where aid=? limit ?,?", aid, page*CommentPageSize, CommentPageSize)
 	if err != nil {
 		return
 	}
@@ -550,7 +551,7 @@ func (q *QaDaoImpl) GetComments(ctx TransactionContext, aid int64, page int64) (
 func (q *QaDaoImpl) GetCriticisms(ctx TransactionContext, aid int64, page int64) (comments []entity.Criticisms, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select ctid,uid,time from criticisms where aid=? limit ?,?", aid, page * CommentPageSize, CommentPageSize)
+		"select ctid,uid,time from criticisms where aid=? limit ?,?", aid, page*CommentPageSize, CommentPageSize)
 	if err != nil {
 		return
 	}
@@ -562,8 +563,8 @@ func (q *QaDaoImpl) GetCriticisms(ctx TransactionContext, aid int64, page int64)
 func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, category string, page int64) (questions []entity.Questions, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query(
-		"select " + questionFields + " from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q where ?='all' or category=? order by time desc limit ?,?",
-		uid, category, category, page * PageSize, PageSize)
+		"select "+questionFields+" from questions natural join(select distinct qid from question_labels where lid in(select lid from user_labels where uid=?))as Q where ?='all' or category=? order by time desc limit ?,?",
+		uid, category, category, page*PageSize, PageSize)
 	if err != nil {
 		return
 	}
@@ -578,7 +579,7 @@ func (q *QaDaoImpl) MainPage(ctx TransactionContext, uid int64, category string,
 
 func (q *QaDaoImpl) FindQuestionById(ctx TransactionContext, qid int64) (question []entity.Questions, err error) {
 	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select " + questionFields + " from questions where qid=?", qid)
+	rows, err = ctx.sqlTx.Query("select "+questionFields+" from questions where qid=?", qid)
 	if err != nil {
 		return
 	}
@@ -593,7 +594,7 @@ func (q *QaDaoImpl) FindQuestionById(ctx TransactionContext, qid int64) (questio
 
 func (q *QaDaoImpl) FindAnswerById(ctx TransactionContext, aid int64) (answer []entity.Answers, err error) {
 	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select " + questionFields + " from answers where aid=?", aid)
+	rows, err = ctx.sqlTx.Query("select "+questionFields+" from answers where aid=?", aid)
 	if err != nil {
 		return
 	}
@@ -644,7 +645,7 @@ func (q *QaDaoImpl) FindQuestionAnswers(ctx TransactionContext, qid int64, page 
 		query += "time desc"
 	}
 	query += " limit ?,?"
-	rows, err = ctx.sqlTx.Query(query, qid, page * PageSize, PageSize)
+	rows, err = ctx.sqlTx.Query(query, qid, page*PageSize, PageSize)
 	if err != nil {
 		return
 	}

@@ -195,6 +195,7 @@ CREATE TABLE `questions`  (
   `favorite_count` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
   `scanned` tinyint(4) NOT NULL,
+  `closed` tinyint(4) NOT NULL DEFAULT 0,
   PRIMARY KEY (`qid`) USING BTREE,
   INDEX `questions_ibfk_1`(`raiser`) USING BTREE,
   INDEX `questions_ibfk_2`(`accepted_answer`) USING BTREE,

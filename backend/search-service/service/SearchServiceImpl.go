@@ -23,8 +23,8 @@ const (
 )
 
 type SearchServiceImpl struct {
-	searchDao    dao.SearchDao
-	usersRPC rpc.UsersRPC
+	searchDao dao.SearchDao
+	usersRPC  rpc.UsersRPC
 }
 
 type Owner struct {
@@ -37,6 +37,7 @@ type Owner struct {
 type QuestionListItem struct {
 	HasKeywords   bool     `json:"has_keywords"`
 	Qid           string   `json:"qid"`
+	Closed        bool     `json:"closed"`
 	Owner         Owner    `json:"raiser"`
 	Title         string   `json:"title"`
 	Time          string   `json:"time"`
@@ -99,6 +100,7 @@ func (s *SearchServiceImpl) QuestionListResponse(questions []entity.Questions, q
 	for i, v := range questions {
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
+		res[i].Closed = v.Closed
 		if MatchKeywords(&v.Title, keywords) {
 			res[i].Title = "[标题包含敏感词，已屏蔽]"
 		} else {
@@ -134,7 +136,7 @@ func (s *SearchServiceImpl) QuestionListResponse(questions []entity.Questions, q
 
 func (s *SearchServiceImpl) SearchQuestions(token string, page int64, text string) (code int8, result interface{}) {
 	// check token
-	suc, _ , _ := s.usersRPC.ParseToken(token)
+	suc, _, _ := s.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -214,7 +216,7 @@ func (s *SearchServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid i
 
 func (s *SearchServiceImpl) SearchAnswers(token string, page int64, text string) (code int8, result interface{}) {
 	// check token
-	suc, uid , _ := s.usersRPC.ParseToken(token)
+	suc, uid, _ := s.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -248,7 +250,7 @@ func (s *SearchServiceImpl) SearchAnswers(token string, page int64, text string)
 
 func (s *SearchServiceImpl) SearchUsers(token string, page int64, text string) (code int8, result interface{}) {
 	// check token
-	suc, _ , _ := s.usersRPC.ParseToken(token)
+	suc, _, _ := s.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -270,7 +272,7 @@ func (s *SearchServiceImpl) SearchUsers(token string, page int64, text string) (
 
 func (s *SearchServiceImpl) HotList(token string) (code int8, result interface{}) {
 	// check token
-	suc, _ , _ := s.usersRPC.ParseToken(token)
+	suc, _, _ := s.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -305,7 +307,7 @@ func (s *SearchServiceImpl) HotList(token string) (code int8, result interface{}
 
 func (s *SearchServiceImpl) Search(token string, text string) (code int8, result interface{}) {
 	// check token
-	suc, _ , _ := s.usersRPC.ParseToken(token)
+	suc, _, _ := s.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
