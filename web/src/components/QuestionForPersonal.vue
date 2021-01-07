@@ -26,6 +26,21 @@
       <a-row  @click="toQuestion">
         <a-col :span="4" >
           <div style="align-items: center">
+          <!-- <a-carousel arrows>
+            <template #prevArrow>
+              <div class="custom-slick-arrow" style="left: 10px;zIndex: 1">
+                <left-circle-outlined />
+              </div>
+            </template>
+            <template #nextArrow>
+              <div class="custom-slick-arrow" style="right: 10px">
+                <right-circle-outlined />
+              </div>
+            </template>
+            <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
+              <img :src="item" @click="toQuestion" style="width:100%" />
+            </div>
+          </a-carousel> -->
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
