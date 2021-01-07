@@ -31,7 +31,7 @@
               <span key="comment-basic-comment" @click="clickComment" >
                 <MessageTwoTone twoToneColor="#88d5d1" v-if="showComment" />
                 <MessageOutlined v-else />
-                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.comment_count }}</span>
+                <span style="padding-left: '8px';cursor: 'auto'">{{ ans.comment_count+ans.criticism_count }}</span>
               </span>
               <span v-if="!writeCriticism">
                 <a-button v-if="writeComment" @click="onWriteComment" type="primary"
