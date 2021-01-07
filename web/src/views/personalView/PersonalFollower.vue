@@ -11,12 +11,12 @@
         <a-row justify="center"><br />
           <a-col :span="7"><br />
             <a-input-search
-            
+
               placeholder="输入用户名或昵称"
               v-model:value="value"
                style=" border-radius: 25px;box-shadow: 3px 3px 3px #dcdfdf"
               @search="onSearch"
-              
+
             />
           </a-col>
           <a-col :span="2" :offset="1">
@@ -40,7 +40,7 @@
                           alt="example"
                           :src="item.icon"
                           style="height: 60px; border-radius: 50% ;box-shadow: 3px 3px 3px #dcdfdf"
-                          
+
                         />
                         <br />
                         <!-- <br /> -->
@@ -50,8 +50,8 @@
                         <br />
                         <br />
                         <span class="follower-profile" @click="gotoPerson(item.uid)">{{item.profile}}</span>
-                        
-                       
+
+
                       </a-col>
                       <!-- <a-col :span="2" :offset="1"></a-col> -->
                     </a-row>
