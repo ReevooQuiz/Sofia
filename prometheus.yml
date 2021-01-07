@@ -19,6 +19,11 @@ scrape_configs:
     static_configs:
     - targets: ['prometheus:9090']
 
+  - job_name: 'search-service'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['search-serivce:9094']
+
   - job_name: 'qa-service'
     scrape_interval: 5s
     static_configs:
