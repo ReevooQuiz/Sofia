@@ -59,6 +59,8 @@ func TestServiceQuestionListResponse(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	tests := []struct {
 		name            string
+		uid int64
+		role int8
 		questions       []entity.Questions
 		questionDetails []entity.QuestionDetails
 		keywords []string
@@ -69,6 +71,8 @@ func TestServiceQuestionListResponse(t *testing.T) {
 	}{
 		{
 			"Normal",
+			456,
+			service.USER,
 			[]entity.Questions{{
 				15,
 				5,
@@ -100,6 +104,8 @@ func TestServiceQuestionListResponse(t *testing.T) {
 		},
 		{
 			"RPC Failure",
+			456,
+			service.USER,
 			[]entity.Questions{},
 			[]entity.QuestionDetails{},
 			[]string{},
@@ -115,7 +121,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				mockUsersRPC.EXPECT().GetUserInfos(tt.mockIds).Return(tt.mockResult, tt.mockError)
 			}
 			var questions []service.QuestionListItem
-			result, err := q.QuestionListResponse(tt.questions, tt.questionDetails, &tt.keywords)
+			result, err := q.QuestionListResponse(tt.uid, tt.role, tt.questions, tt.questionDetails, &tt.keywords)
 			a.Equal(err, tt.mockError)
 			if tt.mockResult != nil {
 				a.NotNil(result)
@@ -1348,12 +1354,15 @@ func TestServiceAnswerListResponse(t *testing.T) {
 	keywords := []string{"key"}
 	userInfoResult := []rpc.UserInfo{{Name: "sk", Nickname: "nick", Icon: "icon"}}
 	var ctx dao.TransactionContext
-	var uid int64 = 5
+	var (
+		uid int64 = 5
+		role int8 = service.USER
+	)
 
 	t.Run("Normal", func(t *testing.T) {
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(userInfoResult, nil)
 		mockQaDao.EXPECT().GetAnswerActionInfos(ctx, uid, []int64{234}, []int64{56}).Return([]dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: true}}, nil)
-		result, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+		result, err := q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 		a.Nil(err)
 		res := result.([]service.AnswerListItem)[0]
 		a.True(res.Liked)
@@ -1367,14 +1376,14 @@ func TestServiceAnswerListResponse(t *testing.T) {
 
 	t.Run("Failed to Get User Infos", func(t *testing.T) {
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(nil, errors.New("err"))
-		_, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+		_, err := q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 		a.NotNil(err)
 	})
 
 	t.Run("Failed to Get Action Infos", func(t *testing.T) {
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(userInfoResult, nil)
 		mockQaDao.EXPECT().GetAnswerActionInfos(ctx, uid, []int64{234}, []int64{56}).Return(nil, errors.New("gg"))
-		_, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+		_, err := q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 		a.NotNil(err)
 	})
 }

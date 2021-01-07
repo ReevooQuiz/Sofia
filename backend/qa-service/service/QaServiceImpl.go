@@ -220,13 +220,13 @@ func (q *QaServiceImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels)
 	return q.qaDao.InsertQuestionLabel(questionLabel)
 }*/
 
-func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, questionDetails []entity.QuestionDetails, keywords *[]string) (result interface{}, err error) {
+func (q *QaServiceImpl) QuestionListResponse(uid int64, role int8, questions []entity.Questions, questionDetails []entity.QuestionDetails, keywords *[]string) (result interface{}, err error) {
 	res := make([]QuestionListItem, len(questions))
 	uids := make([]int64, len(questions))
 	for i, v := range questions {
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
-		if MatchKeywords(&v.Title, keywords) {
+		if uid != v.Raiser && role != ADMIN && MatchKeywords(&v.Title, keywords) {
 			res[i].Title = "[标题包含敏感词，已屏蔽]"
 		} else {
 			res[i].Title = v.Title
@@ -238,7 +238,7 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 		res[i].Category = v.Category
 		res[i].Labels = v.Labels
 		res[i].HasKeywords = MatchKeywords(&questionDetails[i].Content, keywords)
-		if !res[i].HasKeywords {
+		if uid == v.Raiser || role == ADMIN || !res[i].HasKeywords {
 			res[i].Head = questionDetails[i].Head
 		}
 		if questionDetails[i].PictureUrl != "" {
@@ -259,7 +259,7 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 	return res, nil
 }
 
-func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64, answers []entity.Answers, answerDetails []entity.AnswerDetails, keywords *[]string) (result interface{}, err error) {
+func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64, role int8, answers []entity.Answers, answerDetails []entity.AnswerDetails, keywords *[]string) (result interface{}, err error) {
 	res := make([]AnswerListItem, len(answers))
 	uids := make([]int64, len(answers))
 	qids := make([]int64, len(answers))
@@ -275,7 +275,7 @@ func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64
 		res[i].CommentCount = v.CommentCount
 		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
 		res[i].HasKeywords = MatchKeywords(&answerDetails[i].Content, keywords)
-		if !res[i].HasKeywords {
+		if uid == v.Answerer || role == ADMIN || !res[i].HasKeywords {
 			res[i].Head = answerDetails[i].Head
 		}
 		if answerDetails[i].PictureUrl != "" {
@@ -764,7 +764,7 @@ func (q *QaServiceImpl) ModifyAnswer(token string, req ReqAnswersPut) (int8, int
 
 func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
 	// check token
-	suc, uid, _ := q.usersRPC.ParseToken(token)
+	suc, uid, role := q.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -795,7 +795,7 @@ func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
 	}
 	// construct response
 	var result interface{}
-	result, err = q.QuestionListResponse(questions, questionDetails, &keywords)
+	result, err = q.QuestionListResponse(uid, role, questions, questionDetails, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
@@ -813,7 +813,7 @@ func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
 
 func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface{}) {
 	// check token
-	suc, _, _ := q.usersRPC.ParseToken(token)
+	suc, uid, role := q.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -852,7 +852,7 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	qs := question[0]
 	var res QuestionInfo
 	res.Qid = strconv.FormatInt(qs.Qid, 10)
-	if MatchKeywords(&qs.Title, &keywords) {
+	if uid == qs.Raiser || role == ADMIN || MatchKeywords(&qs.Title, &keywords) {
 		res.Title = "[标题包含敏感词，已屏蔽]"
 	} else {
 		res.Title = qs.Title
@@ -864,7 +864,7 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	res.Category = qs.Category
 	res.Labels = qs.Labels
 	res.HasKeywords = MatchKeywords(&detail[0].Content, &keywords)
-	if !res.HasKeywords {
+	if uid == qs.Raiser || role == ADMIN || !res.HasKeywords {
 		res.Content = detail[0].Content
 	}
 	if qs.AcceptedAnswer.Valid {
@@ -898,7 +898,7 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 
 func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort int8) (int8, interface{}) {
 	// check token
-	suc, uid, _ := q.usersRPC.ParseToken(token)
+	suc, uid, role := q.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -925,7 +925,7 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 	}
 	var result interface{}
 	// construct response
-	result, err = q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+	result, err = q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
@@ -943,7 +943,7 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 
 func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}) {
 	// check token
-	suc, uid, _ := q.usersRPC.ParseToken(token)
+	suc, uid, role := q.usersRPC.ParseToken(token)
 	if !suc {
 		return Expired, nil
 	}
@@ -987,7 +987,7 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	res.ApprovalCount = ans.ApprovalCount
 	res.CommentCount = ans.CommentCount
 	res.HasKeywords = MatchKeywords(&detail[0].Content, &keywords)
-	if !res.HasKeywords {
+	if uid == ans.Answerer || role == ADMIN || !res.HasKeywords {
 		res.Content = detail[0].Content
 	}
 

@@ -32,7 +32,7 @@ func TestControllerInit(t *testing.T) {
 			httpServerExitDone := &sync.WaitGroup{}
 			httpServerExitDone.Add(1)
 			server := q.Init(httpServerExitDone, mockQaService)
-			time.Sleep(500 * time.Microsecond)
+			time.Sleep(200 * time.Microsecond)
 			if err := server.Shutdown(context.Background()); err != nil {
 				t.Error(err)
 			}
