@@ -59,7 +59,7 @@ services:
       - sofia
 
   cadvisor:
-    image: gcr.io/google-containers/cadvisor:latest
+    image: google/cadvisor:latest
     container_name: cadvisor
     hostname: cadvisor
     restart: always
@@ -107,7 +107,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-server:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.31.77.222:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://172.17.0.2:9092
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_ADVERTISED_HOST_NAME: kafka

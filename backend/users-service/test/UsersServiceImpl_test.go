@@ -282,6 +282,89 @@ func TestServiceCheckToken(t *testing.T) {
 	}
 }
 
+func TestServiceFavorite(t *testing.T) {
+	t.Parallel()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
+	users := []entity.Users{
+		{Uid: 1, Role: entity.USER},
+	}
+	favorites := []entity.Favorites{
+		{Fid: 1, Uid: 1, Title: "Default"},
+	}
+	favoriteItems := []entity.FavoriteItems{
+		{Fid: 1, Qid: 1},
+	}
+	questions := []entity.Questions{
+		{Qid: 1, FavoriteCount: 0},
+		{Qid: 1, FavoriteCount: 1},
+	}
+	token, _ := util.SignToken(users[0].Uid, users[0].Role, false)
+	gomock.InOrder(
+		mockUsersDao.EXPECT().Init().Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().InsertFavoriteItem(gomock.Any(), favoriteItems[0]).Return(nil),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), questions[0].Qid).Return(questions[0], nil),
+		mockUsersDao.EXPECT().UpdateQuestionByQid(gomock.Any(), questions[1]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().FindFavoriteItemByFidAndQid(gomock.Any(), favorites[0].Fid, questions[1].Qid).Return(favoriteItems[0], nil),
+		mockUsersDao.EXPECT().RemoveFavoriteItemByFidAndQid(gomock.Any(), favorites[0].Fid, questions[1].Qid).Return(nil),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), questions[1].Qid).Return(questions[1], nil),
+		mockUsersDao.EXPECT().UpdateQuestionByQid(gomock.Any(), questions[0]).Return(nil),
+		mockUsersDao.EXPECT().Commit(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(entity.Favorites{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().InsertFavoriteItem(gomock.Any(), favoriteItems[0]).Return(errors.New("error 1062: Duplicate entry '0-0' for key 'PRIMARY'")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().FindFavoriteItemByFidAndQid(gomock.Any(), favorites[0].Fid, questions[1].Qid).Return(entity.FavoriteItems{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().FindFavoriteByUidAndTitle(gomock.Any(), users[0].Uid, "Default").Return(favorites[0], nil),
+		mockUsersDao.EXPECT().InsertFavoriteItem(gomock.Any(), favoriteItems[0]).Return(nil),
+		mockUsersDao.EXPECT().FindQuestionByQid(gomock.Any(), questions[0].Qid).Return(entity.Questions{}, errors.New("sql: no rows in result set")),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Begin(false).Return(dao.TransactionContext{}, nil),
+		mockUsersDao.EXPECT().Rollback(gomock.Any()).Return(nil),
+		mockUsersDao.EXPECT().Destruct(),
+	)
+	var u service.UsersServiceImpl
+	_ = u.Init(mockUsersDao)
+	defer u.Destruct()
+	type args struct {
+		token string
+		req   service.ReqFavorite
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes service.ResFavorite
+	}{
+		{"FavoriteNormal", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[0].Qid, 10), Favorite: true}}, service.ResFavorite{Code: 0}},
+		{"DisFavoriteNormal", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[1].Qid, 10), Favorite: false}}, service.ResFavorite{Code: 0}},
+		{"FavoriteNotFound", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[0].Qid, 10), Favorite: true}}, service.ResFavorite{Code: 1}},
+		{"FavoriteItemFound", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[0].Qid, 10), Favorite: true}}, service.ResFavorite{Code: 1}},
+		{"FavoriteItemNotFound", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[1].Qid, 10), Favorite: false}}, service.ResFavorite{Code: 1}},
+		{"QuestionNotFound", args{token: token, req: service.ReqFavorite{Qid: strconv.FormatInt(questions[0].Qid, 10), Favorite: true}}, service.ResFavorite{Code: 1}},
+		{"WrongToken", args{req: service.ReqFavorite{Qid: strconv.FormatInt(questions[0].Qid, 10), Favorite: true}}, service.ResFavorite{Code: 2}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res, _ := u.Favorite(tt.args.token, tt.args.req); res != tt.wantRes {
+				t.Errorf("Actual: %v, expect: %v.", res, tt.wantRes)
+			}
+		})
+	}
+}
+
 func TestServiceFollow(t *testing.T) {
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)

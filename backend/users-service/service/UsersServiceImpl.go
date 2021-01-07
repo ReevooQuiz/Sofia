@@ -39,6 +39,11 @@ type ReqBan struct {
 	Ban bool   `json:"ban"`
 }
 
+type ReqFavorite struct {
+	Qid      string `json:"qid"`
+	Favorite bool   `json:"favorite"`
+}
+
 type ReqFollow struct {
 	Uid    string `json:"uid"`
 	Follow bool   `json:"follow"`
@@ -112,6 +117,10 @@ type ResCheckToken struct {
 	Successful bool  `json:"successful"`
 	Uid        int64 `json:"uid"`
 	Role       int8  `json:"role"`
+}
+
+type ResFavorite struct {
+	Code int8 `json:"code"`
 }
 
 type ResFollow struct {
@@ -572,6 +581,84 @@ func (u *UsersServiceImpl) CheckSession(token string) (res ResCheckSession, err 
 func (u *UsersServiceImpl) CheckToken(token string) (res ResCheckToken, err error) {
 	res.Successful, res.Uid, res.Role, err = util.ParseToken(token)
 	return res, err
+}
+
+func (u *UsersServiceImpl) Favorite(token string, req ReqFavorite) (res ResFavorite, err error) {
+	var ctx dao.TransactionContext
+	ctx, err = u.usersDao.Begin(false)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var user entity.Users
+	var successful bool
+	successful, user.Uid, user.Role, err = util.ParseToken(token)
+	if err != nil || !successful {
+		if err != nil {
+			log.Info(err)
+		}
+		res.Code = 2
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var qid int64
+	qid, err = strconv.ParseInt(req.Qid, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var favorite entity.Favorites
+	favorite, err = u.usersDao.FindFavoriteByUidAndTitle(ctx, user.Uid, "Default")
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	var favoriteItem entity.FavoriteItems
+	if req.Favorite {
+		favoriteItem.Fid = favorite.Fid
+		favoriteItem.Qid = qid
+		err = u.usersDao.InsertFavoriteItem(ctx, favoriteItem)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	} else {
+		favoriteItem, err = u.usersDao.FindFavoriteItemByFidAndQid(ctx, favorite.Fid, qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+		err = u.usersDao.RemoveFavoriteItemByFidAndQid(ctx, favorite.Fid, qid)
+		if err != nil {
+			log.Info(err)
+			res.Code = 1
+			return res, u.usersDao.Rollback(&ctx)
+		}
+	}
+	var question entity.Questions
+	question, err = u.usersDao.FindQuestionByQid(ctx, qid)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	if req.Favorite {
+		question.FavoriteCount++
+	} else {
+		question.FavoriteCount--
+	}
+	err = u.usersDao.UpdateQuestionByQid(ctx, question)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
+	res.Code = 0
+	return res, u.usersDao.Commit(&ctx)
 }
 
 func (u *UsersServiceImpl) Follow(token string, req ReqFollow) (res ResFollow, err error) {

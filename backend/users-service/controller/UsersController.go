@@ -30,6 +30,7 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 	http.HandleFunc("/banned", u.Banned)
 	http.HandleFunc("/checkSession", u.CheckSession)
 	http.HandleFunc("/checkToken", u.CheckToken)
+	http.HandleFunc("/favorite", u.Favorite)
 	http.HandleFunc("/follow", u.Follow)
 	http.HandleFunc("/followed", u.Followed)
 	http.HandleFunc("/followers", u.Followers)
@@ -148,6 +149,25 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err = u.usersService.CheckToken(r.FormValue("token"))
+	if err != nil {
+		log.Info(err)
+	}
+	object, _ := json.Marshal(res)
+	_, _ = w.Write(object)
+}
+
+func (u *UsersController) Favorite(w http.ResponseWriter, r *http.Request) {
+	var req service.ReqFavorite
+	var res service.ResFavorite
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		object, _ := json.Marshal(res)
+		_, _ = w.Write(object)
+		return
+	}
+	res, err = u.usersService.Favorite(r.Header.Get("Authorization"), req)
 	if err != nil {
 		log.Info(err)
 	}
