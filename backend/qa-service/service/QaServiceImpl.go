@@ -28,7 +28,7 @@ const (
 const (
 	HeadLengthMax            = 100
 	QuestionLabelsMax        = 5
-	QuestionTitleLengthMax   = 50
+	QuestionTitleLengthMax   = 100
 	LabelLengthMax           = 32
 	QuestionContentLengthMax = 50000
 	CommentLengthMax         = 150
@@ -979,10 +979,6 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 	if !suc {
 		return Expired, nil
 	}
-	// check constraints
-	if page < 0 {
-		return Failed, nil
-	}
 	// serve
 	ctx, err := q.qaDao.Begin(true)
 	comments, err := q.qaDao.GetComments(ctx, aid, page)
@@ -994,7 +990,7 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 		log.Warn(err)
 		return Failed, nil
 	}
-	details, err := q.qaDao.FindCommentDetails(ctx, comments)
+	details := q.qaDao.FindCommentDetails(ctx, comments)
 	if err != nil {
 		_ = q.qaDao.Rollback(&ctx)
 		log.Warn(err)
@@ -1045,12 +1041,12 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 	}
 	// check constraints
 	if len(content) > CommentLengthMax {
-		return Failed, ConstraintsViolated
+		return Failed, map[string]int8{"type": ConstraintsViolated}
 	}
 	// check keywords
 	ctx, err := q.qaDao.Begin(false)
 	if err != nil {
-		return Failed, UnknownError
+		return Failed, map[string]int8{"type": UnknownError}
 	}
 	keywords, err := q.qaDao.GetBannedWords(ctx)
 	if err != nil {
@@ -1059,11 +1055,11 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 			log.Warn(e)
 		}
 		log.Warn(err)
-		return Failed, UnknownError
+		return Failed, map[string]int8{"type": UnknownError}
 	}
 	banned := false
 	for _, v := range keywords {
-		if strings.Index(v, content) != -1 {
+		if strings.Index(content, v) != -1 {
 			banned = true
 			break
 		}
@@ -1074,7 +1070,7 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 			log.Warn(e)
 		}
 		log.Warn(err)
-		return Failed, HasKeywords
+		return Failed, map[string]int8{"type": HasKeywords}
 	}
 	// serve
 	cmid, err := q.qaDao.AddComment(ctx, uid, aid, content)
@@ -1084,7 +1080,7 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 			log.Warn(e)
 		}
 		log.Warn(err)
-		return Failed, UnknownError
+		return Failed, map[string]int8{"type": UnknownError}
 	}
 	err = q.qaDao.Commit(&ctx)
 	if err != nil {

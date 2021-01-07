@@ -197,7 +197,7 @@ func (q *QaDaoImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels) (er
 	return err
 }*/
 
-func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails, err error) {
+func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails) {
 	var findErr error
 	var current entity.CommentDetails
 	for _, v := range comments {
