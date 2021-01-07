@@ -32,6 +32,7 @@ const (
 	LabelLengthMax           = 32
 	QuestionContentLengthMax = 50000
 	CommentLengthMax         = 150
+	AnswerContentLengthMax = 50000
 )
 
 type QaServiceImpl struct {
@@ -77,6 +78,7 @@ type Owner struct {
 }
 
 type QuestionListItem struct {
+	HasKeywords   bool     `json:"has_keywords"`
 	Qid           string   `json:"qid"`
 	Owner         Owner    `json:"raiser"`
 	Title         string   `json:"title"`
@@ -91,6 +93,7 @@ type QuestionListItem struct {
 }
 
 type QuestionInfo struct {
+	HasKeywords   bool     `json:"has_keywords"`
 	Qid           string   `json:"qid"`
 	Owner         Owner    `json:"raiser"`
 	Title         string   `json:"title"`
@@ -105,6 +108,7 @@ type QuestionInfo struct {
 }
 
 type AnswerInfo struct {
+	HasKeywords    bool   `json:"has_keywords"`
 	Aid            string `json:"aid"`
 	Owner          Owner  `json:"answerer"`
 	Time           string `json:"time"`
@@ -119,6 +123,7 @@ type AnswerInfo struct {
 }
 
 type AnswerListItem struct {
+	HasKeywords    bool     `json:"has_keywords"`
 	Aid            string   `json:"aid"`
 	Owner          Owner    `json:"answerer"`
 	LikeCount      int64    `json:"like_count"`
@@ -198,7 +203,7 @@ func (q *QaServiceImpl) InsertQuestionLabel(questionLabel entity.QuestionLabels)
 	return q.qaDao.InsertQuestionLabel(questionLabel)
 }*/
 
-func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, questionDetails []entity.QuestionDetails) (result interface{}, err error) {
+func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, questionDetails []entity.QuestionDetails, keywords *[]string) (result interface{}, err error) {
 	res := make([]QuestionListItem, len(questions))
 	uids := make([]int64, len(questions))
 	for i, v := range questions {
@@ -211,7 +216,10 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 		res[i].FavoriteCount = v.FavoriteCount
 		res[i].Category = v.Category
 		res[i].Labels = v.Labels
-		res[i].Head = questionDetails[i].Head
+		res[i].HasKeywords = MatchKeywords(&questionDetails[i].Content, keywords)
+		if !res[i].HasKeywords {
+			res[i].Head = questionDetails[i].Head
+		}
 		if questionDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{questionDetails[i].PictureUrl}
 		}
@@ -230,7 +238,7 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 	return res, nil
 }
 
-func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64, answers []entity.Answers, answerDetails []entity.AnswerDetails) (result interface{}, err error) {
+func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64, answers []entity.Answers, answerDetails []entity.AnswerDetails, keywords *[]string) (result interface{}, err error) {
 	res := make([]AnswerListItem, len(answers))
 	uids := make([]int64, len(answers))
 	qids := make([]int64, len(answers))
@@ -244,8 +252,11 @@ func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64
 		res[i].CriticismCount = v.CriticismCount
 		res[i].ApprovalCount = v.ApprovalCount
 		res[i].CommentCount = v.CommentCount
-		res[i].Head = answerDetails[i].Head
 		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
+		res[i].HasKeywords = MatchKeywords(&answerDetails[i].Content, keywords)
+		if !res[i].HasKeywords {
+			res[i].Head = answerDetails[i].Head
+		}
 		if answerDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{answerDetails[i].PictureUrl}
 		}
@@ -273,7 +284,7 @@ func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64
 	return res, nil
 }
 
-func (q *QaServiceImpl) CommentListResponse(ctx dao.TransactionContext, comments []entity.Comments, details []entity.CommentDetails, keywords *[]string) (result interface{}, err error) {
+func (q *QaServiceImpl) CommentListResponse(comments []entity.Comments, details []entity.CommentDetails, keywords *[]string) (result interface{}, err error) {
 	res := make([]CommentListItem, len(comments))
 	uids := make([]int64, len(comments))
 	for i, v := range comments {
@@ -545,7 +556,7 @@ func (q *QaServiceImpl) AddAnswer(token string, req ReqAnswersPost) (int8, inter
 		return Expired, nil
 	}
 	// check constraints
-	if len(content) > QuestionContentLengthMax {
+	if len(content) > AnswerContentLengthMax {
 		return Failed, map[string]int8{"type": ConstraintsViolated}
 	}
 	// get banned words
@@ -597,6 +608,12 @@ func (q *QaServiceImpl) AddAnswer(token string, req ReqAnswersPost) (int8, inter
 	}
 	if len(question) < 1 {
 		log.Warn("AddAnswer: qid = ", qid, ", not found")
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, map[string]int8{"type": UnknownError}
 	}
 	question[0].AnswerCount++
 	err = q.qaDao.SaveQuestionSkeleton(ctx, question[0])
@@ -718,9 +735,18 @@ func (q *QaServiceImpl) MainPage(token string, page int64) (int8, interface{}) {
 		return Failed, nil
 	}
 	questionDetails := q.qaDao.FindQuestionDetails(ctx, questions)
-	var result interface{}
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, nil
+	}
 	// construct response
-	result, err = q.QuestionListResponse(questions, questionDetails)
+	var result interface{}
+	result, err = q.QuestionListResponse(questions, questionDetails, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
@@ -758,6 +784,19 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	}
 	if len(question) < 1 {
 		log.Warn("QuestionDetail: qid = ", qid, ", not found")
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		return Failed, nil
+	}
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
 		return Failed, nil
 	}
 	detail := q.qaDao.FindQuestionDetails(ctx, question)
@@ -771,7 +810,10 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	res.FavoriteCount = qs.FavoriteCount
 	res.Category = qs.Category
 	res.Labels = qs.Labels
-	res.Content = detail[0].Content
+	res.HasKeywords = MatchKeywords(&detail[0].Content, &keywords)
+	if !res.HasKeywords {
+		res.Content = detail[0].Content
+	}
 	if qs.AcceptedAnswer.Valid {
 		val, e := qs.AcceptedAnswer.Value()
 		if e == nil {
@@ -807,10 +849,6 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 	if !suc {
 		return Expired, nil
 	}
-	// check constraints
-	if page < 0 {
-		return Failed, nil
-	}
 	// serve
 	ctx, err := q.qaDao.Begin(true)
 	answers, err := q.qaDao.FindQuestionAnswers(ctx, qid, page, sort)
@@ -823,9 +861,18 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 		return Failed, nil
 	}
 	answerDetails := q.qaDao.FindAnswerDetails(ctx, answers)
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, nil
+	}
 	var result interface{}
 	// construct response
-	result, err = q.AnswerListResponse(ctx, uid, answers, answerDetails)
+	result, err = q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
@@ -862,10 +909,23 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 		return Failed, nil
 	}
 	if len(answer) < 1 {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
 		return Failed, nil
 	}
 	detail := q.qaDao.FindAnswerDetails(ctx, answer)
 	ans := answer[0]
+	keywords, err := q.qaDao.GetBannedWords(ctx)
+	if err != nil {
+		e := q.qaDao.Rollback(&ctx)
+		if e != nil {
+			log.Warn(e)
+		}
+		log.Warn(err)
+		return Failed, nil
+	}
 	var res AnswerInfo
 	res.Aid = strconv.FormatInt(ans.Aid, 10)
 	res.Time = fmt.Sprint(ans.Time)
@@ -873,7 +933,10 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	res.CriticismCount = ans.CriticismCount
 	res.ApprovalCount = ans.ApprovalCount
 	res.CommentCount = ans.CommentCount
-	res.Content = detail[0].Content
+	res.HasKeywords = MatchKeywords(&detail[0].Content, &keywords)
+	if !res.HasKeywords {
+		res.Content = detail[0].Content
+	}
 
 	uids := []int64{ans.Answerer}
 	var userInfos []rpc.UserInfo
@@ -948,7 +1011,7 @@ func (q *QaServiceImpl) GetComments(token string, aid int64, page int64) (int8, 
 	}
 	var result interface{}
 	// construct response
-	result, err = q.CommentListResponse(ctx, comments, details, &keywords)
+	result, err = q.CommentListResponse(comments, details, &keywords)
 	if err != nil {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {

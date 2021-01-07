@@ -61,6 +61,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 		name            string
 		questions       []entity.Questions
 		questionDetails []entity.QuestionDetails
+		keywords []string
 		mock            bool
 		mockIds         []int64
 		mockError       error
@@ -87,6 +88,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				"pictureUrl",
 				"What is gradient?",
 			}},
+			[]string {"xxx"},
 			true,
 			[]int64{5},
 			nil,
@@ -100,6 +102,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 			"RPC Failure",
 			[]entity.Questions{},
 			[]entity.QuestionDetails{},
+			[]string{},
 			true,
 			[]int64{},
 			errors.New("test error"),
@@ -112,7 +115,7 @@ func TestServiceQuestionListResponse(t *testing.T) {
 				mockUsersRPC.EXPECT().GetUserInfos(tt.mockIds).Return(tt.mockResult, tt.mockError)
 			}
 			var questions []service.QuestionListItem
-			result, err := q.QuestionListResponse(tt.questions, tt.questionDetails)
+			result, err := q.QuestionListResponse(tt.questions, tt.questionDetails, &tt.keywords)
 			a.Equal(err, tt.mockError)
 			if tt.mockResult != nil {
 				a.NotNil(result)
@@ -266,7 +269,7 @@ func TestAddQuestion(t *testing.T) {
 		HasKeyword          = 1
 		UnknownError        = 2
 	)
-	//t.Parallel()
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	a := assert.New(t)
@@ -295,6 +298,7 @@ func TestAddQuestion(t *testing.T) {
 		mockQid          int64
 		mockAddErr       error
 		mockIncQuestionCount bool
+		incQuestionCountErr error
 		req              service.ReqQuestionsPost
 		expectedCode     int8
 		expectedResult   interface{}
@@ -356,7 +360,7 @@ func TestAddQuestion(t *testing.T) {
 			mockBannedWords: false,
 			mockAddQuestion: false,
 			req: service.ReqQuestionsPost{
-				Title:    "123456789012345678901234567890123",
+				Title:    "123456789012345678901234567890123456789012345678901",
 				Content:  "this is the content",
 				Category: "life",
 				Labels:   []string{},
@@ -494,6 +498,32 @@ func TestAddQuestion(t *testing.T) {
 			rollback:       true,
 			commit:         false,
 		},
+		{
+			name: "Failed to IncQuestionCount",
+			token: "token",
+			mockToken: true,
+			mockSuc:          true,
+			mockUid:          0,
+			mockRole:         service.ADMIN,
+			mockBannedWords:  true,
+			mockBannedResult: BannedWords,
+			mockBannedErr:    nil,
+			mockAddQuestion:  true,
+			mockAddErr:       nil,
+			mockQid:          0,
+			req: service.ReqQuestionsPost{
+				Title:    "title",
+				Content:  "content",
+				Category: "life",
+				Labels:   []string{},
+			},
+			mockIncQuestionCount: true,
+			incQuestionCountErr: errors.New("err"),
+			expectedCode:   service.Failed,
+			expectedResult: map[string]int8{"type": UnknownError},
+			rollback:       true,
+			commit:         false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -507,7 +537,7 @@ func TestAddQuestion(t *testing.T) {
 				mockQaDao.EXPECT().AddQuestion(gomock.Any(), tt.mockUid, tt.req.Title, tt.req.Content, tt.req.Category, tt.req.Labels, gomock.Any(), gomock.Any()).Return(tt.mockQid, tt.mockAddErr)
 			}
 			if tt.mockIncQuestionCount {
-				mockQaDao.EXPECT().IncQuestionCount(gomock.Any(), tt.mockUid)
+				mockQaDao.EXPECT().IncQuestionCount(gomock.Any(), tt.mockUid).Return(tt.incQuestionCountErr)
 			}
 			if tt.rollback {
 				mockQaDao.EXPECT().Rollback(gomock.Any())
@@ -645,7 +675,7 @@ func TestModifyQuestion(t *testing.T) {
 			mockModifyQuestion:     false,
 			req: service.ReqQuestionsPut{
 				Qid:      "456",
-				Title:    "123456789012345678901234567890123",
+				Title:    "123456789012345678901234567890123456789012345678901",
 				Content:  "content",
 				Category: "life",
 				Labels:   []string{"main"},
@@ -933,16 +963,19 @@ func TestMainPage(t *testing.T) {
 		name               string
 		token              string
 		page               int64
-		mockParseToken     bool
+		mockParseToken bool
 		parseTokenSuc      bool
 		parseTokenUid      int64
 		parseTokenRole     int8
-		mockMainPage       bool
+		mockMainPage bool
 		mainPageResult     []entity.Questions
 		mainPageErr        error
-		mockFindDetails    bool
+		mockFindDetails bool
 		findDetailsResult  []entity.QuestionDetails
-		mockGetUserInfos   bool
+		mockGetBannedWords bool
+		getBannedWordsRes []string
+		getBannedWordsErr error
+		mockGetUserInfos bool
 		getUserInfosUids   []int64
 		getUserInfosResult []rpc.UserInfo
 		getUserInfosErr    error
@@ -962,6 +995,9 @@ func TestMainPage(t *testing.T) {
 			mainPageErr:        nil,
 			mockFindDetails:    true,
 			findDetailsResult:  DetailsResult,
+			mockGetBannedWords: true,
+			getBannedWordsRes: []string{},
+			getBannedWordsErr: nil,
 			mockGetUserInfos:   true,
 			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: UserInfosResult,
@@ -1033,6 +1069,25 @@ func TestMainPage(t *testing.T) {
 			expectedResult:   nil,
 		},
 		{
+			name:"Failed to Get Banned Words",
+			token:"token",
+			page: 1,
+			mockParseToken: true,
+			parseTokenSuc:      true,
+			parseTokenUid:      1,
+			parseTokenRole:     service.USER,
+			mockMainPage:       true,
+			mainPageResult:     MainPageResult,
+			mainPageErr:        nil,
+			mockFindDetails:    true,
+			findDetailsResult:  DetailsResult,
+			mockGetBannedWords: true,
+			getBannedWordsRes:  []string{},
+			getBannedWordsErr: errors.New("error"),
+			expectedCode: service.Failed,
+			expectedResult: nil,
+		},
+		{
 			name:               "Failed to Get User Infos",
 			token:              "token",
 			page:               1,
@@ -1045,6 +1100,9 @@ func TestMainPage(t *testing.T) {
 			mainPageErr:        nil,
 			mockFindDetails:    true,
 			findDetailsResult:  DetailsResult,
+			mockGetBannedWords: true,
+			getBannedWordsRes:  []string{},
+			getBannedWordsErr: nil,
 			mockGetUserInfos:   true,
 			getUserInfosUids:   []int64{MainPageResult[0].Raiser},
 			getUserInfosResult: nil,
@@ -1064,6 +1122,9 @@ func TestMainPage(t *testing.T) {
 			}
 			if tt.mockFindDetails {
 				mockQaDao.EXPECT().FindQuestionDetails(gomock.Any(), tt.mainPageResult).Return(tt.findDetailsResult)
+			}
+			if tt.mockGetBannedWords {
+				mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(tt.getBannedWordsRes, tt.getBannedWordsErr)
 			}
 			if tt.mockGetUserInfos {
 				mockUsersRPC.EXPECT().GetUserInfos(tt.getUserInfosUids).Return(tt.getUserInfosResult, tt.getUserInfosErr)
@@ -1086,6 +1147,32 @@ func TestQuestionDetail(t *testing.T) {
 	var q service.QaServiceImpl
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
+
+	question := []entity.Questions{{
+		Qid:            234,
+		Raiser:         78,
+		Title:          "title",
+		Category:       "life",
+		AcceptedAnswer: sql.NullInt64{Valid: false},
+	}}
+	questionWithAccepted := []entity.Questions{{
+		Qid:            234,
+		Raiser:         78,
+		Title:          "title",
+		Category:       "life",
+		AcceptedAnswer: sql.NullInt64{Valid: true, Int64: 567},
+	}}
+	details := []entity.QuestionDetails{{
+		234,
+		"content",
+		"",
+		"content",
+	}}
+	userInfos := []rpc.UserInfo{{
+		"skfe",
+		"skfe2",
+		"icon data",
+	}}
 	tests := []struct {
 		name                 string
 		token                string
@@ -1096,6 +1183,9 @@ func TestQuestionDetail(t *testing.T) {
 		mockFindQuestion     bool
 		findQuestionQuestion []entity.Questions
 		findQuestionErr      error
+		mockGetBannedWords bool
+		getBannedWordsRes []string
+		getBannedWordsErr error
 		mockFindDetails      bool
 		findDetailsDetails   []entity.QuestionDetails
 		mockGetUserInfos     bool
@@ -1115,35 +1205,97 @@ func TestQuestionDetail(t *testing.T) {
 			parseTokenUid:    56,
 			parseTokenRole:   service.USER,
 			mockFindQuestion: true,
-			findQuestionQuestion: []entity.Questions{{
-				Qid:            234,
-				Raiser:         78,
-				Title:          "title",
-				Category:       "life",
-				AcceptedAnswer: sql.NullInt64{Valid: false},
-			}},
+			findQuestionQuestion: question,
+			mockGetBannedWords: true,
+			getBannedWordsRes: []string{},
+			getBannedWordsErr: nil,
 			mockFindDetails: true,
-			findDetailsDetails: []entity.QuestionDetails{{
-				234,
-				"content",
-				"",
-				"content",
-			}},
+			findDetailsDetails: details,
 			mockGetUserInfos: true,
-			getUserInfosRes: []rpc.UserInfo{{
-				"skfe",
-				"skfe2",
-				"icon data",
-			}},
+			getUserInfosRes: userInfos,
 			mockSaveQuestionSkeleton: true,
 			commit:     true,
 			wantCode:   service.Succeeded,
 			wantResult: service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "", Content: "content", Time: "0"},
 		},
 		{
+			name:             "Normal2",
+			token:            "token",
+			qid:              234,
+			parseTokenSuc:    true,
+			parseTokenUid:    56,
+			parseTokenRole:   service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: questionWithAccepted,
+			mockGetBannedWords: true,
+			getBannedWordsRes: []string{},
+			getBannedWordsErr: nil,
+			mockFindDetails: true,
+			findDetailsDetails: details,
+			mockGetUserInfos: true,
+			getUserInfosRes: userInfos,
+			mockSaveQuestionSkeleton: true,
+			commit:     true,
+			wantCode:   service.Succeeded,
+			wantResult: service.QuestionInfo{Qid: "234", Owner: service.Owner{Uid: "78", Name: "skfe", Nickname: "skfe2", Icon: "icon data"}, Title: "title", Category: "life", Accepted: "567", Content: "content", Time: "0"},
+		},
+		{
 			name: "Token expired",
 			parseTokenSuc: false,
 			wantCode: service.Expired,
+		},
+		{
+			name: "Failed to Find Question by Id",
+			parseTokenSuc: true,
+			parseTokenUid: 46,
+			parseTokenRole: service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: nil,
+			findQuestionErr: errors.New("xxx"),
+			rollback: true,
+			wantCode: service.Failed,
+			wantResult: nil,
+		},
+		{
+			name: "Find Question not Found",
+			parseTokenSuc: true,
+			parseTokenUid: 345,
+			parseTokenRole: service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: []entity.Questions{},
+			rollback: true,
+			wantCode: service.Failed,
+			wantResult: nil,
+		},
+		{
+			name: "Failed to Get Banned Words",
+			parseTokenSuc: true,
+			parseTokenUid: 345,
+			parseTokenRole: service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: question,
+			mockGetBannedWords: true,
+			getBannedWordsErr: errors.New("xxx"),
+			rollback: true,
+			wantCode: service.Failed,
+			wantResult: nil,
+		},
+		{
+			name: "Failed to Get User Infos",
+			parseTokenSuc: true,
+			parseTokenUid: 345,
+			parseTokenRole: service.USER,
+			mockFindQuestion: true,
+			findQuestionQuestion: question,
+			mockGetBannedWords: true,
+			getBannedWordsRes: []string{"river"},
+			mockFindDetails: true,
+			findDetailsDetails: details,
+			mockGetUserInfos: true,
+			getUserInfosErr: errors.New("xx"),
+			rollback: true,
+			wantCode: service.Failed,
+			wantResult: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -1160,6 +1312,9 @@ func TestQuestionDetail(t *testing.T) {
 			}
 			if tt.mockSaveQuestionSkeleton {
 				mockQaDao.EXPECT().SaveQuestionSkeleton(gomock.Any(), gomock.Any())
+			}
+			if tt.mockGetBannedWords {
+				mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(tt.getBannedWordsRes, tt.getBannedWordsErr)
 			}
 			if tt.commit {
 				mockQaDao.EXPECT().Commit(gomock.Any())
@@ -1186,14 +1341,17 @@ func TestAnswerListResponse(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
+	answers := []entity.Answers {{Aid: 56, Answerer: 7, Qid: 234}}
+	answerDetails := []entity.AnswerDetails {{Aid: 56, Content: "content", PictureUrl: "pic url", Head: "Head"}}
+	keywords := []string{"key"}
+	userInfoResult := []rpc.UserInfo{{Name: "sk", Nickname: "nick", Icon: "icon"}}
+	var ctx dao.TransactionContext
+	var uid int64 = 5
+
 	t.Run("Normal", func(t *testing.T) {
-		var ctx dao.TransactionContext
-		var uid int64 = 5
-		answers := []entity.Answers {{Aid: 56, Answerer: 7, Qid: 234}}
-		answerDetails := []entity.AnswerDetails {{Aid: 56, Content: "content", PictureUrl: "pic url", Head: "Head"}}
-		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return([]rpc.UserInfo{{Name: "sk", Nickname: "nick", Icon: "icon"}}, nil)
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(userInfoResult, nil)
 		mockQaDao.EXPECT().GetAnswerActionInfos(ctx, uid, []int64{234}, []int64{56}).Return([]dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: true}}, nil)
-		result, err := q.AnswerListResponse(ctx, uid, answers, answerDetails)
+		result, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
 		a.Nil(err)
 		res := result.([]service.AnswerListItem)[0]
 		a.True(res.Liked)
@@ -1204,9 +1362,27 @@ func TestAnswerListResponse(t *testing.T) {
 		a.Equal("icon", res.Owner.Icon)
 		a.Equal("nick", res.Owner.Nickname)
 	})
+
+	t.Run("Failed to Get User Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(nil, errors.New("err"))
+		_, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+		a.NotNil(err)
+	})
+
+	t.Run("Failed to Get Action Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{7}).Return(userInfoResult, nil)
+		mockQaDao.EXPECT().GetAnswerActionInfos(ctx, uid, []int64{234}, []int64{56}).Return(nil, errors.New("gg"))
+		_, err := q.AnswerListResponse(ctx, uid, answers, answerDetails, &keywords)
+		a.NotNil(err)
+	})
 }
 
 func TestAddAnswer(t *testing.T) {
+	const (
+		ConstraintsViolated = 0
+		HasKeyword          = 1
+		UnknownError        = 2
+	)
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1218,21 +1394,23 @@ func TestAddAnswer(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
+	token := "token"
+	req := service.ReqAnswersPost{
+		Qid:     "456",
+		Content: "content",
+	}
+	var uid int64 = 5
+	var role int8 = service.USER
+	banned := []string{"river"}
+	pictureUrl := ""
+	questions := []entity.Questions{{Qid: 456, Raiser: 89, Title: "title", Category: "life", Labels: []string{}}}
+	unknownFailure := map[string]int8{"type": UnknownError}
+
 	t.Run("Normal", func(t *testing.T) {
-		token := "token"
-		req := service.ReqAnswersPost{
-			Qid:     "456",
-			Content: "content",
-		}
-		var uid int64 = 5
-		var role int8 = service.USER
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
-		banned := []string{"river"}
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
-		pictureUrl := ""
 		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
 		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(nil)
-		questions := []entity.Questions{{Qid: 456, Raiser: 89, Title: "title", Category: "life", Labels: []string{}}}
 		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), int64(456)).Return(questions, nil)
 		mockQaDao.EXPECT().SaveQuestionSkeleton(gomock.Any(), gomock.Any()).Return(nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
@@ -1240,10 +1418,106 @@ func TestAddAnswer(t *testing.T) {
 		a.Equal(int8(service.Succeeded), code)
 		a.Equal("47", result.(map[string]string)["aid"])
 	})
-	// more
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, int64(0), int8(0))
+		code, _ := q.AddAnswer(token, req)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Long Content", func(t *testing.T) {
+		long := string(make([]byte, service.AnswerContentLengthMax + 1))
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		nreq := req
+		nreq.Content = long
+		code, result := q.AddAnswer(token, nreq)
+		a.Equal(map[string]int8{"type": ConstraintsViolated}, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, errors.New("xx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Has Keywords", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return([]string{"content"}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(map[string]int8{"type": HasKeyword}, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Add Answer", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(0), errors.New("xx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Inc User Answer Count", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
+		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(errors.New("xx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Find Question By Id", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
+		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(nil)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), int64(456)).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Find Question not Exist", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
+		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(nil)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), int64(456)).Return([]entity.Questions{}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Save Question Skeleton", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().AddAnswer(gomock.Any(), uid, int64(456), req.Content, pictureUrl, "content ").Return(int64(47), nil)
+		mockQaDao.EXPECT().IncUserAnswerCount(gomock.Any(), uid).Return(nil)
+		mockQaDao.EXPECT().FindQuestionById(gomock.Any(), int64(456)).Return(questions, nil)
+		mockQaDao.EXPECT().SaveQuestionSkeleton(gomock.Any(), gomock.Any()).Return(errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.AddAnswer(token, req)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
 }
 
 func TestModifyAnswer(t *testing.T) {
+	const (
+		ConstraintsViolated = 0
+		HasKeyword          = 1
+		UnknownError        = 2
+	)
 	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -1255,25 +1529,110 @@ func TestModifyAnswer(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
+	token := "token"
+	req := service.ReqAnswersPut{
+		Aid: "346",
+		Content: "content",
+	}
+	var aid int64 = 346
+	var uid int64 = 76
+	var role int8 = service.USER
+	answer := []entity.Answers {{Aid: 345, Answerer: 76, Qid: 123}}
+	banned := []string{"tiger"}
+	unknownFailure := map[string]int8{"type": UnknownError}
+
 	t.Run("Normal", func(t *testing.T) {
-		token := "token"
-		req := service.ReqAnswersPut{
-			Aid: "346",
-			Content: "content",
-		}
-		var aid int64 = 346
-		var uid int64 = 76
-		var role int8 = service.USER
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
-		answer := []entity.Answers {{Aid: 345, Answerer: 76, Qid: 123}}
 		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answer, nil)
-		banned := []string{"tiger"}
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
 		mockQaDao.EXPECT().ModifyAnswer(gomock.Any(), aid, "content", "", "content ").Return(nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
 		code, result := q.ModifyAnswer(token, req)
 		a.Nil(result)
 		a.Equal(int8(service.Succeeded), code)
+	})
+
+	t.Run("Failed Aid", func(t *testing.T) {
+		nreq := req
+		nreq.Aid = "234x"
+		code, result := q.ModifyAnswer(token, nreq)
+		a.Equal(unknownFailure, result)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Long Content", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		long := string(make([]byte, service.QuestionContentLengthMax + 1))
+		nreq := req
+		nreq.Content = long
+		code, result := q.ModifyAnswer(token, nreq)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": ConstraintsViolated}, result)
+	})
+
+	t.Run("Failed to Find Answer By Id", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, result)
+	})
+
+	t.Run("Find Answer By Id not Found", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return([]entity.Answers{}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, result)
+	})
+
+	t.Run("Not Owner", func(t *testing.T) {
+		newAnswer := []entity.Answers {{Aid: 345, Answerer: 77, Qid: 123}}
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(newAnswer, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, result)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answer, nil)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, result)
+	})
+
+	t.Run("Has Keywords", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answer, nil)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return([]string{"content"}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(map[string]int8{"type": HasKeyword}, result)
+	})
+
+	t.Run("Failed to Modify Answer", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answer, nil)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(banned, nil)
+		mockQaDao.EXPECT().ModifyAnswer(gomock.Any(), aid, "content", "", "content ").Return(errors.New("xxxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, result := q.ModifyAnswer(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, result)
 	})
 }
 
@@ -1289,23 +1648,26 @@ func TestListAnswers(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
+	token := "token"
+	var (
+		qid int64 = 234
+		page int64 = 2
+		sort int8 = 1
+		uid int64 = 76
+		role int8 = service.USER
+	)
+	answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
+	details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+	userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
+	actionInfos := []dao.AnswerActionInfo{{Liked: false, Approved: false, Approvable: true}}
+	bannedWords := []string{"xxx"}
+
 	t.Run("Normal", func(t *testing.T) {
-		token := "token"
-		var (
-			qid int64 = 234
-			page int64 = 2
-			sort int8 = 1
-			uid int64 = 76
-			role int8 = service.USER
-		)
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
-		answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
 		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(answers, nil)
-		details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
 		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
-		userInfos := []rpc.UserInfo{{Name: "tsw", Nickname: "sk", Icon: "icon"}}
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
-		actionInfos := []dao.AnswerActionInfo{{Liked: false, Approved: false, Approvable: true}}
 		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(actionInfos, nil)
 		mockQaDao.EXPECT().Rollback(gomock.Any())
 		code, result := q.ListAnswers(token, qid, page, sort)
@@ -1315,6 +1677,53 @@ func TestListAnswers(t *testing.T) {
 		a.Equal("sk", res.Owner.Nickname)
 		a.True(res.Approvable)
 		a.Equal("content ", res.Head)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Failed to Find Question Answers", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(nil, errors.New("xx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get User Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Answer Action Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindQuestionAnswers(gomock.Any(), qid, page, sort).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
+		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(nil, errors.New("xxx"))
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.ListAnswers(token, qid, page, sort)
+		a.Equal(int8(service.Failed), code)
 	})
 }
 
@@ -1330,21 +1739,25 @@ func TestAnswerDetail(t *testing.T) {
 	_ = q.Init(mockQaDao, mockUsersRPC)
 	a := assert.New(t)
 
+	token := "token"
+	var (
+		aid int64 = 345
+		uid int64 = 76
+		role int8 = service.USER
+	)
+	answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
+	details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
+	userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+	actionInfos := []dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: false}}
+	bannedWords := []string{"xxx"}
+	err := errors.New("xxx")
+
 	t.Run("Normal", func(t *testing.T) {
-		token := "token"
-		var (
-			aid int64 = 345
-			uid int64 = 76
-			role int8 = service.USER
-		)
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
-		answers := []entity.Answers {{Aid: 345, Answerer: 36, Qid: 234}}
 		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answers, nil)
-		details := []entity.AnswerDetails {{Aid: 345, Content: "content", PictureUrl: "", Head: "content "}}
 		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
-		userInfos := []rpc.UserInfo {{Name: "name", Nickname: "nick", Icon: "icon"}}
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
-		actionInfos := []dao.AnswerActionInfo{{Liked: true, Approved: false, Approvable: false}}
 		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(actionInfos, nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
 		code, result := q.AnswerDetail(token, aid)
@@ -1354,5 +1767,68 @@ func TestAnswerDetail(t *testing.T) {
 		a.Equal("icon", res.Owner.Icon)
 		a.Equal("content", res.Content)
 		a.True(res.Liked)
+	})
+
+	t.Run("Failed Token", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(false, uid, role)
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Expired), code)
+	})
+
+	t.Run("Failed to Find Answer by Id", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Find Answer by Id not Found", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return([]entity.Answers{}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Find Answer by Id not Found", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return([]entity.Answers{}, nil)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Banned Words", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get User Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
+	})
+
+	t.Run("Failed to Get Answer Action Infos", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().FindAnswerById(gomock.Any(), aid).Return(answers, nil)
+		mockQaDao.EXPECT().FindAnswerDetails(gomock.Any(), answers).Return(details)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockUsersRPC.EXPECT().GetUserInfos([]int64{36}).Return(userInfos, nil)
+		mockQaDao.EXPECT().GetAnswerActionInfos(gomock.Any(), uid, []int64{234}, []int64{345}).Return(nil, err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, _ := q.AnswerDetail(token, aid)
+		a.Equal(int8(service.Failed), code)
 	})
 }
