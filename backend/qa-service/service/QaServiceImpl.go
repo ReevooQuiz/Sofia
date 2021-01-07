@@ -226,7 +226,11 @@ func (q *QaServiceImpl) QuestionListResponse(questions []entity.Questions, quest
 	for i, v := range questions {
 		uids[i] = v.Raiser
 		res[i].Qid = strconv.FormatInt(v.Qid, 10)
-		res[i].Title = v.Title
+		if MatchKeywords(&v.Title, keywords) {
+			res[i].Title = "[标题包含敏感词，已屏蔽]"
+		} else {
+			res[i].Title = v.Title
+		}
 		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
 		res[i].AnswerCount = v.AnswerCount
 		res[i].ViewCount = v.ViewCount
@@ -460,9 +464,10 @@ func (q *QaServiceImpl) AddQuestion(token string, req ReqQuestionsPost) (int8, i
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
+	titleKeywords := MatchKeywords(&title, &words)
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
-	if hasKeyword {
+	if titleKeywords || hasKeyword {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
 			log.Warn(e)
@@ -556,9 +561,10 @@ func (q *QaServiceImpl) ModifyQuestion(token string, req ReqQuestionsPut) (int8,
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
+	titleKeywords := MatchKeywords(&title, &words)
 	// serve
 	pictureUrl, head, hasKeyword := q.ParseContent(&content, &words)
-	if hasKeyword {
+	if titleKeywords || hasKeyword {
 		e := q.qaDao.Rollback(&ctx)
 		if e != nil {
 			log.Warn(e)
@@ -846,7 +852,11 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	qs := question[0]
 	var res QuestionInfo
 	res.Qid = strconv.FormatInt(qs.Qid, 10)
-	res.Title = qs.Title
+	if MatchKeywords(&qs.Title, &keywords) {
+		res.Title = "[标题包含敏感词，已屏蔽]"
+	} else {
+		res.Title = qs.Title
+	}
 	res.Time = fmt.Sprint(qs.Time)
 	res.AnswerCount = qs.AnswerCount
 	res.ViewCount = qs.ViewCount

@@ -200,7 +200,7 @@ CREATE TABLE `questions`  (
   INDEX `questions_ibfk_2`(`accepted_answer`) USING BTREE,
   CONSTRAINT `questions_ibfk_1` FOREIGN KEY (`raiser`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `questions_ibfk_2` FOREIGN KEY (`accepted_answer`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Table structure for user_labels
@@ -242,6 +242,6 @@ CREATE TABLE `users`  (
   `approval_count` bigint(20) NOT NULL,
   `notification_time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;

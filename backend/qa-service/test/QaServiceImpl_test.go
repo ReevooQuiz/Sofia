@@ -558,6 +558,7 @@ func TestServiceModifyQuestion(t *testing.T) {
 		HasKeyword          = 1
 		UnknownError        = 2
 	)
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	a := assert.New(t)
@@ -916,6 +917,7 @@ func TestServiceModifyQuestion(t *testing.T) {
 }
 
 func TestServiceMainPage(t *testing.T) {
+	t.Parallel()
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	mockUsersRPC := mock.NewMockUsersRPC(mockCtrl)
