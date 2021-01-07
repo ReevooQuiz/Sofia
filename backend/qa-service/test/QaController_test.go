@@ -729,3 +729,122 @@ func TestControllerComments(t *testing.T) {
 		})
 	}
 }
+
+func TestControllerCriticisms(t *testing.T) {
+	t.Parallel()
+	mux := http.NewServeMux()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockQaService := mock.NewMockQaService(mockCtrl)
+	a := assert.New(t)
+
+	var q controller.QaController
+	q.SetQaService(mockQaService)
+	mux.HandleFunc("/criticisms", q.Criticisms)
+
+	/******************************************* GET *********************************************/
+	getTests := []struct {
+		name string
+		token string
+		aid string
+		page string
+		mock bool
+		mockAid int64
+		mockPage int64
+		mockCode int8
+		mockResult interface{}
+		wantCode int8
+		wantResult interface{}
+	} {
+		{
+			"Normal",
+			"token",
+			"234",
+			"5",
+			true,
+			234,
+			5,
+			service.Succeeded,
+			"result",
+			service.Succeeded,
+			"result",
+		},
+		{
+			"Wrong Parameters",
+			"token",
+			"234df",
+			"5",
+			false,
+			234,
+			5,
+			service.Failed,
+			nil,
+			service.Failed,
+			nil,
+		},
+	}
+
+	for _, tt := range getTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().GetCriticisms(tt.token, tt.mockAid, tt.mockPage).Return(tt.mockCode, tt.mockResult)
+			}
+			r, _ := http.NewRequest("GET", "/criticisms?aid=" + tt.aid + "&page=" + tt.page, nil)
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+
+	/******************************************* POST *********************************************/
+	postTests := []struct {
+		name       string
+		token      string
+		req        service.ReqCriticismsPost
+		mock       bool
+		mockCode   int8
+		mockResult interface{}
+		wantCode   int8
+		wantResult interface{}
+	}{
+		{
+			"Normal",
+			"token",
+			service.ReqCriticismsPost{
+				Aid:    "3456",
+				Content:  "content",
+			},
+			true,
+			service.Succeeded,
+			"mock result",
+			service.Succeeded,
+			"mock result",
+		},
+	}
+	for _, tt := range postTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mock {
+				mockQaService.EXPECT().AddCriticism(tt.token, tt.req).Return(tt.mockCode, tt.mockResult)
+			}
+			body, _ := json.Marshal(tt.req)
+			r, _ := http.NewRequest("POST", "/criticisms", bytes.NewReader(body))
+			r.Header.Set("Authorization", tt.token)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, r)
+			a.Equal(http.StatusOK, w.Result().StatusCode)
+			responseBody := make([]byte, w.Body.Len())
+			_, _ = w.Body.Read(responseBody)
+			var res controller.ServerResponse
+			_ = json.Unmarshal(responseBody, &res)
+			want := controller.ServerResponse{Code: tt.wantCode, Result: tt.wantResult}
+			a.Equal(want, res)
+		})
+	}
+}
