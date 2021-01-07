@@ -2006,6 +2006,7 @@ func TestServiceAddComment(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockQaDao.EXPECT().AddComment(gomock.Any(), uid, aid, req.Content).Return(cmid, nil)
+		mockQaDao.EXPECT().IncCommentCount(gomock.Any(), aid).Return(nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
 		code, result := q.AddComment(token, req)
 		res := result.(map[string]string)["cmid"]
@@ -2052,6 +2053,17 @@ func TestServiceAddComment(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockQaDao.EXPECT().AddComment(gomock.Any(), uid, aid, req.Content).Return(int64(0), err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddComment(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Failed to Inc Comment Count", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddComment(gomock.Any(), uid, aid, req.Content).Return(cmid, nil)
+		mockQaDao.EXPECT().IncCommentCount(gomock.Any(), aid).Return(err)
 		mockQaDao.EXPECT().Rollback(gomock.Any())
 		code, res := q.AddComment(token, req)
 		a.Equal(int8(service.Failed), code)
@@ -2223,6 +2235,7 @@ func TestServiceAddCriticism(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockQaDao.EXPECT().AddCriticism(gomock.Any(), uid, aid, req.Content).Return(ctid, nil)
+		mockQaDao.EXPECT().IncCriticismCount(gomock.Any(), aid).Return(nil)
 		mockQaDao.EXPECT().Commit(gomock.Any())
 		code, result := q.AddCriticism(token, req)
 		res := result.(map[string]string)["ctid"]
@@ -2269,6 +2282,17 @@ func TestServiceAddCriticism(t *testing.T) {
 		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
 		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
 		mockQaDao.EXPECT().AddCriticism(gomock.Any(), uid, aid, req.Content).Return(int64(0), err)
+		mockQaDao.EXPECT().Rollback(gomock.Any())
+		code, res := q.AddCriticism(token, req)
+		a.Equal(int8(service.Failed), code)
+		a.Equal(unknownFailure, res)
+	})
+
+	t.Run("Failed to Inc Criticism Count", func(t *testing.T) {
+		mockUsersRPC.EXPECT().ParseToken(token).Return(true, uid, role)
+		mockQaDao.EXPECT().GetBannedWords(gomock.Any()).Return(bannedWords, nil)
+		mockQaDao.EXPECT().AddCriticism(gomock.Any(), uid, aid, req.Content).Return(ctid, nil)
+		mockQaDao.EXPECT().IncCriticismCount(gomock.Any(), aid).Return(err)
 		mockQaDao.EXPECT().Rollback(gomock.Any())
 		code, res := q.AddCriticism(token, req)
 		a.Equal(int8(service.Failed), code)

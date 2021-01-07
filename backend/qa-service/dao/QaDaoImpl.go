@@ -236,6 +236,30 @@ func (q *QaDaoImpl) IncUserAnswerCount(ctx TransactionContext, uid int64) (err e
 	return nil
 }
 
+func (q *QaDaoImpl) IncCommentCount(ctx TransactionContext, aid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update answers set comment_count=comment_count+1 where aid=?", aid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncCommentCount: aid = ", aid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
+func (q *QaDaoImpl) IncCriticismCount(ctx TransactionContext, aid int64) (err error) {
+	res, err := ctx.sqlTx.Exec("update answers set criticism_count=criticism_count+1 where aid=?", aid)
+	if err != nil {
+		return
+	}
+	affected, e := res.RowsAffected()
+	if e == nil && affected != 1 {
+		log.Warn("IncCriticismCount: aid = ", aid, ", but rows affected = ", affected)
+	}
+	return nil
+}
+
 func (q *QaDaoImpl) CheckQuestionOwner(ctx TransactionContext, qid int64, uid int64) (result bool, err error) {
 	var rows *sql.Rows
 	rows, err = ctx.sqlTx.Query("select exists(select*from questions where qid=? and raiser=?)", qid, uid)

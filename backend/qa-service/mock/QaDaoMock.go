@@ -352,6 +352,34 @@ func (mr *MockQaDaoMockRecorder) GetCriticisms(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCriticisms", reflect.TypeOf((*MockQaDao)(nil).GetCriticisms), arg0, arg1, arg2)
 }
 
+// IncCommentCount mocks base method
+func (m *MockQaDao) IncCommentCount(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncCommentCount", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncCommentCount indicates an expected call of IncCommentCount
+func (mr *MockQaDaoMockRecorder) IncCommentCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncCommentCount", reflect.TypeOf((*MockQaDao)(nil).IncCommentCount), arg0, arg1)
+}
+
+// IncCriticismCount mocks base method
+func (m *MockQaDao) IncCriticismCount(arg0 dao.TransactionContext, arg1 int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IncCriticismCount", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// IncCriticismCount indicates an expected call of IncCriticismCount
+func (mr *MockQaDaoMockRecorder) IncCriticismCount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IncCriticismCount", reflect.TypeOf((*MockQaDao)(nil).IncCriticismCount), arg0, arg1)
+}
+
 // IncQuestionCount mocks base method
 func (m *MockQaDao) IncQuestionCount(arg0 dao.TransactionContext, arg1 int64) error {
 	m.ctrl.T.Helper()

@@ -1013,6 +1013,12 @@ func (q *QaServiceImpl) AddComment(token string, req ReqCommentsPost) (int8, int
 		log.Warn(err)
 		return Failed, map[string]int8{"type": UnknownError}
 	}
+	err = q.qaDao.IncCommentCount(ctx, aid)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, map[string]int8{"type": UnknownError}
+	}
 	q.qaDao.Commit(&ctx)
 	return Succeeded, map[string]string{"cmid": strconv.FormatInt(cmid, 10)}
 }
@@ -1062,6 +1068,12 @@ func (q *QaServiceImpl) AddCriticism(token string, req ReqCriticismsPost) (int8,
 	}
 	// serve
 	ctid, err := q.qaDao.AddCriticism(ctx, uid, aid, content)
+	if err != nil {
+		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
+		return Failed, map[string]int8{"type": UnknownError}
+	}
+	err = q.qaDao.IncCriticismCount(ctx, aid)
 	if err != nil {
 		q.qaDao.Rollback(&ctx)
 		log.Warn(err)

@@ -24,6 +24,8 @@ type QaDao interface {
 
 	IncQuestionCount(ctx TransactionContext, uid int64) (err error)
 	IncUserAnswerCount(ctx TransactionContext, uid int64) (err error)
+	IncCommentCount(ctx TransactionContext, aid int64) (err error)
+	IncCriticismCount(ctx TransactionContext, aid int64) (err error)
 
 	CheckQuestionOwner(ctx TransactionContext, qid int64, uid int64) (result bool, err error)
 	CheckAnswerOwner(ctx TransactionContext, aid int64, uid int64) (result bool, err error)
