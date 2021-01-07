@@ -24,7 +24,7 @@
               <DownOutlined />
             </a-button>
           </a-dropdown>
-          <span v-if="questionHead.closed">
+          <span v-if="!questionHead.closed">
             <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
             <a-button v-else @click="onWriteAnswer">我要回答</a-button>
           </span>
@@ -37,8 +37,8 @@
               <a-row type="flex" justify="end">
                 <a-button @click="onCommitAnswer" type="primary" shape="pill" size="small">提交回答</a-button>
               </a-row>
+          <br/>
         </span>
-      <br />
       <a-row>
         <AnswerCard v-for="(item) in answerData" v-bind:key="item.aid" :ans="item" />
       </a-row>
