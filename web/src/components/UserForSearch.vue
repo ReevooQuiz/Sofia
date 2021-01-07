@@ -1,25 +1,28 @@
 <template>
-  <a-card hoverable>
+<div style="margin-bottom:10px">
+  <a-card hoverable >
     <a-comment  @click="toUser">
       <template v-if="admin" #actions>
-        <a-button v-if="user.banned" type="danger" shape="round" size="small" @click="onBanUser">解禁用户</a-button>
-        <a-button v-else type="danger" shape="round" size="small" @click="onBanUser">封禁用户</a-button>
+        <a-button v-if="user.banned"  type="primary" style="background-color:#fbbdbd;border-color: #ecc7d4;" shape="round" size="small" @click="onBanUser">解禁用户</a-button>
+        <a-button v-else  type="primary"  shape="round" size="small" @click="onBanUser">封禁用户</a-button>
       </template>
       <template #author><a>{{user.name}}</a></template>
       <template #avatar>
         <a-avatar
+        @click="gotoPerson(user.uid)"
             :src="user.icon"
             :alt="user.nickname"
         />
       </template>
       <template #content>
-        <p>
+        <p @click="gotoPerson(user.uid)">
           {{user.profile}}
         </p>
       </template>
     </a-comment>
   </a-card>
-  <br/>
+  <!-- <br/> -->
+</div>
 </template>
 
 <script>
@@ -41,6 +44,13 @@ export default {
       },{errorCallback:(e)=>{
           console.log(e);
         }});
+    },
+     gotoPerson(id) {
+      console.log(id)
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
+      });
     }
   }
 }

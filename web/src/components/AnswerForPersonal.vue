@@ -6,17 +6,22 @@
       size="small"
       style="border-radius : 3px"
       :headStyle="tstyle"
+      v-if="!deleted"
     >
       <template #extra>
-        <a-tag color="#68b0af" style="margin-top:10px">
-          <a-tooltip title="分区">
-            <DatabaseOutlined />
-            {{ans.question.category}}
-          </a-tooltip>
-        </a-tag>
+          <a-tag color="#68b0af" style="margin-top:10px">
+            <a-tooltip title="分区">
+              <DatabaseOutlined />
+              {{ans.question.category}}
+            </a-tooltip>
+          </a-tag>
+          <a-button v-if="modifying" size="small" shape="pill" type="primary" @click="onModify">取消修改</a-button>
+          <a-space v-else size="small">
+            <a-button size="small" shape="pill" type="primary" @click="onModify">修改回答</a-button>
+            <a-avatar @click="onDelete" size="small" shape="round" type="primary" style="background-color:#fbbdbd;border-color: #ecc7d4;"><DeleteOutlined /></a-avatar>
+          </a-space>
       </template>
-
-      <a-row>
+      <a-row v-if="!modifying" @click="toQuestion" >
         <a-col :span="4">
           <div style="align-items: center">
             <a-carousel arrows>
@@ -39,32 +44,6 @@
         <a-col :span="18" :offset="1">
           <a-comment>
             <template #actions>
-              <!-- <span key="comment-basic-like">
-                <a-tooltip title="赞">
-                  <template v-if="action === 'liked'">
-                    <LikeFilled @click="like" />
-                    {{ans.answer.like_count}}
-                  </template>
-                  <template v-else>
-                    <LikeOutlined @click="like" />
-                    {{ans.answer.like_count}}
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ likes }}</span>
-              </span>-->
-              <!-- <span key="comment-basic-dislike">
-                <a-tooltip title="反对">
-                  <template v-if="action === 'disliked'">
-                    <DislikeFilled @click="dislike" />
-                    {{ans.answer.criticism_count}}
-                  </template>
-                  <template v-else>
-                    <DislikeOutlined @click="dislike" />
-                    {{ans.answer.criticism_count}}
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
-              </span>-->
               <span key="comment-basic-reply-to">
                 <a-tooltip title="点赞数">
                   <LikeOutlined />
@@ -74,7 +53,7 @@
               <span key="comment-basic-reply-to">
                 <a-tooltip title="反对数">
                   <FrownOutlined />
-                  
+
                   {{ans.answer.criticism_count}} 反对
                 </a-tooltip>
               </span>
@@ -92,14 +71,8 @@
                 </a-tooltip>
               </span>
             </template>
-            <!-- <template #author>
-              <a>{{ans.owner.user_name}}</a>
-            </template>
-            <template #avatar>
-              <a-avatar :src="ans.owner.user_icon" alt="avatar" />
-            </template>-->
             <template #content>
-              <p>{{ans.answer.head}}</p>
+              <v-md-editor mode="preview" v-model="ans.answer.head"></v-md-editor>
             </template>
             <template #datetime>
               <a-tooltip :title="moment(ans.answer.time).format('YYYY-MM-DD HH:mm:ss')">
@@ -118,15 +91,25 @@
           >{{item}}</a-tag>
         </a-col>
       </a-row>
+      <a-row v-else>
+        <a-col :span="24" >
+          <v-md-editor v-model="answerValue" height="400px"></v-md-editor>
+          <br/>
+          <a-row type="flex" justify="end">
+            <a-button @click="onCommitAnswer" type="primary" shape="pill" size="small">提交回答</a-button>
+          </a-row>
+        </a-col>
+      </a-row>
     </a-card>
     <br />
   </div>
 </template>
-       
+
 
 
 <script >
 import moment from "moment";
+import { putRequest,getRequest } from "@/http/request.js";
 import {
   LikeFilled,
   LikeOutlined,
@@ -139,7 +122,8 @@ import {
   RightCircleOutlined,
   DatabaseOutlined,
   FrownOutlined,
-  SmileOutlined
+  SmileOutlined,
+  DeleteOutlined
 } from "@ant-design/icons-vue";
 export default {
   components: {
@@ -154,7 +138,8 @@ export default {
     RightCircleOutlined,
     DatabaseOutlined,
     FrownOutlined,
-    SmileOutlined
+    SmileOutlined,
+    DeleteOutlined
   },
   props: ["ans"],
 
@@ -164,20 +149,52 @@ export default {
       dislikes: 0,
       action: null,
       moment,
-      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" }
+      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" },
+      deleted:false,
+      modifying:false,
+      answerValue:""
     };
   },
   methods: {
-    like() {
-      this.likes = 1;
-      this.dislikes = 0;
-      this.action = "liked";
+    onModify(){
+      this.modifying=!this.modifying;
+      getRequest("/answer", (e) => {
+        this.answerValue = e.result.content;
+      }, {
+        errorCallback: (e) => {
+          console.log(e)
+        },
+        params: {aid: this.ans.answer.aid}
+      });
     },
-    dislike() {
-      this.likes = 0;
-      this.dislikes = 1;
-      this.action = "disliked";
-    }
+    onDelete(){
+      postRequest("/delete_answer", {aid:this.ans.answer.aid},(e)=>{
+        console.log(e);
+        if (e.code==0){
+          this.deleted=true;
+        }
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
+    },
+    onCommitAnswer(){
+      putRequest("/answers", {aid:this.ans.answer.aid,content:this.answerValue},(e)=>{
+        console.log(e);
+        if (e.code==0){
+          this.ans.answer.head=this.answerValue;
+          this.answerValue="";
+          this.modifying=false;
+        }
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
+    },
+    toQuestion() {
+      this.$router.push({
+        path: "/question",
+        query: { questionId: this.ans.question.qid }
+      });
+    },
   }
 };
 </script>

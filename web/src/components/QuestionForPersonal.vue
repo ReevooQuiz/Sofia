@@ -6,6 +6,7 @@
       size="small"
       style="border-radius : 3px"
       :headStyle="tstyle"
+      v-if="!deleted"
     >
       <template #extra>
         <a-tag color="#68b0af" style="margin-top:10px">
@@ -14,56 +15,25 @@
             {{ques.category}}
           </a-tooltip>
         </a-tag>
-        <a-button v-if="modifiable" @click="onModify">修改问题</a-button>
+        <a-space size="small">
+          <a-button size="small" shape="pill" type="primary" v-if="modifiable" @click="onModify">修改问题</a-button>
+          <a-button v-if="!ques.closed" @click="onClose" size="small" shape="pill" type="primary">关闭问题</a-button>
+          <a-avatar @click="onDelete" size="small" shape="round" type="primary" style="background-color:#fbbdbd;border-color: #ecc7d4;"><DeleteOutlined /></a-avatar>
+
+        </a-space>
       </template>
 
-      <a-row >
+      <a-row  @click="toQuestion">
         <a-col :span="4" >
           <div style="align-items: center">
-          <a-carousel arrows>
-            <template #prevArrow>
-              <div class="custom-slick-arrow" style="left: 10px;zIndex: 1">
-                <left-circle-outlined />
-              </div>
-            </template>
-            <template #nextArrow>
-              <div class="custom-slick-arrow" style="right: 10px">
-                <right-circle-outlined />
-              </div>
-            </template>
             <div v-for="(item) in ques.picture_urls" v-bind:key="item.index">
               <img :src="item" @click="toQuestion" style="width:100%" />
             </div>
-          </a-carousel>
           </div>
         </a-col>
         <a-col :span="18" :offset="1">
           <a-comment>
             <template #actions>
-              <!-- <span key="comment-basic-like">
-                <a-tooltip title="赞">
-                  <template v-if="action === 'liked'">
-                    <LikeFilled @click="like" />
-                    {{ques.favorite_count}}
-                  </template>
-                  <template v-else>
-                    <LikeOutlined @click="like" />
-                    {{ques.favorite_count}}
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ likes }}</span>
-              </span>
-              <span key="comment-basic-dislike">
-                <a-tooltip title="Dislike">
-                  <template v-if="action === 'disliked'">
-                    <DislikeFilled @click="dislike" />
-                  </template>
-                  <template v-else>
-                    <DislikeOutlined @click="dislike" />
-                  </template>
-                </a-tooltip>
-                <span style="padding-left: '8px';cursor: 'auto'">{{ dislikes }}</span>
-              </span> -->
                <span key="comment-basic-reply-to">
                 <a-tooltip title="赞">
                  <LikeOutlined />
@@ -90,14 +60,8 @@
                 </a-tooltip>
               </span>
             </template>
-            <!-- <template #author>
-              <a>{{ques.owner.user_name}}</a>
-            </template>
-            <template #avatar>
-              <a-avatar :src="ques.owner.user_icon" alt="avatar" />
-            </template> -->
             <template #content>
-              <p @click="toQuestion">{{ques.head}}</p>
+              <v-md-editor mode="preview" v-model="ques.head" @click="toQuestion"></v-md-editor>
             </template>
             <template #datetime>
               <a-tooltip :title="moment(ques.time).format('YYYY-MM-DD HH:mm:ss')">
@@ -135,8 +99,11 @@ import {
   TeamOutlined,
   LeftCircleOutlined,
   RightCircleOutlined,
-  DatabaseOutlined
+  DatabaseOutlined,
+    DeleteOutlined,
+    CloseOutlined
 } from "@ant-design/icons-vue";
+import {postRequest,putRequest} from "../http/request";
 export default {
   components: {
     LikeFilled,
@@ -148,7 +115,10 @@ export default {
     FileTextOutlined,
     LeftCircleOutlined,
     RightCircleOutlined,
-    DatabaseOutlined
+    DatabaseOutlined,
+    DeleteOutlined,
+    CloseOutlined
+
   },
   props: ["ques"],
 
@@ -159,7 +129,8 @@ export default {
       action: null,
       moment,
       modifiable:false,
-      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" }
+      tstyle: { "font-size": "21px", "font-weight": " bold", color: " #425050" },
+      deleted:false
     };
   },
   created() {
@@ -168,8 +139,6 @@ export default {
   },
   methods: {
     toQuestion() {
-      console.log("??");
-      console.log(this.ques.qid);
       this.$router.push({
         path: "/question",
         query: { questionId: this.ques.qid }
@@ -177,7 +146,27 @@ export default {
     },
     onModify(){
       this.$router.push({ path:'/postQuestion' , query: { questionId: this.ques.qid } });
-    }
+    },
+    onDelete(){
+      postRequest("/disable_question", {qid:this.ques.qid},(e)=>{
+        console.log(e);
+        if (e.code==0){
+          this.deleted=true;
+        }
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
+    },
+    onClose(){
+      this.ques.closed=true;
+      putRequest("/disable_question", {qid:this.ques.qid},(e)=>{
+        console.log(e);
+        if (e.code==0){
+        }
+      },{errorCallback:(e)=>{
+          console.log(e);
+        }});
+    },
   }
 };
 </script>

@@ -17,7 +17,7 @@
         <div class="col-7">
              <a-input-search placeholder="输入您的问题" style="width: 450px" @search="onSearch" size="large" v-model:value="value"/>
         </div>
-      </a-row>    
+      </a-row>
     </a-col>
     <a-col :span="5" :offset="3">
         <img src="../assets/cactus2.png" height="345" width="180"    style="marginTop: 340px"/>
@@ -31,6 +31,9 @@ export default {
     return {
       value: '',
     };
+  },
+  mounted() {
+    this.$store.commit('changeTarget','home');
   },
   methods: {
     onSearch(value) {

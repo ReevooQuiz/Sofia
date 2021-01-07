@@ -1,14 +1,17 @@
 <template>
   <div>
-    <a-col :span="20" :offset="2">
+    <!-- <a-row justify="center"> -->
+
+
+    <a-col :span="16" :offset="4">
       <a-row>
         <div>
           <QuestionHead :ques="questionHead" />
         </div>
       </a-row>
       <a-row justify="space-between">
-        <a-tag>{{questionHead.answer_count}} 个回答</a-tag>
-        <a-space :size="20">
+        <a-tag> {{questionHead.answer_count}} 个回答</a-tag>
+        <a-space :size="19">
           <a-dropdown>
             <template #overlay>
               <a-menu @click="handleOrderClick">
@@ -21,8 +24,10 @@
               <DownOutlined />
             </a-button>
           </a-dropdown>
-          <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
-                <a-button v-else @click="onWriteAnswer">我要回答</a-button>
+          <span v-if="!questionHead.closed">
+            <a-button v-if="writeAnswer" @click="onWriteAnswer">取消回答</a-button>
+            <a-button v-else @click="onWriteAnswer">我要回答</a-button>
+          </span>
         </a-space>
       </a-row>
         <br/>
@@ -32,8 +37,8 @@
               <a-row type="flex" justify="end">
                 <a-button @click="onCommitAnswer" type="primary" shape="pill" size="small">提交回答</a-button>
               </a-row>
+          <br/>
         </span>
-      <br />
       <a-row>
         <AnswerCard v-for="(item) in answerData" v-bind:key="item.aid" :ans="item" />
       </a-row>
@@ -52,6 +57,8 @@
         </a-col>
       </a-row>
     </a-col>
+
+    <!-- </a-row> -->
   </div>
 </template>
 
@@ -60,7 +67,7 @@ import { Options, Vue } from "vue-class-component";
 import QuestionHead from "@/components/QuestionHead.vue";
 import AnswerCard from "@/components/AnswerCard.vue";
 import { DownOutlined } from "@ant-design/icons-vue";
-import { postRequest,getRequest } from "@/http/request.js";
+import { postRequest,getRequest,putRequest } from "@/http/request.js";
 
 const orderBy = ["按时间排序", "按热度排序"];
 export default {
@@ -102,7 +109,7 @@ export default {
           (response)=>{
             this.answerData=this.answerData.concat(response.result);
             this.loadingMore=false;
-            if (response.res.length==0)
+            if (response.result.length==0)
               this.showLoadingMore=false;
           },
           {
@@ -135,7 +142,7 @@ export default {
       this.writeAnswer=true;
     },
     onCommitAnswer(){
-      console.log(this.writeAnswerValue);
+      //console.log(this.writeAnswerValue);
       postRequest("/answers", {qid:this.questionHead.qid,content:this.writeAnswerValue},(e)=>{
         console.log(e);
         this.writeAnswer=false;

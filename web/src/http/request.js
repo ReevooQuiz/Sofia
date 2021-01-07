@@ -1,10 +1,15 @@
 import axios from 'axios'
 import router from "@/router/index.ts";
+
 const server = axios.create({
     // baseURL: "http://localhost:4000/",
-    baseURL: "https://private-16f24d-reevooapi.apiary-mock.com",
+    baseURL: "https://private-74c97e-reevooapi.apiary-mock.com",
     timeout: 5000,
+
 });
+
+server.defaults.retry = 3;
+server.defaults.retryDelay =500;
 // 设置拦截器
 // 请求拦截器
 server.interceptors.request.use(
@@ -20,6 +25,7 @@ server.interceptors.request.use(
         this.$dialog.alert(error);
         return Promise.reject(error);
     }
+
 );
 // 响应拦截器
 server.interceptors.response.use(
@@ -33,24 +39,38 @@ server.interceptors.response.use(
         } else {
             console.log("操作成功")
         }
-
         return response;
     },
-    error => {
-        switch (
-        error.response.status
-        ) {
-            case 500:
-                router.push({
-                    path: "/404"
-                });
-                break;
-            case 401:
-                router.push({
-                    path: "/401"
-                });
-                break;
+    function axiosRetryInterceptor(err) {
+        var config = err.config;
+        // console.log("retry")
+        // console.log(config.retry)
+        // If config does not exist or the retry option is not set, reject
+        if (!config || !config.retry) return Promise.reject(err);
+
+        // Set the variable for keeping track of the retry count
+        config.__retryCount = config.__retryCount || 0;
+
+        // Check if we've maxed out the total number of retries
+        if (config.__retryCount >= config.retry) {
+            // Reject with the error
+            return Promise.reject(err);
         }
+
+        // Increase the retry count
+        config.__retryCount += 1;
+
+        // Create new promise to handle exponential backoff
+        var backoff = new Promise(function (resolve) {
+            setTimeout(function () {
+                resolve();
+            }, config.retryDelay || 1);
+        });
+
+        // Return the promise in which recalls axios to retry the request
+        return backoff.then(function () {
+            return server(config);
+        });
     }
 );
 
@@ -114,6 +134,40 @@ let postRequest = (url, body, callback, { errorCallback }) => {
     console.log("here");
     server
         .post(url,
+            body,
+        )
+        .catch(function (error) {
+            console.log("error");
+            errorCallback(error)
+        })
+        .then(response => {
+            console.log("callback");
+
+            if (response.data.code === 1) {
+                console.log("code failed")
+            }
+            else if (response.data.code === 2) {
+                console.log("time out ,go to refresh token")
+                resetToken(url, body, callback, true, false, {
+                    errorCallback: errorCallback,
+                    params: {}
+                })
+
+            }
+            else {
+                callback(response.data);
+            }
+
+
+        });
+
+
+};
+let putRequest = (url, body, callback, { errorCallback }) => {
+
+    console.log("put");
+    server
+        .put(url,
             body,
         )
         .catch(function (error) {
@@ -208,10 +262,10 @@ let getRequest_checkSession = (callback) => {
 
             // }
             // else {
-                callback(response.data);
+            callback(response.data);
             // }
 
         });
 };
 
-export { server, postRequest, getRequest ,getRequest_checkSession};
+export { server, postRequest, getRequest, getRequest_checkSession, putRequest };

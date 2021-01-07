@@ -11,18 +11,18 @@
             </span>
           </template>
           <a-menu-item key="study">
-            <router-link to="/category?c=study"><BookOutlined />学习</router-link>
+            <router-link to="/categoryStudy"><BookOutlined />学习</router-link>
           </a-menu-item>
           <a-menu-item key="life">
-            <router-link to="/category?c=life"><CoffeeOutlined />生活</router-link>
+            <router-link to="/categoryLife"><CoffeeOutlined />生活</router-link>
           </a-menu-item>
         </a-sub-menu>
         <a-menu-item key="recommend"><router-link to="/recommend">推荐</router-link></a-menu-item>
-        <a-menu-item key="explore">探索</a-menu-item>
+        <!-- <a-menu-item key="explore">探索</a-menu-item> -->
         <a-menu-item key="ban">
-          <router-link to="/ban">封禁</router-link></a-menu-item>
+          <router-link v-if="admin" to="/ban">封禁</router-link></a-menu-item>
         <a-menu-item key="mine">
-          <router-link to="/personal">我的</router-link></a-menu-item>
+          <router-link to="/personalSet">我的</router-link></a-menu-item>
         <a-menu-item v-if="admin" key="hotRank">
           <router-link to="/hotRank">热榜管理</router-link></a-menu-item>
       </a-menu>
@@ -37,15 +37,15 @@
         <a-button type="primary" shape="round" size="small">
           <router-link to="/postQuestion">提问</router-link>
         </a-button>
-        <a-avatar @click="goToPersonal">
-          <img v-if="this.logStatus" src="'data:image/png;base64,'+this.avtar" alt="图片未上传" />
+        <a-avatar @click="goToPersonal" v-if="logStatus" :src="avatar" alt="图片未上传" >
+        </a-avatar>
+        <a-avatar v-else>
           <template #icon>
             <UserOutlined />
           </template>
         </a-avatar>
-        <a-button >{{logButton}}</a-button>
         <a-button
-          v-if="this.loginStatus"
+          v-if="logStatus"
           type="primary"
           shape="round"
           size="small"
@@ -74,66 +74,51 @@ export default {
   data() {
     return {
       current: ["home"],
-      logStatus: false,
-      avtar: "",
       admin:false
     };
   },
   created() {
     if (sessionStorage.getItem("user") !== null) {
-      this.logStatus = true;
-      this.avtar = JSON.parse(sessionStorage.getItem("user")).icon;
+      this.$store.commit("changeLogStatus",true);
       if (JSON.parse(sessionStorage.getItem("user")).role==0)
         this.admin=true;
     } else {
     }
+    // const store = useStore();
+    // store.commit('increment');
+    // console.log(store.state.count);
+
   },
 
   methods: {
     goToPersonal() {
-      this.$router.push({ path: "/personal" });
+      this.$router.push({ path: "/personalSet" });
     },
     goToLogin() {
-      console.log("!");
       this.$router.push({ path: "/login" });
     },
     goToLogout() {
-      console.log("!");
       if (sessionStorage.getItem("user") !== null) {
         sessionStorage.removeItem("user");
       }
-      this.logStatus = false;
+      this.$store.commit("changeLogStatus",false);
+      this.$store.commit("changeIcon","");
       // this.$store.state.loginStatus=false;
       message.success("成功登出");
       this.$router.push({ path: "/" });
     }
   },
-  computed:{
-            // userType:function(){
-            //     return this.$store.state.user.type;
-            // },
-            logButton:function () {
-                if(sessionStorage.getItem("user")){
-                    return 1;
-                }
-                else return 0;
-            },
-        },
-  // computed: {
-  //   user: function() {
-  //     return this.$store.state.loginStatus;
-  //   }
-  // },
-  // watch: {
-  //   user: function(newType) {
-  //     if (newType) {
-  //       this.logStatus = true;
-  //       this.avtar = JSON.parse(newType).icon;
-  //     } else {
-  //       this.logStatus = true;
-  //     }
-  //   }
-  // }
+  computed: {
+    current:function () {
+      return [this.$store.state.navTarget];
+    },
+    logStatus:function (){
+      return this.$store.state.logStatus;
+    },
+    avatar:function () {
+      return this.$store.state.navIcon;
+    }
+  }
 };
 </script>
 

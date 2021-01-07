@@ -35,20 +35,23 @@
                       <a-col>
                         <br />
                         <img
+                         @click="gotoPerson(item.uid)"
                           slot="cover"
                           alt="example"
-                          src="https://tse2-mm.cn.bing.net/th/id/OIP.OCLuKoXlay8WIeNZPpCfcgHaHa?pid=Api&rs=1"
+                          :src="item.icon"
                           style="height: 60px; border-radius: 50% ;box-shadow: 3px 3px 3px #dcdfdf"
                           
                         />
                         <br />
                         <!-- <br /> -->
-                        <span class="follower-name">{{item.name}}</span>
+                        <span class="follower-name" @click="gotoPerson(item.uid)">{{item.name}}</span>
                         <br />
-                        <span class="follower-nickname">{{item.nickname}}</span>
+                        <span class="follower-nickname" @click="gotoPerson(item.uid)">{{item.nickname}}</span>
                         <br />
                         <br />
-                        <span class="follower-profile">{{item.profile}}</span>
+                        <span class="follower-profile" @click="gotoPerson(item.uid)">{{item.profile}}</span>
+                        
+                       
                       </a-col>
                       <!-- <a-col :span="2" :offset="1"></a-col> -->
                     </a-row>
@@ -111,6 +114,13 @@ export default {
     onSearch(value) {
       this.showData=this.data.filter(item => item.name.indexOf(value)>=0 || item.nickname.indexOf(value)>=0)
     },
+    gotoPerson(id) {
+      console.log(id)
+      this.$router.push({
+        path: "/personalSetOthers",
+        query: { uId: id }
+      });
+    }
   }
 };
 </script>

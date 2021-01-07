@@ -14,6 +14,7 @@
       <v-md-editor v-model="questionValue" height="400px"></v-md-editor>
     </a-col>
     <a-col :span="2" :offset="1" >
+      分类
       <a-select
           v-model:value="category"
           style="width: 80px"
@@ -35,7 +36,7 @@
 
 <script>
 import {message} from "ant-design-vue";
-import { postRequest,getRequest } from "@/http/request.js";
+import { postRequest,getRequest,putRequest } from "@/http/request.js";
 
 export default {
   data(){
@@ -86,7 +87,7 @@ export default {
         count++;
       }
       if (this.qid!=null){
-        postRequest("/questions",
+        putRequest("/questions",
             {
               qid:this.qid,
               title:this.title,
