@@ -5,10 +5,10 @@
 package mock
 
 import (
+	"github.com/SKFE396/search-service/dao"
+	"github.com/SKFE396/search-service/entity"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
-	dao "github.com/SKFE396/search-service/dao"
-	entity "github.com/SKFE396/search-service/entity"
 )
 
 // MockSearchDao is a mock of SearchDao interface

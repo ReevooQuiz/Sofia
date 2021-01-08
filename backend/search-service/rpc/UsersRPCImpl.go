@@ -3,7 +3,6 @@ package rpc
 import (
 	"encoding/json"
 	"github.com/SKFE396/search-service/config"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"

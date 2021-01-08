@@ -3,13 +3,13 @@ package test
 import (
 	"database/sql"
 	"errors"
+	"github.com/SKFE396/search-service/dao"
+	"github.com/SKFE396/search-service/entity"
+	"github.com/SKFE396/search-service/mock"
+	"github.com/SKFE396/search-service/rpc"
+	"github.com/SKFE396/search-service/service"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"search-service/dao"
-	"search-service/entity"
-	"search-service/mock"
-	"search-service/rpc"
-	"search-service/service"
 	"testing"
 	"time"
 )
