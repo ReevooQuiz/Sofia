@@ -1204,12 +1204,12 @@ func TestServicePublicInfoPut(t *testing.T) {
 		args    args
 		wantRes service.ResPublicInfoPut
 	}{
-		{"NormalAndLabelFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
-		{"NormalAndLabelNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
-		{"NameFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 0}}},
-		{"UserNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},
-		{"UserDetailNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},
-		{"WrongToken", args{req: service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: users[0].Gender, Email: users[0].Email}}, service.ResPublicInfoPut{Code: 2}},
+		{"NormalAndLabelFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
+		{"NormalAndLabelNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email, Labels: []string{labels[0].Title}}}, service.ResPublicInfoPut{Code: 0}},
+		{"NameFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 0}}},
+		{"UserNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},
+		{"UserDetailNotFound", args{token, service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email}}, service.ResPublicInfoPut{Code: 1, Result: service.ResultPublicInfoPut{Type: 1}}},
+		{"WrongToken", args{req: service.ReqPublicInfoPut{Name: users[0].Name, Nickname: users[0].Nickname, Profile: users[0].Profile, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10), Email: users[0].Email}}, service.ResPublicInfoPut{Code: 2}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1318,10 +1318,10 @@ func TestServiceRegister(t *testing.T) {
 		args    args
 		wantRes service.ResRegister
 	}{
-		{"Normal", args{service.ReqRegister{Name: users[0].Name, Nickname: users[0].Nickname, Password: "test", Email: users[0].Email, Icon: userDetails[0].Icon, Gender: users[0].Gender}}, service.ResRegister{Code: 0}},
-		{"NameFound", args{service.ReqRegister{Name: users[0].Name, Nickname: users[0].Nickname, Password: users[0].HashPassword, Email: users[0].Email, Icon: userDetails[0].Icon, Gender: users[0].Gender}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 0}}},
-		{"EmailFound", args{service.ReqRegister{Name: users[1].Name, Nickname: users[1].Nickname, Password: users[1].HashPassword, Email: users[1].Email, Icon: userDetails[0].Icon, Gender: users[1].Gender}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 1}}},
-		{"NotActive", args{service.ReqRegister{Name: users[2].Name, Nickname: users[2].Nickname, Password: users[2].HashPassword, Email: users[2].Email, Icon: userDetails[0].Icon, Gender: users[2].Gender}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 2}}},
+		{"Normal", args{service.ReqRegister{Name: users[0].Name, Nickname: users[0].Nickname, Password: "test", Email: users[0].Email, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10)}}, service.ResRegister{Code: 0}},
+		{"NameFound", args{service.ReqRegister{Name: users[0].Name, Nickname: users[0].Nickname, Password: users[0].HashPassword, Email: users[0].Email, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[0].Gender), 10)}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 0}}},
+		{"EmailFound", args{service.ReqRegister{Name: users[1].Name, Nickname: users[1].Nickname, Password: users[1].HashPassword, Email: users[1].Email, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[1].Gender), 10)}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 1}}},
+		{"NotActive", args{service.ReqRegister{Name: users[2].Name, Nickname: users[2].Nickname, Password: users[2].HashPassword, Email: users[2].Email, Icon: userDetails[0].Icon, Gender: strconv.FormatInt(int64(users[2].Gender), 10)}}, service.ResRegister{Code: 1, Result: service.ResultRegister{Type: 2}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

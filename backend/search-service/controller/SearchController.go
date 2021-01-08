@@ -2,9 +2,10 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/SKFE396/search-service/service"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"search-service/service"
 	"strconv"
 	"sync"
 )
@@ -28,15 +29,23 @@ func (s *SearchController) Init(group *sync.WaitGroup, searchService service.Sea
 	if err != nil {
 		log.Info(err)
 	}
-	server = &http.Server{Addr: ":9094"}
-	http.HandleFunc("/searchQuestions", s.SearchQuestions)
-	http.HandleFunc("/searchAnswers", s.SearchAnswers)
-	http.HandleFunc("/searchUsers", s.SearchUsers)
-	http.HandleFunc("/hotlist", s.HotList)
-	http.HandleFunc("/search", s.Search)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/searchQuestions", s.SearchQuestions)
+	mux.HandleFunc("/searchAnswers", s.SearchAnswers)
+	mux.HandleFunc("/searchUsers", s.SearchUsers)
+	mux.HandleFunc("/hotlist", s.HotList)
+	mux.HandleFunc("/search", s.Search)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedMethods:   []string{"GET", "POST", "PUT"},
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	go func() {
 		defer group.Done()
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := http.ListenAndServe(":9094", handler); err != http.ErrServerClosed {
 			log.Info(err)
 		}
 	}()

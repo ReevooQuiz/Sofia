@@ -45,7 +45,7 @@ func (u *UsersRPCImpl) GetUserInfos(uids []int64) (result []UserInfo, err error)
 }
 
 func (u *UsersRPCImpl) ParseToken(token string) (successful bool, uid int64, role int8) {
-	request, err := http.NewRequest("GET", config.UserServiceUrl+"check?token="+token, nil)
+	request, err := http.NewRequest("GET", config.UserServiceUrl+"checkToken?token="+token, nil)
 	if err == nil {
 		request.Header.Set("Accept", "application/json")
 		client := http.Client{}

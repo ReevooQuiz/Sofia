@@ -30,12 +30,9 @@ CREATE TABLE `answers`  (
   `like_count` bigint(20) NOT NULL,
   `approval_count` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
-  `scanned` tinyint(1) NOT NULL,
   PRIMARY KEY (`aid`) USING BTREE,
   INDEX `answerer`(`answerer`) USING BTREE,
-  INDEX `qid`(`qid`) USING BTREE,
-  CONSTRAINT `answers_ibfk_1` FOREIGN KEY (`answerer`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `answers_ibfk_2` FOREIGN KEY (`qid`) REFERENCES `questions` (`qid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `qid`(`qid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -47,9 +44,7 @@ CREATE TABLE `approve_answers`  (
   `aid` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE,
-  INDEX `aid`(`aid`) USING BTREE,
-  CONSTRAINT `approve_answers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `approve_answers_ibfk_2` FOREIGN KEY (`aid`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `aid`(`aid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -72,9 +67,7 @@ CREATE TABLE `comments`  (
   `time` bigint(20) NOT NULL,
   PRIMARY KEY (`cmid`) USING BTREE,
   INDEX `uid`(`uid`) USING BTREE,
-  INDEX `aid`(`aid`) USING BTREE,
-  CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`aid`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `aid`(`aid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -88,9 +81,7 @@ CREATE TABLE `criticisms`  (
   `time` bigint(20) NOT NULL,
   PRIMARY KEY (`ctid`) USING BTREE,
   INDEX `uid`(`uid`) USING BTREE,
-  INDEX `aid`(`aid`) USING BTREE,
-  CONSTRAINT `criticisms_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `criticisms_ibfk_2` FOREIGN KEY (`aid`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `aid`(`aid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -101,9 +92,7 @@ CREATE TABLE `favorite_items`  (
   `fid` bigint(20) NOT NULL,
   `qid` bigint(20) NOT NULL,
   PRIMARY KEY (`fid`, `qid`) USING BTREE,
-  INDEX `favorite_items_ibfk_2`(`qid`) USING BTREE,
-  CONSTRAINT `favorite_items_ibfk_1` FOREIGN KEY (`fid`) REFERENCES `favorites` (`fid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `favorite_items_ibfk_2` FOREIGN KEY (`qid`) REFERENCES `questions` (`qid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `favorite_items_ibfk_2`(`qid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -115,8 +104,7 @@ CREATE TABLE `favorites`  (
   `uid` bigint(20) NOT NULL,
   `title` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   PRIMARY KEY (`fid`) USING BTREE,
-  INDEX `uid`(`uid`) USING BTREE,
-  CONSTRAINT `favorites_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `uid`(`uid`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -128,9 +116,7 @@ CREATE TABLE `follows`  (
   `follower` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `follower`) USING BTREE,
-  INDEX `follower`(`follower`) USING BTREE,
-  CONSTRAINT `follows_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `follows_ibfk_2` FOREIGN KEY (`follower`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `follower`(`follower`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -140,8 +126,7 @@ DROP TABLE IF EXISTS `hotlist_items`;
 CREATE TABLE `hotlist_items`  (
   `qid` bigint(20) NOT NULL,
   `temperature` bigint(20) NOT NULL,
-  PRIMARY KEY (`qid`) USING BTREE,
-  CONSTRAINT `hotlist_items_ibfk_1` FOREIGN KEY (`qid`) REFERENCES `questions` (`qid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  PRIMARY KEY (`qid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -186,9 +171,7 @@ CREATE TABLE `like_answers`  (
   `aid` bigint(20) NOT NULL,
   `time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `aid`) USING BTREE,
-  INDEX `aid`(`aid`) USING BTREE,
-  CONSTRAINT `like_answers_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `like_answers_ibfk_2` FOREIGN KEY (`aid`) REFERENCES `answers` (`aid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `aid`(`aid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -199,9 +182,7 @@ CREATE TABLE `question_labels`  (
   `qid` bigint(20) NOT NULL,
   `lid` bigint(20) NOT NULL,
   PRIMARY KEY (`qid`, `lid`) USING BTREE,
-  INDEX `question_labels_ibfk_2`(`lid`) USING BTREE,
-  CONSTRAINT `question_labels_ibfk_1` FOREIGN KEY (`qid`) REFERENCES `questions` (`qid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `question_labels_ibfk_2` FOREIGN KEY (`lid`) REFERENCES `labels` (`lid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `question_labels_ibfk_2`(`lid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -232,9 +213,7 @@ CREATE TABLE `user_labels`  (
   `uid` bigint(20) NOT NULL,
   `lid` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`, `lid`) USING BTREE,
-  INDEX `user_labels_ibfk_2`(`lid`) USING BTREE,
-  CONSTRAINT `user_labels_ibfk_1` FOREIGN KEY (`uid`) REFERENCES `users` (`uid`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `user_labels_ibfk_2` FOREIGN KEY (`lid`) REFERENCES `labels` (`lid`) ON DELETE CASCADE ON UPDATE RESTRICT
+  INDEX `user_labels_ibfk_2`(`lid`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -265,21 +244,5 @@ CREATE TABLE `users`  (
   `notification_time` bigint(20) NOT NULL,
   PRIMARY KEY (`uid`) USING BTREE
 ) ENGINE = MyISAM AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
--- Procedure structure for proc_initData
--- ----------------------------
-DROP PROCEDURE IF EXISTS `proc_initData`;
-delimiter ;;
-CREATE PROCEDURE `proc_initData`()
-BEGIN
-    DECLARE i INT DEFAULT 1;
-    WHILE i<=100000 DO
-        INSERT INTO questions(raiser,category,answer_count,view_count,favorite_count,time,scanned,closed) VALUES(5,"life",0,0,0,0,0,0);
-        SET i=i+1;  
-    END WHILE;  
-END
-;;
-delimiter ;
 
 SET FOREIGN_KEY_CHECKS = 1;

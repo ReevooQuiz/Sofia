@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"github.com/zhanghanchong/users-service/service"
 	"net/http"
@@ -24,35 +25,43 @@ func (u *UsersController) Init(group *sync.WaitGroup, usersService service.Users
 		log.Info(err)
 		return server
 	}
-	server = &http.Server{Addr: ":9092"}
-	http.HandleFunc("/approve", u.Approve)
-	http.HandleFunc("/ban", u.Ban)
-	http.HandleFunc("/banned", u.Banned)
-	http.HandleFunc("/checkSession", u.CheckSession)
-	http.HandleFunc("/checkToken", u.CheckToken)
-	http.HandleFunc("/collection", u.Collection)
-	http.HandleFunc("/favorite", u.Favorite)
-	http.HandleFunc("/follow", u.Follow)
-	http.HandleFunc("/followed", u.Followed)
-	http.HandleFunc("/followers", u.Followers)
-	http.HandleFunc("/infoList", u.InfoList)
-	http.HandleFunc("/like", u.Like)
-	http.HandleFunc("/login", u.Login)
-	http.HandleFunc("/notifications", u.Notifications)
-	http.HandleFunc("/oauth/github", u.OAuthGithub)
-	http.HandleFunc("/passwd", u.Passwd)
-	http.HandleFunc("/publicInfo", u.PublicInfo)
-	http.HandleFunc("/refreshToken", u.RefreshToken)
-	http.HandleFunc("/register", u.Register)
-	http.HandleFunc("/userAnswers", u.UserAnswers)
-	http.HandleFunc("/userQuestions", u.UserQuestions)
-	http.HandleFunc("/verificationCode", u.VerificationCode)
-	http.HandleFunc("/verify", u.Verify)
-	http.HandleFunc("/wordBan", u.WordBan)
-	http.HandleFunc("/wordsBanned", u.WordsBanned)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/approve", u.Approve)
+	mux.HandleFunc("/ban", u.Ban)
+	mux.HandleFunc("/banned", u.Banned)
+	mux.HandleFunc("/checkSession", u.CheckSession)
+	mux.HandleFunc("/checkToken", u.CheckToken)
+	mux.HandleFunc("/collection", u.Collection)
+	mux.HandleFunc("/favorite", u.Favorite)
+	mux.HandleFunc("/follow", u.Follow)
+	mux.HandleFunc("/followed", u.Followed)
+	mux.HandleFunc("/followers", u.Followers)
+	mux.HandleFunc("/infoList", u.InfoList)
+	mux.HandleFunc("/like", u.Like)
+	mux.HandleFunc("/login", u.Login)
+	mux.HandleFunc("/notifications", u.Notifications)
+	mux.HandleFunc("/oauth/github", u.OAuthGithub)
+	mux.HandleFunc("/passwd", u.Passwd)
+	mux.HandleFunc("/publicInfo", u.PublicInfo)
+	mux.HandleFunc("/refreshToken", u.RefreshToken)
+	mux.HandleFunc("/register", u.Register)
+	mux.HandleFunc("/userAnswers", u.UserAnswers)
+	mux.HandleFunc("/userQuestions", u.UserQuestions)
+	mux.HandleFunc("/verificationCode", u.VerificationCode)
+	mux.HandleFunc("/verify", u.Verify)
+	mux.HandleFunc("/wordBan", u.WordBan)
+	mux.HandleFunc("/wordsBanned", u.WordsBanned)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedMethods:   []string{"GET", "POST", "PUT"},
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	go func() {
 		defer group.Done()
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := http.ListenAndServe(":9092", handler); err != http.ErrServerClosed {
 			log.Info(err)
 		}
 	}()
@@ -152,6 +161,7 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCheckToken
 	err := r.ParseForm()
+	log.Error("checkToken RPC")
 	if err != nil {
 		log.Info(err)
 		res.Successful = false

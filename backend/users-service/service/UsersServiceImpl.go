@@ -74,7 +74,7 @@ type ReqPublicInfoPut struct {
 	Nickname string   `json:"nickname"`
 	Profile  string   `json:"profile"`
 	Icon     string   `json:"icon"`
-	Gender   int8     `json:"gender"`
+	Gender   string   `json:"gender"`
 	Email    string   `json:"email"`
 	Labels   []string `json:"labels"`
 }
@@ -89,7 +89,7 @@ type ReqRegister struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Icon     string `json:"icon"`
-	Gender   int8   `json:"gender"`
+	Gender   string `json:"gender"`
 }
 
 type ReqWordBan struct {
@@ -1773,10 +1773,18 @@ func (u *UsersServiceImpl) PublicInfoPut(token string, req ReqPublicInfoPut) (re
 		res.Result.Type = 0
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var gender int64
+	gender, err = strconv.ParseInt(req.Gender, 10, 64)
+	if err == nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 1
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	user.Name = req.Name
 	user.Nickname = req.Nickname
 	user.Profile = req.Profile
-	user.Gender = req.Gender
+	user.Gender = int8(gender)
 	user.Email = req.Email
 	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {
@@ -1930,11 +1938,19 @@ func (u *UsersServiceImpl) Register(req ReqRegister) (res ResRegister, err error
 		res.Result.Type = 1
 		return res, u.usersDao.Rollback(&ctx)
 	}
+	var gender int64
+	gender, err = strconv.ParseInt(req.Gender, 10, 64)
+	if err != nil {
+		log.Info(err)
+		res.Code = 1
+		res.Result.Type = 3
+		return res, u.usersDao.Rollback(&ctx)
+	}
 	user.Name = req.Name
 	user.Nickname = req.Nickname
 	user.Salt = u.generateSalt()
 	user.HashPassword = u.encryptPassword(req.Password, user.Salt)
-	user.Gender = req.Gender
+	user.Gender = int8(gender)
 	user.Role = entity.USER
 	err = u.usersDao.UpdateUserByUid(ctx, user)
 	if err != nil {

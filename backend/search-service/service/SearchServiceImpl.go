@@ -2,10 +2,10 @@ package service
 
 import (
 	"fmt"
+	"github.com/SKFE396/search-service/dao"
+	"github.com/SKFE396/search-service/entity"
+	"github.com/SKFE396/search-service/rpc"
 	log "github.com/sirupsen/logrus"
-	"search-service/dao"
-	"search-service/entity"
-	"search-service/rpc"
 	"strconv"
 	"strings"
 	"time"

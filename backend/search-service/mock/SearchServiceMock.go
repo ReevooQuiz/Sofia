@@ -7,8 +7,8 @@ package mock
 import (
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
-	dao "search-service/dao"
-	rpc "search-service/rpc"
+	dao "github.com/SKFE396/search-service/dao"
+	rpc "github.com/SKFE396/search-service/rpc"
 )
 
 // MockSearchService is a mock of SearchService interface

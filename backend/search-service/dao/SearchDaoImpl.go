@@ -3,12 +3,13 @@ package dao
 import (
 	"context"
 	"database/sql"
+	"github.com/SKFE396/search-service/entity"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
-	"search-service/entity"
 	"strconv"
 )
 

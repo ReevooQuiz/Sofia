@@ -1,6 +1,6 @@
 package dao
 
-import "search-service/entity"
+import "github.com/SKFE396/search-service/entity"
 
 type SearchDao interface {
 	Init() (err error)
