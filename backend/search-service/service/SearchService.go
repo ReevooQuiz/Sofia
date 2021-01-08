@@ -1,8 +1,8 @@
 package service
 
 import (
-	"search-service/dao"
-	"search-service/rpc"
+	"github.com/SKFE396/search-service/dao"
+	"github.com/SKFE396/search-service/rpc"
 )
 
 type SearchService interface {

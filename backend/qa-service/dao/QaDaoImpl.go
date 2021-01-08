@@ -72,6 +72,7 @@ func (q *QaDaoImpl) Init() (err error) {
 		return err
 	}
 	q.session, err = mgo.Dial(mongoUrl)
+	q.session.SetPoolLimit(100)
 	return err
 }
 
@@ -89,7 +90,15 @@ func (q *QaDaoImpl) Begin(read bool) (ctx TransactionContext, err error) {
 	if err != nil {
 		return
 	}
-	return TransactionContext{tx, q.session.New()}, nil
+	ss := q.session.New()
+	if ss == nil {
+		e := tx.Rollback()
+		if e != nil {
+			log.Warn(e)
+		}
+		return ctx, errors.New("failed to create mongo session")
+	}
+	return TransactionContext{tx, ss}, nil
 }
 
 func (q *QaDaoImpl) FindCommentDetails(ctx TransactionContext, comments []entity.Comments) (details []entity.CommentDetails) {

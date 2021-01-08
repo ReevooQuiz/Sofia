@@ -2,9 +2,9 @@ package rpc
 
 import (
 	"encoding/json"
+	"github.com/SKFE396/search-service/config"
 	"io/ioutil"
 	"net/http"
-	"search-service/config"
 	"strconv"
 	"strings"
 )
