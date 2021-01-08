@@ -1,8 +1,8 @@
 package main
 
 import (
-	"search-service/controller"
-	"search-service/service"
+	"github.com/SKFE396/search-service/controller"
+	"github.com/SKFE396/search-service/service"
 	"sync"
 )
 
