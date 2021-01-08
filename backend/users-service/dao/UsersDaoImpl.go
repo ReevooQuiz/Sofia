@@ -96,7 +96,7 @@ func (u *UsersDaoImpl) FindAnswerByAid(ctx TransactionContext, aid int64) (answe
 
 func (u *UsersDaoImpl) FindAnswerDetailByAid(ctx TransactionContext, aid int64) (answerDetail entity.AnswerDetails, err error) {
 	var res []entity.AnswerDetails
-	err = ctx.session.DB("sofia").C("answer_details").Find(bson.M{"aid": aid}).All(&res)
+	err = ctx.session.DB("sofia").C("answer_details").Find(bson.M{"_id": aid}).All(&res)
 	if err != nil {
 		return answerDetail, err
 	}
@@ -419,7 +419,7 @@ func (u *UsersDaoImpl) FindQuestionByQid(ctx TransactionContext, qid int64) (que
 
 func (u *UsersDaoImpl) FindQuestionDetailByQid(ctx TransactionContext, qid int64) (questionDetail entity.QuestionDetails, err error) {
 	var res []entity.QuestionDetails
-	err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"qid": qid}).All(&res)
+	err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"_id": qid}).All(&res)
 	if err != nil {
 		return questionDetail, err
 	}
@@ -498,7 +498,7 @@ func (u *UsersDaoImpl) FindUserByUid(ctx TransactionContext, uid int64) (user en
 
 func (u *UsersDaoImpl) FindUserDetailByUid(ctx TransactionContext, uid int64) (userDetail entity.UserDetails, err error) {
 	var res []entity.UserDetails
-	err = ctx.session.DB("sofia").C("user_details").Find(bson.M{"uid": uid}).All(&res)
+	err = ctx.session.DB("sofia").C("user_details").Find(bson.M{"_id": uid}).All(&res)
 	if err != nil {
 		return userDetail, err
 	}
@@ -750,5 +750,5 @@ func (u *UsersDaoImpl) UpdateUserByUid(ctx TransactionContext, user entity.Users
 }
 
 func (u *UsersDaoImpl) UpdateUserDetailByUid(ctx TransactionContext, userDetail entity.UserDetails) (err error) {
-	return ctx.session.DB("sofia").C("user_details").Update(bson.M{"uid": userDetail.Uid}, userDetail)
+	return ctx.session.DB("sofia").C("user_details").Update(bson.M{"_id": userDetail.Uid}, userDetail)
 }

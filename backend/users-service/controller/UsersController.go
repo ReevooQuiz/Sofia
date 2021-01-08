@@ -161,7 +161,6 @@ func (u *UsersController) CheckToken(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var res service.ResCheckToken
 	err := r.ParseForm()
-	log.Error("checkToken RPC")
 	if err != nil {
 		log.Info(err)
 		res.Successful = false

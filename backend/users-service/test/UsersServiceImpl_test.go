@@ -1139,7 +1139,7 @@ func TestServicePublicInfoPut(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockUsersDao := mock.NewMockUsersDao(mockCtrl)
 	users := []entity.Users{
-		{Uid: 1, Name: "test", Role: entity.USER},
+		{Uid: 1, Name: "test", Gender: 0, Role: entity.USER},
 		{Uid: 2},
 	}
 	userDetails := []entity.UserDetails{

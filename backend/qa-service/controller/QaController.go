@@ -185,7 +185,6 @@ func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		err = r.ParseForm()
 		if err == nil {
-			log.Warn("1 passed")
 			qid, qidErr := strconv.ParseInt(r.FormValue("qid"), 10, 64)
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 64)
 			sort, sortErr := strconv.ParseInt(r.FormValue("sort"), 10, 8)

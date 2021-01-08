@@ -66,9 +66,8 @@ func (s *SearchController) SearchQuestions(w http.ResponseWriter, r *http.Reques
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchQuestions(token, page, text)
+				code, result := s.searchService.SearchQuestions(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -94,9 +93,8 @@ func (s *SearchController) SearchAnswers(w http.ResponseWriter, r *http.Request)
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchAnswers(token, page, text)
+				code, result := s.searchService.SearchAnswers(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -122,9 +120,8 @@ func (s *SearchController) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchUsers(token, page, text)
+				code, result := s.searchService.SearchUsers(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -145,8 +142,7 @@ func (s *SearchController) HotList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	if r.Method == "GET" {
-		token := r.Header.Get("Authorization")
-		code, result := s.searchService.HotList(token)
+		code, result := s.searchService.HotList()
 		response.Code = code
 		response.Result = result
 		object, _ := json.Marshal(response)
@@ -164,8 +160,7 @@ func (s *SearchController) Search(w http.ResponseWriter, r *http.Request) {
 		err = r.ParseForm()
 		if err == nil {
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
-			code, result := s.searchService.Search(token, text)
+			code, result := s.searchService.Search(text)
 			response.Code = code
 			response.Result = result
 			object, _ := json.Marshal(response)

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/SKFE396/qa-service/dao"
 	"github.com/SKFE396/qa-service/entity"
 	"github.com/SKFE396/qa-service/rpc"
@@ -92,66 +91,66 @@ type Owner struct {
 }
 
 type QuestionListItem struct {
-	HasKeywords   bool     `json:"has_keywords"`
-	Closed        bool     `json:"closed"`
-	Qid           string   `json:"qid"`
-	Owner         Owner    `json:"raiser"`
-	Title         string   `json:"title"`
-	Time          string   `json:"time"`
-	AnswerCount   int64    `json:"answer_count"`
-	ViewCount     int64    `json:"view_count"`
-	FavoriteCount int64    `json:"favorite_count"`
-	Category      string   `json:"category"`
-	Labels        []string `json:"labels"`
-	Head          string   `json:"head"`
-	PictureUrls   []string `json:"pictureUrls"`
+	HasKeywords   bool      `json:"has_keywords"`
+	Closed        bool      `json:"closed"`
+	Qid           string    `json:"qid"`
+	Owner         Owner     `json:"raiser"`
+	Title         string    `json:"title"`
+	Time          time.Time `json:"time"`
+	AnswerCount   int64     `json:"answer_count"`
+	ViewCount     int64     `json:"view_count"`
+	FavoriteCount int64     `json:"favorite_count"`
+	Category      string    `json:"category"`
+	Labels        []string  `json:"labels"`
+	Head          string    `json:"head"`
+	PictureUrls   []string  `json:"picture_urls"`
 }
 
 type QuestionInfo struct {
-	HasKeywords   bool     `json:"has_keywords"`
-	Closed        bool     `json:"closed"`
-	Qid           string   `json:"qid"`
-	Owner         Owner    `json:"raiser"`
-	Title         string   `json:"title"`
-	Time          string   `json:"time"`
-	AnswerCount   int64    `json:"answer_count"`
-	ViewCount     int64    `json:"view_count"`
-	FavoriteCount int64    `json:"favorite_count"`
-	Category      string   `json:"category"`
-	Labels        []string `json:"labels"`
-	Content       string   `json:"content"`
-	Accepted      string   `json:"accepted_answer"`
+	HasKeywords   bool      `json:"has_keywords"`
+	Closed        bool      `json:"closed"`
+	Qid           string    `json:"qid"`
+	Owner         Owner     `json:"raiser"`
+	Title         string    `json:"title"`
+	Time          time.Time `json:"time"`
+	AnswerCount   int64     `json:"answer_count"`
+	ViewCount     int64     `json:"view_count"`
+	FavoriteCount int64     `json:"favorite_count"`
+	Category      string    `json:"category"`
+	Labels        []string  `json:"labels"`
+	Content       string    `json:"content"`
+	Accepted      string    `json:"accepted_answer"`
 }
 
 type AnswerInfo struct {
-	HasKeywords    bool   `json:"has_keywords"`
-	Aid            string `json:"aid"`
-	Owner          Owner  `json:"answerer"`
-	Time           string `json:"time"`
-	LikeCount      int64  `json:"like_count"`
-	CriticismCount int64  `json:"criticism_count"`
-	ApprovalCount  int64  `json:"approval_count"`
-	CommentCount   int64  `json:"comment_count"`
-	Content        string `json:"content"`
-	Liked          bool   `json:"liked"`
-	Approved       bool   `json:"approved"`
-	Approvable     bool   `json:"approvale"`
+	HasKeywords    bool      `json:"has_keywords"`
+	Aid            string    `json:"aid"`
+	Owner          Owner     `json:"answerer"`
+	Time           time.Time `json:"time"`
+	LikeCount      int64     `json:"like_count"`
+	CriticismCount int64     `json:"criticism_count"`
+	ApprovalCount  int64     `json:"approval_count"`
+	CommentCount   int64     `json:"comment_count"`
+	Content        string    `json:"content"`
+	Liked          bool      `json:"liked"`
+	Approved       bool      `json:"approved"`
+	Approvable     bool      `json:"approvable"`
 }
 
 type AnswerListItem struct {
-	HasKeywords    bool     `json:"has_keywords"`
-	Aid            string   `json:"aid"`
-	Owner          Owner    `json:"answerer"`
-	LikeCount      int64    `json:"like_count"`
-	CriticismCount int64    `json:"criticism_count"`
-	ApprovalCount  int64    `json:"approval_count"`
-	CommentCount   int64    `json:"comment_count"`
-	Head           string   `json:"head"`
-	Time           string   `json:"time"`
-	PictureUrls    []string `json:"picture_urls"`
-	Liked          bool     `json:"liked"`
-	Approved       bool     `json:"approved"`
-	Approvable     bool     `json:"approvale"`
+	HasKeywords    bool      `json:"has_keywords"`
+	Aid            string    `json:"aid"`
+	Owner          Owner     `json:"answerer"`
+	LikeCount      int64     `json:"like_count"`
+	CriticismCount int64     `json:"criticism_count"`
+	ApprovalCount  int64     `json:"approval_count"`
+	CommentCount   int64     `json:"comment_count"`
+	Head           string    `json:"head"`
+	Time           time.Time `json:"time"`
+	PictureUrls    []string  `json:"picture_urls"`
+	Liked          bool      `json:"liked"`
+	Approved       bool      `json:"approved"`
+	Approvable     bool      `json:"approvable"`
 }
 
 type CommentListItem struct {
@@ -242,7 +241,7 @@ func (q *QaServiceImpl) QuestionListResponse(uid int64, role int8, questions []e
 		} else {
 			res[i].Title = questionDetails[i].Title
 		}
-		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
+		res[i].Time = time.Unix(v.Time, 0)
 		res[i].AnswerCount = v.AnswerCount
 		res[i].ViewCount = v.ViewCount
 		res[i].FavoriteCount = v.FavoriteCount
@@ -251,9 +250,13 @@ func (q *QaServiceImpl) QuestionListResponse(uid int64, role int8, questions []e
 		res[i].HasKeywords = MatchKeywords(&questionDetails[i].Content, keywords)
 		if uid == v.Raiser || role == ADMIN || !res[i].HasKeywords {
 			res[i].Head = questionDetails[i].Head
+		} else {
+			res[i].Head = ""
 		}
 		if questionDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{questionDetails[i].PictureUrl}
+		} else {
+			res[i].PictureUrls = []string{}
 		}
 	}
 	var userInfos []rpc.UserInfo
@@ -284,13 +287,17 @@ func (q *QaServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid int64
 		res[i].CriticismCount = v.CriticismCount
 		res[i].ApprovalCount = v.ApprovalCount
 		res[i].CommentCount = v.CommentCount
-		res[i].Time = fmt.Sprint(time.Unix(v.Time, 0))
+		res[i].Time = time.Unix(v.Time, 0)
 		res[i].HasKeywords = MatchKeywords(&answerDetails[i].Content, keywords)
 		if uid == v.Answerer || role == ADMIN || !res[i].HasKeywords {
 			res[i].Head = answerDetails[i].Head
+		} else {
+			res[i].Head = ""
 		}
 		if answerDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{answerDetails[i].PictureUrl}
+		} else {
+			res[i].PictureUrls = []string{}
 		}
 	}
 	var userInfos []rpc.UserInfo
@@ -766,12 +773,12 @@ func (q *QaServiceImpl) QuestionDetail(token string, qid int64) (int8, interface
 	var res QuestionInfo
 	res.Qid = strconv.FormatInt(qs.Qid, 10)
 	res.Closed = qs.Closed
-	if uid == qs.Raiser || role == ADMIN || MatchKeywords(&detail[0].Title, &keywords) {
+	if uid != qs.Raiser && role != ADMIN && MatchKeywords(&detail[0].Title, &keywords) {
 		res.Title = "[标题包含敏感词，已屏蔽]"
 	} else {
 		res.Title = detail[0].Title
 	}
-	res.Time = fmt.Sprint(qs.Time)
+	res.Time = time.Unix(qs.Time, 0)
 	res.AnswerCount = qs.AnswerCount
 	res.ViewCount = qs.ViewCount
 	res.FavoriteCount = qs.FavoriteCount
@@ -830,6 +837,7 @@ func (q *QaServiceImpl) ListAnswers(token string, qid int64, page int64, sort in
 	result, err = q.AnswerListResponse(ctx, uid, role, answers, answerDetails, &keywords)
 	if err != nil {
 		q.qaDao.Rollback(&ctx)
+		log.Warn(err)
 		return Failed, nil
 	}
 	q.qaDao.Rollback(&ctx)
@@ -867,7 +875,7 @@ func (q *QaServiceImpl) AnswerDetail(token string, aid int64) (int8, interface{}
 	}
 	var res AnswerInfo
 	res.Aid = strconv.FormatInt(ans.Aid, 10)
-	res.Time = fmt.Sprint(ans.Time)
+	res.Time = time.Unix(ans.Time, 0)
 	res.LikeCount = ans.LikeCount
 	res.CriticismCount = ans.CriticismCount
 	res.ApprovalCount = ans.ApprovalCount
