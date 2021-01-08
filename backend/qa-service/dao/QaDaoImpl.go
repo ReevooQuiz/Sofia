@@ -72,6 +72,7 @@ func (q *QaDaoImpl) Init() (err error) {
 		return err
 	}
 	q.session, err = mgo.Dial(mongoUrl)
+	q.session.SetPoolLimit(100)
 	return err
 }
 
