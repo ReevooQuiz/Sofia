@@ -3,6 +3,8 @@ package dao
 import (
 	"context"
 	"database/sql"
+	"errors"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2"
@@ -78,7 +80,15 @@ func (s *SearchDaoImpl) Begin(read bool) (ctx TransactionContext, err error) {
 	if err != nil {
 		return
 	}
-	return TransactionContext{tx, s.session.New()}, nil
+	ss := s.session.New()
+	if ss == nil {
+		e := tx.Rollback()
+		if e != nil {
+			log.Warn(e)
+		}
+		return ctx, errors.New("failed to create mongo session")
+	}
+	return TransactionContext{tx, ss}, nil
 }
 
 func (s *SearchDaoImpl) Commit(t *TransactionContext) {
