@@ -53,6 +53,7 @@ func (u *UsersDaoImpl) Init() (err error) {
 		return err
 	}
 	u.session, err = mgo.Dial(mongoUrl)
+	u.session.SetPoolLimit(100)
 	return err
 }
 
