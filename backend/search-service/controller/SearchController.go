@@ -2,9 +2,9 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/SKFE396/search-service/service"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"search-service/service"
 	"strconv"
 	"sync"
 )
