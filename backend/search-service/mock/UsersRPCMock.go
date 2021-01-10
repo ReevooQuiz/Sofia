@@ -5,9 +5,9 @@
 package mock
 
 import (
+	"github.com/SKFE396/search-service/rpc"
 	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
-	rpc "search-service/rpc"
 )
 
 // MockUsersRPC is a mock of UsersRPC interface

@@ -3,12 +3,14 @@ package dao
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"github.com/SKFE396/search-service/entity"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"os"
-	"search-service/entity"
 	"strconv"
 )
 
@@ -54,10 +56,10 @@ type KListItem struct {
 const (
 	PageSize       = 5
 	questionFields = "qid,closed,raiser,category,accepted_answer,answer_count,view_count,favorite_count,time,scanned"
-	answerFields   = "aid,answerer,qid,view_count,comment_count,criticism_count,like_count,approval_count,time,scanned"
+	answerFields   = "aid,answerer,qid,comment_count,criticism_count,like_count,approval_count,time"
 	HotListSize    = 10
-	KListSize = 3
-	KCardSize = 3
+	KListSize      = 3
+	KCardSize      = 3
 )
 
 func init() {
@@ -78,7 +80,15 @@ func (s *SearchDaoImpl) Begin(read bool) (ctx TransactionContext, err error) {
 	if err != nil {
 		return
 	}
-	return TransactionContext{tx, s.session.New()}, nil
+	ss := s.session.New()
+	if ss == nil {
+		e := tx.Rollback()
+		if e != nil {
+			log.Warn(e)
+		}
+		return ctx, errors.New("failed to create mongo session")
+	}
+	return TransactionContext{tx, ss}, nil
 }
 
 func (s *SearchDaoImpl) Commit(t *TransactionContext) {
@@ -122,7 +132,8 @@ func (s *SearchDaoImpl) ParseQuestions(rows *sql.Rows) (result []entity.Question
 			&it.AnswerCount,
 			&it.ViewCount,
 			&it.FavoriteCount,
-			&it.Time)
+			&it.Time,
+			&it.Scanned)
 		if err != nil {
 			return
 		}
@@ -156,9 +167,9 @@ func (s *SearchDaoImpl) FindQuestionDetails(ctx TransactionContext, questions []
 		findErr = ctx.session.DB("sofia").C("question_details").FindId(v.Qid).One(&current)
 		if findErr != nil {
 			log.Warn(findErr)
-			questionDetails = append(questionDetails, current)
-		} else {
 			questionDetails = append(questionDetails, entity.QuestionDetails{})
+		} else {
+			questionDetails = append(questionDetails, current)
 		}
 	}
 	return
@@ -181,37 +192,28 @@ func (s *SearchDaoImpl) AssignLabels(ctx TransactionContext, questions []entity.
 			}
 			v.Labels = append(v.Labels, current)
 		}
+		questions[0].Labels = v.Labels
 		_ = rows.Close()
 	}
 	return nil
 }
 
-func (s *SearchDaoImpl) SearchQuestions(ctx TransactionContext, page int64, text string) (questions []entity.Questions, err error) {
-	var rows *sql.Rows
-	rows, err = ctx.sqlTx.Query("select "+questionFields+" from questions where match(title)against(? in boolean mode)limit ?, ?",
-		text, PageSize*page, PageSize)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	questions, err = s.ParseQuestions(rows)
-	if err != nil {
-		return
-	}
-	err = s.AssignLabels(ctx, questions)
-	return questions, err
+func (s *SearchDaoImpl) SearchQuestions(ctx TransactionContext, page int64, text string) (details []entity.QuestionDetails, err error) {
+	err = ctx.session.DB("sofia").C("question_details").Find(bson.M{"title": bson.M{"$regex": text}}).
+		Skip(int(page * PageSize)).Limit(PageSize).All(&details)
+	return
 }
 
 func (s *SearchDaoImpl) SearchAnswers(ctx TransactionContext, page int64, text string) (details []entity.AnswerDetails, err error) {
 	err = ctx.session.DB("sofia").C("answer_details").
-		Find(bson.M{"$text": bson.M{"$search": text}}).
+		Find(bson.M{"content": bson.M{"$regex": text}}).
 		Skip(int(page * PageSize)).
 		Limit(PageSize).
 		All(&details)
 	return
 }
 
-func (s *SearchDaoImpl) ParseAnswers(rows *sql.Rows) (result []entity.Answers, err error) {
+func (s *SearchDaoImpl) ParseAnswers(ctx TransactionContext, rows *sql.Rows) (result []entity.Answers, err error) {
 	var it entity.Answers
 	for rows.Next() {
 		err = rows.Scan(
@@ -226,9 +228,44 @@ func (s *SearchDaoImpl) ParseAnswers(rows *sql.Rows) (result []entity.Answers, e
 		if err != nil {
 			return
 		}
+		var detail entity.QuestionDetails
+		err = ctx.session.DB("sofia").C("question_details").FindId(it.Qid).One(&detail)
+		if err != nil {
+			return
+		}
+		it.QuestionTitle = detail.Title
 		result = append(result, it)
 	}
 	return result, nil
+}
+
+func (s *SearchDaoImpl) FindQuestionSkeletons(ctx TransactionContext, details []entity.QuestionDetails) (questions []entity.Questions) {
+	res := make([]entity.Questions, len(details))
+	for i, v := range details {
+		var rows *sql.Rows
+		rows, err := ctx.sqlTx.Query("select "+questionFields+" from questions where qid=?", v.Qid)
+		suc := false
+		if err == nil {
+			items, err := s.ParseQuestions(rows)
+			if err == nil {
+				if len(items) > 0 {
+					suc = true
+					res[i] = items[0]
+				} else {
+					log.Warn("qid = ", v.Qid, ", question skeleton not found")
+				}
+			} else {
+				log.Warn(err)
+			}
+			_ = rows.Close()
+		} else {
+			log.Warn(err)
+		}
+		if !suc {
+			res[i].Qid = v.Qid
+		}
+	}
+	return res
 }
 
 func (s *SearchDaoImpl) FindAnswerSkeletons(ctx TransactionContext, details []entity.AnswerDetails) (answers []entity.Answers) {
@@ -238,7 +275,7 @@ func (s *SearchDaoImpl) FindAnswerSkeletons(ctx TransactionContext, details []en
 		rows, err := ctx.sqlTx.Query("select "+answerFields+" from answers where aid=?", v.Aid)
 		suc := false
 		if err == nil {
-			items, err := s.ParseAnswers(rows)
+			items, err := s.ParseAnswers(ctx, rows)
 			if err == nil {
 				if len(items) > 0 {
 					suc = true
@@ -328,6 +365,7 @@ func (s *SearchDaoImpl) SearchUsers(ctx TransactionContext, page int64, text str
 		return
 	}
 	defer rows.Close()
+	result = []SearchUserResult{}
 	for rows.Next() {
 		var it SearchUserResult
 		var role int64

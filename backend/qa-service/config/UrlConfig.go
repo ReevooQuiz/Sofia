@@ -1,5 +1,5 @@
 package config
 
 const (
-	UserServiceUrl = "http://localhost:2333/"
+	UserServiceUrl = "http://localhost:9092/"
 )

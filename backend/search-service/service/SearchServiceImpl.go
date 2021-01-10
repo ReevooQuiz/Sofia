@@ -2,10 +2,10 @@ package service
 
 import (
 	"fmt"
+	"github.com/SKFE396/search-service/dao"
+	"github.com/SKFE396/search-service/entity"
+	"github.com/SKFE396/search-service/rpc"
 	log "github.com/sirupsen/logrus"
-	"search-service/dao"
-	"search-service/entity"
-	"search-service/rpc"
 	"strconv"
 	"strings"
 	"time"
@@ -47,11 +47,12 @@ type QuestionListItem struct {
 	Category      string   `json:"category"`
 	Labels        []string `json:"labels"`
 	Head          string   `json:"head"`
-	PictureUrls   []string `json:"pictureUrls"`
+	PictureUrls   []string `json:"picture_urls"`
 }
 
 type AnswerListItem struct {
 	HasKeywords    bool     `json:"has_keywords"`
+	QuestionTitle  string   `json:"question_title"`
 	Aid            string   `json:"aid"`
 	Owner          Owner    `json:"answerer"`
 	LikeCount      int64    `json:"like_count"`
@@ -118,6 +119,8 @@ func (s *SearchServiceImpl) QuestionListResponse(questions []entity.Questions, q
 		}
 		if questionDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{questionDetails[i].PictureUrl}
+		} else {
+			res[i].PictureUrls = []string{}
 		}
 	}
 	var userInfos []rpc.UserInfo
@@ -134,24 +137,19 @@ func (s *SearchServiceImpl) QuestionListResponse(questions []entity.Questions, q
 	return res, nil
 }
 
-func (s *SearchServiceImpl) SearchQuestions(token string, page int64, text string) (code int8, result interface{}) {
-	// check token
-	suc, _, _ := s.usersRPC.ParseToken(token)
-	if !suc {
-		return Expired, nil
-	}
+func (s *SearchServiceImpl) SearchQuestions(page int64, text string) (code int8, result interface{}) {
 	// serve
 	ctx, err := s.searchDao.Begin(true)
 	if err != nil {
 		return Failed, nil
 	}
-	questions, err := s.searchDao.SearchQuestions(ctx, page, text)
+	details, err := s.searchDao.SearchQuestions(ctx, page, text)
 	if err != nil {
 		s.searchDao.Rollback(&ctx)
 		log.Warn(err)
 		return Failed, nil
 	}
-	details := s.searchDao.FindQuestionDetails(ctx, questions)
+	questions := s.searchDao.FindQuestionSkeletons(ctx, details)
 	keywords, err := s.searchDao.GetBannedWords(ctx)
 	if err != nil {
 		s.searchDao.Rollback(&ctx)
@@ -177,6 +175,7 @@ func (s *SearchServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid i
 		uids[i] = v.Answerer
 		qids[i] = v.Qid
 		aids[i] = v.Aid
+		res[i].QuestionTitle = v.QuestionTitle
 		res[i].Aid = strconv.FormatInt(v.Aid, 10)
 		res[i].LikeCount = v.LikeCount
 		res[i].CriticismCount = v.CriticismCount
@@ -186,9 +185,13 @@ func (s *SearchServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid i
 		res[i].HasKeywords = MatchKeywords(&answerDetails[i].Content, keywords)
 		if !res[i].HasKeywords {
 			res[i].Head = answerDetails[i].Head
+		} else {
+			res[i].Head = ""
 		}
 		if answerDetails[i].PictureUrl != "" {
 			res[i].PictureUrls = []string{answerDetails[i].PictureUrl}
+		} else {
+			res[i].PictureUrls = []string{}
 		}
 	}
 	var userInfos []rpc.UserInfo
@@ -214,12 +217,8 @@ func (s *SearchServiceImpl) AnswerListResponse(ctx dao.TransactionContext, uid i
 	return res, nil
 }
 
-func (s *SearchServiceImpl) SearchAnswers(token string, page int64, text string) (code int8, result interface{}) {
-	// check token
-	suc, uid, _ := s.usersRPC.ParseToken(token)
-	if !suc {
-		return Expired, nil
-	}
+func (s *SearchServiceImpl) SearchAnswers(page int64, text string) (code int8, result interface{}) {
+	var uid int64 = 0
 	// serve
 	ctx, err := s.searchDao.Begin(true)
 	if err != nil {
@@ -248,12 +247,7 @@ func (s *SearchServiceImpl) SearchAnswers(token string, page int64, text string)
 	return Succeeded, result
 }
 
-func (s *SearchServiceImpl) SearchUsers(token string, page int64, text string) (code int8, result interface{}) {
-	// check token
-	suc, _, _ := s.usersRPC.ParseToken(token)
-	if !suc {
-		return Expired, nil
-	}
+func (s *SearchServiceImpl) SearchUsers(page int64, text string) (code int8, result interface{}) {
 	// serve
 	ctx, err := s.searchDao.Begin(true)
 	if err != nil {
@@ -270,12 +264,7 @@ func (s *SearchServiceImpl) SearchUsers(token string, page int64, text string) (
 	return Succeeded, result
 }
 
-func (s *SearchServiceImpl) HotList(token string) (code int8, result interface{}) {
-	// check token
-	suc, _, _ := s.usersRPC.ParseToken(token)
-	if !suc {
-		return Expired, nil
-	}
+func (s *SearchServiceImpl) HotList() (code int8, result interface{}) {
 	// serve
 	ctx, err := s.searchDao.Begin(true)
 	if err != nil {
@@ -305,12 +294,7 @@ func (s *SearchServiceImpl) HotList(token string) (code int8, result interface{}
 	return Succeeded, result
 }
 
-func (s *SearchServiceImpl) Search(token string, text string) (code int8, result interface{}) {
-	// check token
-	suc, _, _ := s.usersRPC.ParseToken(token)
-	if !suc {
-		return Expired, nil
-	}
+func (s *SearchServiceImpl) Search(text string) (code int8, result interface{}) {
 	// serve
 	ctx, err := s.searchDao.Begin(true)
 	if err != nil {

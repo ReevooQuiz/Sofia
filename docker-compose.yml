@@ -144,14 +144,10 @@ services:
       - --metrics.prometheus
       - --tracing.elastic
     ports:
-      - "80:80"
-      - "8080:8080"
+      - "80:8081"
+      - "8080:8082"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    logging:
-      driver: syslog
-      options:
-        tag: traefik
     environment:
       - TZ=US/Alaska
     networks:

@@ -2,9 +2,10 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/SKFE396/search-service/service"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"search-service/service"
 	"strconv"
 	"sync"
 )
@@ -28,15 +29,23 @@ func (s *SearchController) Init(group *sync.WaitGroup, searchService service.Sea
 	if err != nil {
 		log.Info(err)
 	}
-	server = &http.Server{Addr: ":9094"}
-	http.HandleFunc("/searchQuestions", s.SearchQuestions)
-	http.HandleFunc("/searchAnswers", s.SearchAnswers)
-	http.HandleFunc("/searchUsers", s.SearchUsers)
-	http.HandleFunc("/hotlist", s.HotList)
-	http.HandleFunc("/search", s.Search)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/searchQuestions", s.SearchQuestions)
+	mux.HandleFunc("/searchAnswers", s.SearchAnswers)
+	mux.HandleFunc("/searchUsers", s.SearchUsers)
+	mux.HandleFunc("/hotlist", s.HotList)
+	mux.HandleFunc("/search", s.Search)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedMethods:   []string{"GET", "POST", "PUT"},
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	go func() {
 		defer group.Done()
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := http.ListenAndServe(":9094", handler); err != http.ErrServerClosed {
 			log.Info(err)
 		}
 	}()
@@ -57,9 +66,8 @@ func (s *SearchController) SearchQuestions(w http.ResponseWriter, r *http.Reques
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchQuestions(token, page, text)
+				code, result := s.searchService.SearchQuestions(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -85,9 +93,8 @@ func (s *SearchController) SearchAnswers(w http.ResponseWriter, r *http.Request)
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchAnswers(token, page, text)
+				code, result := s.searchService.SearchAnswers(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -113,9 +120,8 @@ func (s *SearchController) SearchUsers(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 32)
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
 			if pageErr == nil {
-				code, result := s.searchService.SearchUsers(token, page, text)
+				code, result := s.searchService.SearchUsers(page, text)
 				response.Code = code
 				response.Result = result
 				object, _ := json.Marshal(response)
@@ -136,8 +142,7 @@ func (s *SearchController) HotList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	var response ServerResponse
 	if r.Method == "GET" {
-		token := r.Header.Get("Authorization")
-		code, result := s.searchService.HotList(token)
+		code, result := s.searchService.HotList()
 		response.Code = code
 		response.Result = result
 		object, _ := json.Marshal(response)
@@ -155,8 +160,7 @@ func (s *SearchController) Search(w http.ResponseWriter, r *http.Request) {
 		err = r.ParseForm()
 		if err == nil {
 			text := r.FormValue("text")
-			token := r.Header.Get("Authorization")
-			code, result := s.searchService.Search(token, text)
+			code, result := s.searchService.Search(text)
 			response.Code = code
 			response.Result = result
 			object, _ := json.Marshal(response)
