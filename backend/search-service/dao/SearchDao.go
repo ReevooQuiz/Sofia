@@ -9,8 +9,10 @@ type SearchDao interface {
 	Commit(ctx *TransactionContext)
 	Rollback(ctx *TransactionContext)
 	FindQuestionDetails(ctx TransactionContext, questions []entity.Questions) (questionDetails []entity.QuestionDetails)
-	SearchQuestions(ctx TransactionContext, page int64, text string) (questions []entity.Questions, err error)
+	SearchQuestions(ctx TransactionContext, page int64, text string) (details []entity.QuestionDetails, err error)
 	GetBannedWords(ctx TransactionContext) (words []string, err error)
+
+	FindQuestionSkeletons(ctx TransactionContext, details []entity.QuestionDetails) (questions []entity.Questions)
 
 	SearchAnswers(ctx TransactionContext, page int64, text string) (details []entity.AnswerDetails, err error)
 	FindAnswerSkeletons(ctx TransactionContext, details []entity.AnswerDetails) (answers []entity.Answers)

@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/json"
 	"github.com/SKFE396/search-service/config"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -15,11 +16,11 @@ type UsersRPCImpl struct {
 
 func (u *UsersRPCImpl) GetUserInfos(uids []int64) (result []UserInfo, err error) {
 	var requestBody struct {
-		Uids []string `json:"uids"`
+		Uids []int64 `json:"uids"`
 	}
-	requestBody.Uids = make([]string, len(uids))
+	requestBody.Uids = make([]int64, len(uids))
 	for i, v := range uids {
-		requestBody.Uids[i] = strconv.FormatInt(v, 10)
+		requestBody.Uids[i] = v
 	}
 	var bodyBytes []byte
 	bodyBytes, err = json.Marshal(requestBody)
@@ -45,7 +46,7 @@ func (u *UsersRPCImpl) GetUserInfos(uids []int64) (result []UserInfo, err error)
 }
 
 func (u *UsersRPCImpl) ParseToken(token string) (successful bool, uid int64, role int8) {
-	request, err := http.NewRequest("GET", config.UserServiceUrl+"check?token="+token, nil)
+	request, err := http.NewRequest("GET", config.UserServiceUrl+"checkToken?token="+token, nil)
 	if err == nil {
 		request.Header.Set("Accept", "application/json")
 		client := http.Client{}
@@ -65,5 +66,6 @@ func (u *UsersRPCImpl) ParseToken(token string) (successful bool, uid int64, rol
 			}
 		}
 	}
+	log.Error("Failed to call checkToken RPC")
 	return false, 0, 0
 }

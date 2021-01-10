@@ -9,5 +9,4 @@ type Answers struct {
 	LikeCount      int64 `json:"like_count"`
 	ApprovalCount  int64 `json:"approval_count"`
 	Time           int64 `json:"time"`
-	Scanned        int8  `json:"scanned"`
 }

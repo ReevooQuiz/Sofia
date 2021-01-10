@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"github.com/SKFE396/qa-service/service"
+	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -28,18 +29,26 @@ func (q *QaController) Init(group *sync.WaitGroup, qaService service.QaService) 
 	if err != nil {
 		log.Info(err)
 	}
-	server = &http.Server{Addr: ":9093"}
-	http.HandleFunc("/questions", q.Questions)
-	http.HandleFunc("/question", q.QuestionDetail)
-	http.HandleFunc("/answers", q.Answers)
-	http.HandleFunc("/answer", q.AnswerDetail)
-	http.HandleFunc("/comments", q.Comments)
-	http.HandleFunc("/criticisms", q.Criticisms)
-	http.HandleFunc("/disable_question", q.DisableQuestion)
-	http.HandleFunc("/delete_answer", q.DeleteAnswer)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/questions", q.Questions)
+	mux.HandleFunc("/question", q.QuestionDetail)
+	mux.HandleFunc("/answers", q.Answers)
+	mux.HandleFunc("/answer", q.AnswerDetail)
+	mux.HandleFunc("/comments", q.Comments)
+	mux.HandleFunc("/criticisms", q.Criticisms)
+	mux.HandleFunc("/disable_question", q.DisableQuestion)
+	mux.HandleFunc("/delete_answer", q.DeleteAnswer)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowedMethods:   []string{"GET", "POST", "PUT"},
+		Debug:            true,
+	})
+	handler := c.Handler(mux)
 	go func() {
 		defer group.Done()
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		if err := http.ListenAndServe(":9093", handler); err != http.ErrServerClosed {
 			log.Info(err)
 		}
 	}()
@@ -176,7 +185,6 @@ func (q *QaController) Answers(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		err = r.ParseForm()
 		if err == nil {
-			log.Warn("1 passed")
 			qid, qidErr := strconv.ParseInt(r.FormValue("qid"), 10, 64)
 			page, pageErr := strconv.ParseInt(r.FormValue("page"), 10, 64)
 			sort, sortErr := strconv.ParseInt(r.FormValue("sort"), 10, 8)

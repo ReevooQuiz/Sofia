@@ -1025,7 +1025,7 @@ func TestServiceMainPage(t *testing.T) {
 						Icon:     UserInfosResult[0].Icon,
 					},
 					Title:         DetailsResult[0].Title,
-					Time:          fmt.Sprint(time.Unix(MainPageResult[0].Time, 0)),
+					Time:          strings.Replace(fmt.Sprint(time.Unix(MainPageResult[0].Time, 0)), "CST", "UTC", -1),
 					AnswerCount:   MainPageResult[0].AnswerCount,
 					ViewCount:     MainPageResult[0].ViewCount,
 					FavoriteCount: MainPageResult[0].FavoriteCount,
